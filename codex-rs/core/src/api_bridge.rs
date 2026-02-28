@@ -13,6 +13,7 @@ use crate::error::CodexErr;
 use crate::error::RetryLimitReachedError;
 use crate::error::UnexpectedResponseError;
 use crate::error::UsageLimitReachedError;
+use crate::indubitably_auth::load_access_token_for_base_url;
 use crate::model_provider_info::ModelProviderInfo;
 use crate::token_data::PlanType;
 
@@ -248,6 +249,15 @@ pub(crate) fn auth_provider_from_auth(
     }
 
     if let Some(token) = provider.experimental_bearer_token.clone() {
+        return Ok(CoreAuthProvider {
+            token: Some(token),
+            account_id: None,
+        });
+    }
+
+    if let Some(base_url) = provider.base_url.as_deref()
+        && let Some(token) = load_access_token_for_base_url(base_url)
+    {
         return Ok(CoreAuthProvider {
             token: Some(token),
             account_id: None,
