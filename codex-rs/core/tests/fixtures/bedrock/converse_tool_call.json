@@ -1,0 +1,19 @@
+{
+  "payload": {
+    "output": {
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "toolUse",
+            "id": "tool-1",
+            "name": "shell",
+            "input": {
+              "command": "ls"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

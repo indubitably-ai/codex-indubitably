@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "output": {
+      "message": {
+        "role": "user",
+        "content": [
+          {
+            "type": "toolResult",
+            "toolUseId": "tool-1",
+            "content": [
+              {
+                "type": "text",
+                "text": "listing"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

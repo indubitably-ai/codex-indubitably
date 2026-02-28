@@ -87,6 +87,8 @@ use tracing::warn;
 use crate::AuthManager;
 use crate::auth::CodexAuth;
 use crate::auth::RefreshTokenError;
+use crate::bedrock::BedrockRuntimeAdapter;
+use crate::bedrock::build_default_bedrock_runtime_adapter;
 use crate::client_common::Prompt;
 use crate::client_common::ResponseEvent;
 use crate::client_common::ResponseStream;
@@ -95,6 +97,7 @@ use crate::default_client::build_reqwest_client;
 use crate::error::CodexErr;
 use crate::error::Result;
 use crate::flags::CODEX_RS_SSE_FIXTURE;
+use crate::model_provider_info::BEDROCK_PROVIDER_ID;
 use crate::model_provider_info::ModelProviderInfo;
 use crate::model_provider_info::WireApi;
 use crate::tools::spec::create_tools_json_for_responses_api;
@@ -136,6 +139,7 @@ pub fn ws_version_from_features(config: &Config) -> Option<ResponsesWebsocketVer
 struct ModelClientState {
     auth_manager: Option<Arc<AuthManager>>,
     conversation_id: ThreadId,
+    provider_id: String,
     provider: ModelProviderInfo,
     session_source: SessionSource,
     model_verbosity: Option<VerbosityConfig>,
@@ -143,6 +147,7 @@ struct ModelClientState {
     enable_request_compression: bool,
     include_timing_metrics: bool,
     beta_features_header: Option<String>,
+    bedrock_runtime: Arc<dyn BedrockRuntimeAdapter>,
     disable_websockets: AtomicBool,
     cached_websocket_session: StdMutex<WebsocketSession>,
 }
@@ -231,6 +236,7 @@ impl ModelClient {
     pub fn new(
         auth_manager: Option<Arc<AuthManager>>,
         conversation_id: ThreadId,
+        provider_id: String,
         provider: ModelProviderInfo,
         session_source: SessionSource,
         model_verbosity: Option<VerbosityConfig>,
@@ -239,10 +245,49 @@ impl ModelClient {
         include_timing_metrics: bool,
         beta_features_header: Option<String>,
     ) -> Self {
+        let bedrock_runtime = build_default_bedrock_runtime_adapter(
+            provider_id.as_str(),
+            &provider,
+            auth_manager.clone(),
+            &conversation_id,
+        );
+        Self::new_with_bedrock_runtime(
+            auth_manager,
+            conversation_id,
+            provider_id,
+            provider,
+            session_source,
+            model_verbosity,
+            responses_websocket_version,
+            enable_request_compression,
+            include_timing_metrics,
+            beta_features_header,
+            bedrock_runtime,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    /// Creates a new session-scoped `ModelClient` with a custom Bedrock runtime adapter.
+    ///
+    /// This seam is primarily used by tests while Bedrock runtime integration is being ported.
+    pub fn new_with_bedrock_runtime(
+        auth_manager: Option<Arc<AuthManager>>,
+        conversation_id: ThreadId,
+        provider_id: String,
+        provider: ModelProviderInfo,
+        session_source: SessionSource,
+        model_verbosity: Option<VerbosityConfig>,
+        responses_websocket_version: Option<ResponsesWebsocketVersion>,
+        enable_request_compression: bool,
+        include_timing_metrics: bool,
+        beta_features_header: Option<String>,
+        bedrock_runtime: Arc<dyn BedrockRuntimeAdapter>,
+    ) -> Self {
         Self {
             state: Arc::new(ModelClientState {
                 auth_manager,
                 conversation_id,
+                provider_id,
                 provider,
                 session_source,
                 model_verbosity,
@@ -250,6 +295,7 @@ impl ModelClient {
                 enable_request_compression,
                 include_timing_metrics,
                 beta_features_header,
+                bedrock_runtime,
                 disable_websockets: AtomicBool::new(false),
                 cached_websocket_session: StdMutex::new(WebsocketSession::default()),
             }),
@@ -1022,6 +1068,27 @@ impl ModelClientSession {
         summary: ReasoningSummaryConfig,
         turn_metadata_header: Option<&str>,
     ) -> Result<ResponseStream> {
+        if self
+            .client
+            .state
+            .provider_id
+            .eq_ignore_ascii_case(BEDROCK_PROVIDER_ID)
+        {
+            return self
+                .client
+                .state
+                .bedrock_runtime
+                .stream(
+                    prompt,
+                    model_info,
+                    otel_manager,
+                    effort,
+                    summary,
+                    turn_metadata_header,
+                )
+                .await;
+        }
+
         let wire_api = self.client.state.provider.wire_api;
         match wire_api {
             WireApi::Responses => {
@@ -1301,13 +1368,76 @@ impl WebsocketTelemetry for ApiTelemetry {
 #[cfg(test)]
 mod tests {
     use super::ModelClient;
+    use crate::bedrock::BedrockRuntimeAdapter;
+    use crate::client_common::Prompt;
+    use crate::client_common::ResponseEvent;
+    use crate::client_common::ResponseStream;
+    use crate::error::CodexErr;
+    use crate::error::Result;
+    use crate::model_provider_info::BEDROCK_PROVIDER_ID;
+    use crate::model_provider_info::built_in_model_providers;
+    use async_trait::async_trait;
     use codex_otel::OtelManager;
     use codex_protocol::ThreadId;
+    use codex_protocol::config_types::ReasoningSummary;
     use codex_protocol::openai_models::ModelInfo;
+    use codex_protocol::openai_models::ReasoningEffort as ReasoningEffortConfig;
     use codex_protocol::protocol::SessionSource;
     use codex_protocol::protocol::SubAgentSource;
+    use futures::StreamExt;
     use pretty_assertions::assert_eq;
     use serde_json::json;
+    use std::sync::Arc;
+    use std::sync::Mutex;
+    use tokio::sync::mpsc;
+
+    #[derive(Debug, Default)]
+    struct RecordingBedrockRuntimeAdapter {
+        calls: Arc<Mutex<i32>>,
+    }
+
+    impl RecordingBedrockRuntimeAdapter {
+        fn call_count(&self) -> i32 {
+            *self
+                .calls
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+        }
+    }
+
+    #[async_trait]
+    impl BedrockRuntimeAdapter for RecordingBedrockRuntimeAdapter {
+        async fn stream(
+            &self,
+            _prompt: &Prompt,
+            _model_info: &ModelInfo,
+            _otel_manager: &OtelManager,
+            _effort: Option<ReasoningEffortConfig>,
+            _summary: ReasoningSummary,
+            _turn_metadata_header: Option<&str>,
+        ) -> Result<ResponseStream> {
+            {
+                let mut calls = self
+                    .calls
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
+                *calls += 1;
+            }
+            let (tx, rx) = mpsc::channel(4);
+            tx.send(Ok(ResponseEvent::Created))
+                .await
+                .expect("send Created");
+            tx.send(Ok(ResponseEvent::Completed {
+                response_id: "bedrock-runtime-response".to_string(),
+                token_usage: None,
+                can_append: false,
+            }))
+            .await
+            .expect("send Completed");
+            drop(tx);
+            Ok(ResponseStream { rx_event: rx })
+        }
+    }
 
     fn test_model_client(session_source: SessionSource) -> ModelClient {
         let provider = crate::model_provider_info::create_oss_provider_with_base_url(
@@ -1317,6 +1447,7 @@ mod tests {
         ModelClient::new(
             None,
             ThreadId::new(),
+            "test-provider".to_string(),
             provider,
             session_source,
             None,
@@ -1394,5 +1525,95 @@ mod tests {
             .await
             .expect("empty summarize request should succeed");
         assert_eq!(output.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn bedrock_provider_stream_returns_unsupported_operation() {
+        let provider = built_in_model_providers()
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        let client = ModelClient::new(
+            None,
+            ThreadId::new(),
+            BEDROCK_PROVIDER_ID.to_string(),
+            provider,
+            SessionSource::Cli,
+            None,
+            None,
+            false,
+            false,
+            None,
+        );
+        let mut session = client.new_session();
+        let model_info = test_model_info();
+        let otel_manager = test_otel_manager();
+
+        let result = session
+            .stream(
+                &Prompt::default(),
+                &model_info,
+                &otel_manager,
+                None,
+                ReasoningSummary::Auto,
+                None,
+            )
+            .await;
+
+        match result {
+            Err(CodexErr::UnsupportedOperation(message)) => {
+                assert!(message.contains("Bedrock runtime adapter is not configured"));
+            }
+            Err(other) => panic!("expected UnsupportedOperation, got {other:?}"),
+            Ok(_) => panic!("expected bedrock stream to return an error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn bedrock_provider_stream_uses_injected_runtime_adapter() {
+        let provider = built_in_model_providers()
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        let runtime = Arc::new(RecordingBedrockRuntimeAdapter::default());
+        let client = ModelClient::new_with_bedrock_runtime(
+            None,
+            ThreadId::new(),
+            BEDROCK_PROVIDER_ID.to_string(),
+            provider,
+            SessionSource::Cli,
+            None,
+            None,
+            false,
+            false,
+            None,
+            runtime.clone(),
+        );
+        let mut session = client.new_session();
+        let model_info = test_model_info();
+        let otel_manager = test_otel_manager();
+
+        let mut stream = session
+            .stream(
+                &Prompt::default(),
+                &model_info,
+                &otel_manager,
+                None,
+                ReasoningSummary::Auto,
+                None,
+            )
+            .await
+            .expect("injected runtime should stream");
+
+        assert!(matches!(
+            stream.next().await,
+            Some(Ok(ResponseEvent::Created))
+        ));
+        assert!(matches!(
+            stream.next().await,
+            Some(Ok(ResponseEvent::Completed { .. }))
+        ));
+        assert!(stream.next().await.is_none());
+        assert_eq!(runtime.call_count(), 1);
     }
 }

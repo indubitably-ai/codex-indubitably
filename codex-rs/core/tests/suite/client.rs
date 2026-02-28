@@ -702,6 +702,7 @@ async fn prefers_apikey_when_config_prefers_apikey_even_with_chatgpt_tokens() {
                 .features
                 .enabled(Feature::DefaultModeRequestUserInput),
         },
+        config.model_provider.clone(),
     );
     let NewThread { thread: codex, .. } = thread_manager
         .start_thread(config)
@@ -1638,6 +1639,7 @@ async fn azure_responses_request_includes_store_and_reasoning_ids() {
     let client = ModelClient::new(
         None,
         conversation_id,
+        provider.name.clone(),
         provider.clone(),
         SessionSource::Exec,
         config.model_verbosity,

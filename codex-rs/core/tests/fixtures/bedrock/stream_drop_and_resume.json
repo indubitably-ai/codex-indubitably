@@ -1,0 +1,18 @@
+{
+  "chunks": [
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": "Partial response"
+        }
+      }
+    },
+    {
+      "type": "error",
+      "error": "transport"
+    }
+  ]
+}

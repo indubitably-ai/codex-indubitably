@@ -1,0 +1,35 @@
+{
+  "chunks": [
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": "Hello"
+        }
+      }
+    },
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": " world"
+        }
+      }
+    },
+    {
+      "type": "usage",
+      "value": {
+        "inputTokens": 12,
+        "outputTokens": 8,
+        "totalTokens": 20
+      }
+    },
+    {
+      "type": "done"
+    }
+  ]
+}

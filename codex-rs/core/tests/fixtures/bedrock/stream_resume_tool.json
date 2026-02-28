@@ -1,0 +1,54 @@
+{
+  "chunks": [
+    {
+      "type": "tool_use",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolUse": {
+          "name": "shell",
+          "id": "resume-call",
+          "input": {
+            "command": "ls",
+            "timeout_ms": 5000
+          }
+        }
+      }
+    },
+    {
+      "type": "tool_result",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolResult": {
+          "toolUseId": "resume-call",
+          "content": [
+            {
+              "type": "text",
+              "text": "README.md"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": "Listing captured."
+        }
+      }
+    },
+    {
+      "type": "usage",
+      "value": {
+        "inputTokens": 48,
+        "outputTokens": 32,
+        "totalTokens": 80
+      }
+    },
+    {
+      "type": "done"
+    }
+  ]
+}

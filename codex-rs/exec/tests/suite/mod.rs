@@ -2,6 +2,7 @@
 mod add_dir;
 mod apply_patch;
 mod auth_env;
+mod bedrock_runtime;
 mod ephemeral;
 mod mcp_required_exit;
 mod originator;

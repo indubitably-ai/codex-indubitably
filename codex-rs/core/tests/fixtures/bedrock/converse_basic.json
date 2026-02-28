@@ -1,0 +1,20 @@
+{
+  "payload": {
+    "output": {
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "Hello from Bedrock!"
+          }
+        ]
+      }
+    },
+    "usage": {
+      "inputTokens": 12,
+      "outputTokens": 8,
+      "totalTokens": 20
+    }
+  }
+}

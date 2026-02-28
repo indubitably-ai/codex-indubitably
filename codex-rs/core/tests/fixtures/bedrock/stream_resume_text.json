@@ -1,0 +1,25 @@
+{
+  "chunks": [
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": " continued"
+        }
+      }
+    },
+    {
+      "type": "usage",
+      "value": {
+        "inputTokens": 24,
+        "outputTokens": 16,
+        "totalTokens": 40
+      }
+    },
+    {
+      "type": "done"
+    }
+  ]
+}

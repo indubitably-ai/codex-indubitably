@@ -1,0 +1,109 @@
+{
+  "chunks": [
+    {
+      "type": "tool_use",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolUse": {
+          "name": "shell",
+          "id": "call-1",
+          "input": {
+            "command": "git status --short"
+          }
+        }
+      }
+    },
+    {
+      "type": "tool_use",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolUse": {
+          "name": "project_search",
+          "id": "call-2",
+          "input": {
+            "query": "bedrock"
+          }
+        }
+      }
+    },
+    {
+      "type": "tool_use",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolUse": {
+          "name": "plan",
+          "id": "call-3",
+          "input": {
+            "prompt": "Summarize migration next steps"
+          }
+        }
+      }
+    },
+    {
+      "type": "tool_result",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolResult": {
+          "toolUseId": "call-1",
+          "content": [
+            {
+              "type": "text",
+              "text": " M README.md"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "tool_result",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolResult": {
+          "toolUseId": "call-2",
+          "content": [
+            {
+              "type": "text",
+              "text": "Found 12 hits"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "tool_result",
+      "value": {
+        "contentBlockIndex": 0,
+        "toolResult": {
+          "toolUseId": "call-3",
+          "content": [
+            {
+              "type": "text",
+              "text": "Plan drafted"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "message_delta",
+      "value": {
+        "contentBlockIndex": 0,
+        "delta": {
+          "type": "textDelta",
+          "text": "Summary prepared."
+        }
+      }
+    },
+    {
+      "type": "usage",
+      "value": {
+        "inputTokens": 180,
+        "outputTokens": 64,
+        "totalTokens": 244
+      }
+    },
+    {
+      "type": "done"
+    }
+  ]
+}

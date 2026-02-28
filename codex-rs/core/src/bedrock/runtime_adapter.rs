@@ -1,0 +1,217 @@
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use codex_otel::OtelManager;
+use codex_protocol::ThreadId;
+use codex_protocol::config_types::ReasoningSummary as ReasoningSummaryConfig;
+use codex_protocol::openai_models::ModelInfo;
+use codex_protocol::openai_models::ReasoningEffort as ReasoningEffortConfig;
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderName;
+use reqwest::header::HeaderValue;
+
+use crate::AuthManager;
+use crate::bedrock::messages_adapter;
+use crate::bedrock::proxy_runtime::BedrockProxyRuntime;
+use crate::bedrock::runtime::BedrockError;
+use crate::bedrock::runtime::ConverseRequest;
+use crate::bedrock::stream_adapter::adapt_converse_stream;
+use crate::client_common::Prompt;
+use crate::client_common::ResponseStream;
+use crate::default_client::build_reqwest_client;
+use crate::error::CodexErr;
+use crate::error::Result;
+use crate::indubitably_auth::load_access_token_for_base_url;
+use crate::model_provider_info::BEDROCK_PROVIDER_ID;
+use crate::model_provider_info::ModelProviderInfo;
+
+#[async_trait]
+pub trait BedrockRuntimeAdapter: std::fmt::Debug + Send + Sync {
+    #[allow(clippy::too_many_arguments)]
+    async fn stream(
+        &self,
+        prompt: &Prompt,
+        model_info: &ModelInfo,
+        otel_manager: &OtelManager,
+        effort: Option<ReasoningEffortConfig>,
+        summary: ReasoningSummaryConfig,
+        turn_metadata_header: Option<&str>,
+    ) -> Result<ResponseStream>;
+}
+
+/// Default adapter used when Bedrock runtime wiring has not been configured.
+#[derive(Debug, Default)]
+pub struct UnconfiguredBedrockRuntimeAdapter;
+
+#[async_trait]
+impl BedrockRuntimeAdapter for UnconfiguredBedrockRuntimeAdapter {
+    async fn stream(
+        &self,
+        _prompt: &Prompt,
+        _model_info: &ModelInfo,
+        _otel_manager: &OtelManager,
+        _effort: Option<ReasoningEffortConfig>,
+        _summary: ReasoningSummaryConfig,
+        _turn_metadata_header: Option<&str>,
+    ) -> Result<ResponseStream> {
+        Err(CodexErr::UnsupportedOperation(
+            "Bedrock runtime adapter is not configured".to_string(),
+        ))
+    }
+}
+
+#[derive(Debug)]
+pub struct ProxyBedrockRuntimeAdapter {
+    runtime: BedrockProxyRuntime,
+    provider: ModelProviderInfo,
+    auth_manager: Option<Arc<AuthManager>>,
+    conversation_id: ThreadId,
+}
+
+impl ProxyBedrockRuntimeAdapter {
+    pub fn new(
+        provider: ModelProviderInfo,
+        auth_manager: Option<Arc<AuthManager>>,
+        conversation_id: ThreadId,
+    ) -> Option<Self> {
+        let base_url = provider.base_url.clone()?;
+        if base_url.trim().is_empty() {
+            return None;
+        }
+
+        let headers = provider_headers(&provider);
+        let runtime = BedrockProxyRuntime::new(
+            base_url,
+            provider.query_params.clone(),
+            headers,
+            build_reqwest_client(),
+        );
+
+        Some(Self {
+            runtime,
+            provider,
+            auth_manager,
+            conversation_id,
+        })
+    }
+
+    async fn resolve_bearer_token(&self) -> Result<Option<String>> {
+        if let Some(api_key) = self.provider.api_key()? {
+            return Ok(Some(api_key));
+        }
+
+        if let Some(token) = self.provider.experimental_bearer_token.clone() {
+            return Ok(Some(token));
+        }
+
+        if let Some(base_url) = self.provider.base_url.as_deref()
+            && let Some(token) = load_access_token_for_base_url(base_url)
+        {
+            return Ok(Some(token));
+        }
+
+        if let Some(manager) = self.auth_manager.as_ref()
+            && let Some(auth) = manager.auth().await
+        {
+            return Ok(Some(auth.get_token()?));
+        }
+
+        Ok(None)
+    }
+}
+
+#[async_trait]
+impl BedrockRuntimeAdapter for ProxyBedrockRuntimeAdapter {
+    async fn stream(
+        &self,
+        prompt: &Prompt,
+        model_info: &ModelInfo,
+        _otel_manager: &OtelManager,
+        _effort: Option<ReasoningEffortConfig>,
+        _summary: ReasoningSummaryConfig,
+        _turn_metadata_header: Option<&str>,
+    ) -> Result<ResponseStream> {
+        let history = prompt.get_formatted_input();
+        let system = (!prompt.base_instructions.text.trim().is_empty())
+            .then_some(prompt.base_instructions.text.clone());
+
+        let request_payload = messages_adapter::build_request(
+            model_info.slug.as_str(),
+            system,
+            &history,
+            &prompt.tools,
+            prompt.output_schema.as_ref(),
+        );
+
+        let request = ConverseRequest::new(serde_json::to_value(request_payload)?);
+        let bearer_token = self.resolve_bearer_token().await?;
+
+        let stream = self
+            .runtime
+            .converse_stream(request, bearer_token.as_deref())
+            .await
+            .map_err(map_bedrock_error)?;
+
+        Ok(adapt_converse_stream(
+            self.conversation_id.to_string(),
+            prompt.tools.clone(),
+            stream,
+        ))
+    }
+}
+
+pub fn build_default_bedrock_runtime_adapter(
+    provider_id: &str,
+    provider: &ModelProviderInfo,
+    auth_manager: Option<Arc<AuthManager>>,
+    conversation_id: &ThreadId,
+) -> Arc<dyn BedrockRuntimeAdapter> {
+    if provider_id.eq_ignore_ascii_case(BEDROCK_PROVIDER_ID)
+        && let Some(adapter) =
+            ProxyBedrockRuntimeAdapter::new(provider.clone(), auth_manager, *conversation_id)
+    {
+        return Arc::new(adapter);
+    }
+
+    Arc::new(UnconfiguredBedrockRuntimeAdapter)
+}
+
+fn provider_headers(provider: &ModelProviderInfo) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+
+    if let Some(extra) = &provider.http_headers {
+        for (name, value) in extra {
+            if let (Ok(parsed_name), Ok(parsed_value)) = (
+                HeaderName::from_bytes(name.as_bytes()),
+                HeaderValue::from_str(value),
+            ) {
+                headers.insert(parsed_name, parsed_value);
+            }
+        }
+    }
+
+    if let Some(env_headers) = &provider.env_http_headers {
+        for (name, env_key) in env_headers {
+            if let Ok(value) = std::env::var(env_key)
+                && !value.trim().is_empty()
+                && let (Ok(parsed_name), Ok(parsed_value)) = (
+                    HeaderName::from_bytes(name.as_bytes()),
+                    HeaderValue::from_str(&value),
+                )
+            {
+                headers.insert(parsed_name, parsed_value);
+            }
+        }
+    }
+
+    headers
+}
+
+fn map_bedrock_error(err: BedrockError) -> CodexErr {
+    match err {
+        BedrockError::Transport(source) => CodexErr::Stream(source.to_string(), None),
+        BedrockError::InvalidResponse(message) => CodexErr::Stream(message, None),
+        BedrockError::Throttled => CodexErr::Stream("bedrock request throttled".to_string(), None),
+        BedrockError::Cancelled => CodexErr::Stream("bedrock request cancelled".to_string(), None),
+    }
+}
