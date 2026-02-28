@@ -397,7 +397,11 @@ async fn codex_tool_passes_base_instructions() -> anyhow::Result<()> {
     );
 
     let requests = server.received_requests().await.unwrap();
-    let request = requests[0].body_json::<serde_json::Value>()?;
+    let request = requests
+        .iter()
+        .find(|request| request.url.path().ends_with("/responses"))
+        .expect("expected responses request");
+    let request = request.body_json::<serde_json::Value>()?;
     let instructions = request["instructions"]
         .as_str()
         .expect("responses request should include instructions");

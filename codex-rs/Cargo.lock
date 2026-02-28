@@ -2842,6 +2842,7 @@ dependencies = [
  "pretty_assertions",
  "regex-lite",
  "reqwest",
+ "serde",
  "serde_json",
  "shlex",
  "tempfile",

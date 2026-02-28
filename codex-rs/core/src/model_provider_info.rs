@@ -264,6 +264,7 @@ impl ModelProviderInfo {
 pub const DEFAULT_LMSTUDIO_PORT: u16 = 1234;
 pub const DEFAULT_OLLAMA_PORT: u16 = 11434;
 
+pub const BEDROCK_PROVIDER_ID: &str = "bedrock";
 pub const LMSTUDIO_OSS_PROVIDER_ID: &str = "lmstudio";
 pub const OLLAMA_OSS_PROVIDER_ID: &str = "ollama";
 
@@ -271,12 +272,12 @@ pub const OLLAMA_OSS_PROVIDER_ID: &str = "ollama";
 pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
     use ModelProviderInfo as P;
 
-    // We do not want to be in the business of adjucating which third-party
-    // providers are bundled with Codex CLI, so we only include the OpenAI and
-    // open source ("oss") providers by default. Users are encouraged to add to
-    // `model_providers` in config.toml to add their own providers.
+    // We do not want to be in the business of adjudicating which third-party
+    // providers are bundled with Codex CLI, so built-ins are limited to
+    // first-party defaults plus OSS local-model providers.
     [
         ("openai", P::create_openai_provider()),
+        (BEDROCK_PROVIDER_ID, create_bedrock_provider()),
         (
             OLLAMA_OSS_PROVIDER_ID,
             create_oss_provider(DEFAULT_OLLAMA_PORT, WireApi::Responses),
@@ -289,6 +290,25 @@ pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
     .into_iter()
     .map(|(k, v)| (k.to_string(), v))
     .collect()
+}
+
+fn create_bedrock_provider() -> ModelProviderInfo {
+    ModelProviderInfo {
+        name: "AWS Bedrock".into(),
+        base_url: None,
+        env_key: None,
+        env_key_instructions: None,
+        experimental_bearer_token: None,
+        wire_api: WireApi::Responses,
+        query_params: None,
+        http_headers: None,
+        env_http_headers: None,
+        request_max_retries: None,
+        stream_max_retries: None,
+        stream_idle_timeout_ms: None,
+        requires_openai_auth: false,
+        supports_websockets: false,
+    }
 }
 
 pub fn create_oss_provider(default_provider_port: u16, wire_api: WireApi) -> ModelProviderInfo {
@@ -437,5 +457,18 @@ wire_api = "chat"
 
         let err = toml::from_str::<ModelProviderInfo>(provider_toml).unwrap_err();
         assert!(err.to_string().contains(CHAT_WIRE_API_REMOVED_ERROR));
+    }
+
+    #[test]
+    fn built_in_model_providers_include_bedrock() {
+        let providers = built_in_model_providers();
+        let bedrock = providers
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist");
+
+        assert_eq!(bedrock.name, "AWS Bedrock");
+        assert!(!bedrock.requires_openai_auth);
+        assert!(!bedrock.supports_websockets);
+        assert_eq!(bedrock.wire_api, WireApi::Responses);
     }
 }

@@ -1462,6 +1462,10 @@ impl Session {
             model_client: ModelClient::new(
                 Some(Arc::clone(&auth_manager)),
                 conversation_id,
+                session_configuration
+                    .original_config_do_not_use
+                    .model_provider_id
+                    .clone(),
                 session_configuration.provider.clone(),
                 session_configuration.session_source.clone(),
                 config.model_verbosity,
@@ -8171,6 +8175,10 @@ mod tests {
             model_client: ModelClient::new(
                 Some(auth_manager.clone()),
                 conversation_id,
+                session_configuration
+                    .original_config_do_not_use
+                    .model_provider_id
+                    .clone(),
                 session_configuration.provider.clone(),
                 session_configuration.session_source.clone(),
                 config.model_verbosity,
@@ -8331,6 +8339,10 @@ mod tests {
             model_client: ModelClient::new(
                 Some(Arc::clone(&auth_manager)),
                 conversation_id,
+                session_configuration
+                    .original_config_do_not_use
+                    .model_provider_id
+                    .clone(),
                 session_configuration.provider.clone(),
                 session_configuration.session_source.clone(),
                 config.model_verbosity,

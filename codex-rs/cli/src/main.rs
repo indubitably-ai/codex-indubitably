@@ -989,6 +989,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     if subcommand_cli.oss {
         interactive.oss = true;
     }
+    if subcommand_cli.indubitably {
+        interactive.indubitably = true;
+    }
     if let Some(profile) = subcommand_cli.config_profile {
         interactive.config_profile = Some(profile);
     }
@@ -1287,6 +1290,7 @@ mod tests {
 
         assert_eq!(interactive.model.as_deref(), Some("gpt-5.1-test"));
         assert!(interactive.oss);
+        assert!(!interactive.indubitably);
         assert_eq!(interactive.config_profile.as_deref(), Some("my-profile"));
         assert_matches!(
             interactive.sandbox_mode,
@@ -1314,6 +1318,13 @@ mod tests {
         assert!(!interactive.resume_picker);
         assert!(!interactive.resume_last);
         assert_eq!(interactive.resume_session_id.as_deref(), Some("sid"));
+    }
+
+    #[test]
+    fn resume_merges_indubitably_flag() {
+        let interactive = finalize_resume_from_args(["codex", "resume", "--indubitably"].as_ref());
+        assert!(interactive.indubitably);
+        assert!(!interactive.oss);
     }
 
     #[test]

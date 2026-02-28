@@ -110,6 +110,11 @@ async fn get_auth_status_no_auth() -> Result<()> {
     let status: GetAuthStatusResponse = to_response(resp)?;
     assert_eq!(status.auth_method, None, "expected no auth method");
     assert_eq!(status.auth_token, None, "expected no token");
+    assert_eq!(
+        status.requires_openai_auth,
+        Some(true),
+        "requires_openai_auth should be true",
+    );
     Ok(())
 }
 
@@ -138,6 +143,44 @@ async fn get_auth_status_with_api_key() -> Result<()> {
     let status: GetAuthStatusResponse = to_response(resp)?;
     assert_eq!(status.auth_method, Some(AuthMode::ApiKey));
     assert_eq!(status.auth_token, Some("sk-test-key".to_string()));
+    assert_eq!(
+        status.requires_openai_auth,
+        Some(true),
+        "requires_openai_auth should be true",
+    );
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn get_auth_status_with_api_key_when_auth_required_custom_provider() -> Result<()> {
+    let codex_home = TempDir::new()?;
+    create_config_toml_custom_provider(codex_home.path(), true)?;
+
+    let mut mcp = McpProcess::new(codex_home.path()).await?;
+    timeout(DEFAULT_READ_TIMEOUT, mcp.initialize()).await??;
+
+    login_with_api_key_via_request(&mut mcp, "sk-test-key").await?;
+
+    let request_id = mcp
+        .send_get_auth_status_request(GetAuthStatusParams {
+            include_token: Some(true),
+            refresh_token: Some(false),
+        })
+        .await?;
+
+    let resp: JSONRPCResponse = timeout(
+        DEFAULT_READ_TIMEOUT,
+        mcp.read_stream_until_response_message(RequestId::Integer(request_id)),
+    )
+    .await??;
+    let status: GetAuthStatusResponse = to_response(resp)?;
+    assert_eq!(status.auth_method, Some(AuthMode::ApiKey));
+    assert_eq!(status.auth_token, Some("sk-test-key".to_string()));
+    assert_eq!(
+        status.requires_openai_auth,
+        Some(true),
+        "requires_openai_auth should be true",
+    );
     Ok(())
 }
 
@@ -199,6 +242,11 @@ async fn get_auth_status_with_api_key_no_include_token() -> Result<()> {
     let status: GetAuthStatusResponse = to_response(resp)?;
     assert_eq!(status.auth_method, Some(AuthMode::ApiKey));
     assert!(status.auth_token.is_none(), "token must be omitted");
+    assert_eq!(
+        status.requires_openai_auth,
+        Some(true),
+        "requires_openai_auth should be true",
+    );
     Ok(())
 }
 

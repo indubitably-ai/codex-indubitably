@@ -5521,6 +5521,26 @@ trust_level = "trusted"
     }
 
     #[test]
+    fn test_load_config_accepts_built_in_bedrock_model_provider() -> std::io::Result<()> {
+        let codex_home = TempDir::new()?;
+        let cfg = ConfigToml {
+            model_provider: Some("bedrock".to_string()),
+            ..Default::default()
+        };
+
+        let config = Config::load_from_base_config_with_overrides(
+            cfg,
+            ConfigOverrides::default(),
+            codex_home.path().to_path_buf(),
+        )?;
+
+        assert_eq!(config.model_provider_id, "bedrock");
+        assert!(!config.model_provider.requires_openai_auth);
+
+        Ok(())
+    }
+
+    #[test]
     fn test_untrusted_project_gets_workspace_write_sandbox() -> anyhow::Result<()> {
         let config_with_untrusted = r#"
 [projects."/tmp/test"]

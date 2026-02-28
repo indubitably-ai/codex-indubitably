@@ -1,14 +1,19 @@
 #![cfg(not(target_os = "windows"))]
 
 use anyhow::Result;
+use codex_core::CodexAuth;
+use codex_protocol::openai_models::ModelInfo;
+use codex_protocol::openai_models::ModelsResponse;
 use core_test_support::responses::mount_function_call_agent_response;
-use core_test_support::responses::start_mock_server;
+use core_test_support::responses::mount_models_once;
 use core_test_support::skip_if_no_network;
 use core_test_support::test_codex::TestCodex;
 use core_test_support::test_codex::test_codex;
+use serde_json::json;
 use std::collections::HashSet;
 use std::path::Path;
 use std::process::Command as StdCommand;
+use wiremock::MockServer;
 
 const MODEL_WITH_TOOL: &str = "test-gpt-5.1-codex";
 
@@ -34,7 +39,14 @@ async fn grep_files_tool_collects_matches() -> Result<()> {
     skip_if_no_network!(Ok(()));
     skip_if_ripgrep_missing!(Ok(()));
 
-    let server = start_mock_server().await;
+    let server = MockServer::start().await;
+    let _models_mock = mount_models_once(
+        &server,
+        ModelsResponse {
+            models: vec![remote_model_with_grep_tool(MODEL_WITH_TOOL)],
+        },
+    )
+    .await;
     let test = build_test_codex(&server).await?;
 
     let search_dir = test.cwd.path().join("src");
@@ -92,7 +104,14 @@ async fn grep_files_tool_reports_empty_results() -> Result<()> {
     skip_if_no_network!(Ok(()));
     skip_if_ripgrep_missing!(Ok(()));
 
-    let server = start_mock_server().await;
+    let server = MockServer::start().await;
+    let _models_mock = mount_models_once(
+        &server,
+        ModelsResponse {
+            models: vec![remote_model_with_grep_tool(MODEL_WITH_TOOL)],
+        },
+    )
+    .await;
     let test = build_test_codex(&server).await?;
 
     let search_dir = test.cwd.path().join("logs");
@@ -126,8 +145,36 @@ async fn grep_files_tool_reports_empty_results() -> Result<()> {
 
 #[allow(clippy::expect_used)]
 async fn build_test_codex(server: &wiremock::MockServer) -> Result<TestCodex> {
-    let mut builder = test_codex().with_model(MODEL_WITH_TOOL);
+    let mut builder = test_codex()
+        .with_auth(CodexAuth::create_dummy_chatgpt_auth_for_testing())
+        .with_model(MODEL_WITH_TOOL);
     builder.build(server).await
+}
+
+fn remote_model_with_grep_tool(slug: &str) -> ModelInfo {
+    serde_json::from_value(json!({
+        "slug": slug,
+        "display_name": slug,
+        "description": "grep files test model",
+        "default_reasoning_level": "medium",
+        "supported_reasoning_levels": [{"effort": "low", "description": "low"}, {"effort": "medium", "description": "medium"}],
+        "shell_type": "shell_command",
+        "visibility": "list",
+        "minimal_client_version": [0, 1, 0],
+        "supported_in_api": true,
+        "priority": 0,
+        "upgrade": null,
+        "base_instructions": "base instructions",
+        "supports_reasoning_summaries": false,
+        "support_verbosity": false,
+        "default_verbosity": null,
+        "apply_patch_tool_type": null,
+        "truncation_policy": {"mode": "bytes", "limit": 10_000},
+        "supports_parallel_tool_calls": false,
+        "context_window": 272_000,
+        "experimental_supported_tools": ["grep_files"],
+    }))
+    .unwrap_or_else(|err| panic!("valid model: {err}"))
 }
 
 fn collect_file_names(content: &str) -> HashSet<String> {

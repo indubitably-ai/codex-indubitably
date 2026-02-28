@@ -55,13 +55,17 @@ pub struct Cli {
 
     /// Convenience flag to select the local open source model provider. Equivalent to -c
     /// model_provider=oss; verifies a local LM Studio or Ollama server is running.
-    #[arg(long = "oss", default_value_t = false)]
+    #[arg(long = "oss", default_value_t = false, conflicts_with = "indubitably")]
     pub oss: bool,
 
     /// Specify which local provider to use (lmstudio or ollama).
     /// If not specified with --oss, will use config default or show selection.
     #[arg(long = "local-provider")]
     pub oss_provider: Option<String>,
+
+    /// Use the Bedrock + Indubitably provider path.
+    #[arg(long = "indubitably", default_value_t = false)]
+    pub indubitably: bool,
 
     /// Configuration profile from config.toml to specify default options.
     #[arg(long = "profile", short = 'p')]
@@ -112,4 +116,21 @@ pub struct Cli {
 
     #[clap(skip)]
     pub config_overrides: CliConfigOverrides,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_accepts_indubitably_flag() {
+        let parsed = Cli::parse_from(["codex", "--indubitably", "echo hello"]);
+        assert!(parsed.indubitably);
+    }
+
+    #[test]
+    fn parse_rejects_oss_and_indubitably_together() {
+        let parsed = Cli::try_parse_from(["codex", "--oss", "--indubitably", "echo hello"]);
+        assert!(parsed.is_err());
+    }
 }

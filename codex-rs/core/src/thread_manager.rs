@@ -145,6 +145,7 @@ impl ThreadManager {
         session_source: SessionSource,
         model_catalog: Option<ModelsResponse>,
         collaboration_modes_config: CollaborationModesConfig,
+        model_provider: ModelProviderInfo,
     ) -> Self {
         let (thread_created_tx, _) = broadcast::channel(THREAD_CREATED_CHANNEL_CAPACITY);
         let skills_manager = Arc::new(SkillsManager::new(codex_home.clone()));
@@ -153,11 +154,12 @@ impl ThreadManager {
             state: Arc::new(ThreadManagerState {
                 threads: Arc::new(RwLock::new(HashMap::new())),
                 thread_created_tx,
-                models_manager: Arc::new(ModelsManager::new(
+                models_manager: Arc::new(ModelsManager::new_with_provider(
                     codex_home,
                     auth_manager.clone(),
                     model_catalog,
                     collaboration_modes_config,
+                    model_provider,
                 )),
                 skills_manager,
                 file_watcher,

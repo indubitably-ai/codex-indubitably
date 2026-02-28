@@ -25,6 +25,7 @@ use codex_core::check_execpolicy_for_warnings;
 use codex_core::config::Config;
 use codex_core::config::ConfigBuilder;
 use codex_core::config::ConfigOverrides;
+use codex_core::config::ConfigToml;
 use codex_core::config::find_codex_home;
 use codex_core::config::load_config_as_toml_with_cli_overrides;
 use codex_core::config::resolve_oss_provider;
@@ -74,6 +75,8 @@ use codex_core::default_client::set_default_originator;
 use codex_core::find_thread_path_by_id_str;
 use codex_core::find_thread_path_by_name_str;
 
+const BEDROCK_PROVIDER_ID: &str = "bedrock";
+
 enum InitialOperation {
     UserTurn {
         items: Vec<UserInput>,
@@ -103,6 +106,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
         model: model_cli_arg,
         oss,
         oss_provider,
+        indubitably,
         config_profile,
         full_auto,
         dangerously_bypass_approvals_and_sandbox,
@@ -233,35 +237,17 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
     let cloud_requirements =
         cloud_requirements_loader(cloud_auth_manager, chatgpt_base_url, codex_home.clone());
 
-    let model_provider = if oss {
-        let resolved = resolve_oss_provider(
-            oss_provider.as_deref(),
-            &config_toml,
-            config_profile.clone(),
-        );
+    let model_provider = resolve_model_provider_override(
+        oss,
+        indubitably,
+        oss_provider.as_deref(),
+        &config_toml,
+        config_profile.clone(),
+    )?;
 
-        if let Some(provider) = resolved {
-            Some(provider)
-        } else {
-            return Err(anyhow::anyhow!(
-                "No default OSS provider configured. Use --local-provider=provider or set oss_provider to one of: {LMSTUDIO_OSS_PROVIDER_ID}, {OLLAMA_OSS_PROVIDER_ID} in config.toml"
-            ));
-        }
-    } else {
-        None // No OSS mode enabled
-    };
-
-    // When using `--oss`, let the bootstrapper pick the model based on selected provider
-    let model = if let Some(model) = model_cli_arg {
-        Some(model)
-    } else if oss {
-        model_provider
-            .as_ref()
-            .and_then(|provider_id| get_default_model_for_oss_provider(provider_id))
-            .map(std::borrow::ToOwned::to_owned)
-    } else {
-        None // No model specified, will use the default.
-    };
+    // When using `--oss`, let the bootstrapper pick the model based on selected provider.
+    // `--indubitably` only selects the provider; model defaults come from provider-aware refresh.
+    let model = resolve_model_override(model_cli_arg, oss, model_provider.as_deref());
 
     // Load configuration and determine approval policy
     let overrides = ConfigOverrides {
@@ -403,6 +389,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
                 .features
                 .enabled(codex_core::features::Feature::DefaultModeRequestUserInput),
         },
+        config.model_provider.clone(),
     ));
     let default_model = thread_manager
         .get_models_manager()
@@ -647,6 +634,47 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
     }
 
     Ok(())
+}
+
+fn resolve_model_provider_override(
+    oss: bool,
+    indubitably: bool,
+    oss_provider: Option<&str>,
+    config_toml: &ConfigToml,
+    config_profile: Option<String>,
+) -> anyhow::Result<Option<String>> {
+    if indubitably {
+        return Ok(Some(BEDROCK_PROVIDER_ID.to_string()));
+    }
+
+    if oss {
+        let resolved = resolve_oss_provider(oss_provider, config_toml, config_profile);
+        if let Some(provider) = resolved {
+            Ok(Some(provider))
+        } else {
+            Err(anyhow::anyhow!(
+                "No default OSS provider configured. Use --local-provider=provider or set oss_provider to one of: {LMSTUDIO_OSS_PROVIDER_ID}, {OLLAMA_OSS_PROVIDER_ID} in config.toml"
+            ))
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn resolve_model_override(
+    model_cli_arg: Option<String>,
+    oss: bool,
+    model_provider: Option<&str>,
+) -> Option<String> {
+    if let Some(model) = model_cli_arg {
+        Some(model)
+    } else if oss {
+        model_provider
+            .and_then(get_default_model_for_oss_provider)
+            .map(std::borrow::ToOwned::to_owned)
+    } else {
+        None
+    }
 }
 
 fn spawn_thread_listener(
@@ -925,6 +953,7 @@ fn build_review_request(args: ReviewArgs) -> anyhow::Result<ReviewRequest> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use codex_core::config::ConfigToml;
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -1062,5 +1091,26 @@ mod tests {
         let err = decode_prompt_bytes(&input).expect_err("invalid utf-8 should fail");
 
         assert_eq!(err, PromptDecodeError::InvalidUtf8 { valid_up_to: 0 });
+    }
+
+    #[test]
+    fn resolve_model_provider_override_uses_bedrock_for_indubitably() {
+        let provider =
+            resolve_model_provider_override(false, true, None, &ConfigToml::default(), None)
+                .expect("provider override resolves");
+
+        assert_eq!(provider.as_deref(), Some(BEDROCK_PROVIDER_ID));
+    }
+
+    #[test]
+    fn resolve_model_provider_override_uses_oss_selection_when_enabled() {
+        let config_toml = ConfigToml {
+            oss_provider: Some(OLLAMA_OSS_PROVIDER_ID.to_string()),
+            ..Default::default()
+        };
+        let provider = resolve_model_provider_override(true, false, None, &config_toml, None)
+            .expect("provider override resolves");
+
+        assert_eq!(provider.as_deref(), Some(OLLAMA_OSS_PROVIDER_ID));
     }
 }

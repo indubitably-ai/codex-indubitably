@@ -19,6 +19,7 @@ use codex_core::check_execpolicy_for_warnings;
 use codex_core::config::Config;
 use codex_core::config::ConfigBuilder;
 use codex_core::config::ConfigOverrides;
+use codex_core::config::ConfigToml;
 use codex_core::config::find_codex_home;
 use codex_core::config::load_config_as_toml_with_cli_overrides;
 use codex_core::config::resolve_oss_provider;
@@ -227,6 +228,8 @@ pub use public_widgets::composer_input::ComposerAction;
 pub use public_widgets::composer_input::ComposerInput;
 // (tests access modules directly within the crate)
 
+const BEDROCK_PROVIDER_ID: &str = "bedrock";
+
 pub async fn run_main(mut cli: Cli, arg0_paths: Arg0DispatchPaths) -> std::io::Result<AppExitInfo> {
     let (sandbox_mode, approval_policy) = if cli.full_auto {
         (
@@ -331,41 +334,12 @@ pub async fn run_main(mut cli: Cli, arg0_paths: Arg0DispatchPaths) -> std::io::R
         codex_home.to_path_buf(),
     );
 
-    let model_provider_override = if cli.oss {
-        let resolved = resolve_oss_provider(
-            cli.oss_provider.as_deref(),
-            &config_toml,
-            cli.config_profile.clone(),
-        );
+    let model_provider_override =
+        resolve_model_provider_override(&cli, &config_toml, &codex_home).await?;
 
-        if let Some(provider) = resolved {
-            Some(provider)
-        } else {
-            // No provider configured, prompt the user
-            let provider = oss_selection::select_oss_provider(&codex_home).await?;
-            if provider == "__CANCELLED__" {
-                return Err(std::io::Error::other(
-                    "OSS provider selection was cancelled by user",
-                ));
-            }
-            Some(provider)
-        }
-    } else {
-        None
-    };
-
-    // When using `--oss`, let the bootstrapper pick the model based on selected provider
-    let model = if let Some(model) = &cli.model {
-        Some(model.clone())
-    } else if cli.oss {
-        // Use the provider from model_provider_override
-        model_provider_override
-            .as_ref()
-            .and_then(|provider_id| get_default_model_for_oss_provider(provider_id))
-            .map(std::borrow::ToOwned::to_owned)
-    } else {
-        None // No model specified, will use the default.
-    };
+    // When using `--oss`, let the bootstrapper pick the model based on selected provider.
+    // `--indubitably` only selects the provider; model defaults come from provider-aware refresh.
+    let model = resolve_model_override(&cli.model, cli.oss, model_provider_override.as_deref());
 
     let additional_dirs = cli.add_dir.clone();
 
@@ -527,6 +501,55 @@ pub async fn run_main(mut cli: Cli, arg0_paths: Arg0DispatchPaths) -> std::io::R
     )
     .await
     .map_err(|err| std::io::Error::other(err.to_string()))
+}
+
+async fn resolve_model_provider_override(
+    cli: &Cli,
+    config_toml: &ConfigToml,
+    codex_home: &std::path::Path,
+) -> std::io::Result<Option<String>> {
+    if cli.indubitably {
+        return Ok(Some(BEDROCK_PROVIDER_ID.to_string()));
+    }
+
+    if cli.oss {
+        let resolved = resolve_oss_provider(
+            cli.oss_provider.as_deref(),
+            config_toml,
+            cli.config_profile.clone(),
+        );
+
+        if let Some(provider) = resolved {
+            Ok(Some(provider))
+        } else {
+            // No provider configured, prompt the user.
+            let provider = oss_selection::select_oss_provider(codex_home).await?;
+            if provider == "__CANCELLED__" {
+                return Err(std::io::Error::other(
+                    "OSS provider selection was cancelled by user",
+                ));
+            }
+            Ok(Some(provider))
+        }
+    } else {
+        Ok(None)
+    }
+}
+
+fn resolve_model_override(
+    model_cli_arg: &Option<String>,
+    oss: bool,
+    model_provider_override: Option<&str>,
+) -> Option<String> {
+    if let Some(model) = model_cli_arg {
+        Some(model.clone())
+    } else if oss {
+        model_provider_override
+            .and_then(get_default_model_for_oss_provider)
+            .map(std::borrow::ToOwned::to_owned)
+    } else {
+        None
+    }
 }
 
 async fn run_ratatui_app(
@@ -1185,8 +1208,10 @@ fn should_show_login_screen(login_status: LoginStatus, config: &Config) -> bool 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use clap::Parser;
     use codex_core::config::ConfigBuilder;
     use codex_core::config::ConfigOverrides;
+    use codex_core::config::ConfigToml;
     use codex_core::config::ProjectConfig;
     use codex_core::features::Feature;
     use codex_protocol::ThreadId;
@@ -1245,6 +1270,29 @@ mod tests {
             );
         }
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn resolve_model_provider_override_uses_bedrock_for_indubitably() -> std::io::Result<()> {
+        let cli = Cli {
+            indubitably: true,
+            ..Cli::parse_from(["codex"])
+        };
+        let provider = resolve_model_provider_override(
+            &cli,
+            &ConfigToml::default(),
+            std::path::Path::new("."),
+        )
+        .await?;
+
+        assert_eq!(provider.as_deref(), Some(BEDROCK_PROVIDER_ID));
+        Ok(())
+    }
+
+    #[test]
+    fn resolve_model_override_uses_cli_model_when_provided() {
+        let model = resolve_model_override(&Some("custom-model".to_string()), true, Some("ollama"));
+        assert_eq!(model.as_deref(), Some("custom-model"));
     }
     #[tokio::test]
     async fn untrusted_project_skips_trust_prompt() -> std::io::Result<()> {

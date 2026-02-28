@@ -27,13 +27,17 @@ pub struct Cli {
     pub model: Option<String>,
 
     /// Use open-source provider.
-    #[arg(long = "oss", default_value_t = false)]
+    #[arg(long = "oss", default_value_t = false, conflicts_with = "indubitably")]
     pub oss: bool,
 
     /// Specify which local provider to use (lmstudio or ollama).
     /// If not specified with --oss, will use config default or show selection.
     #[arg(long = "local-provider")]
     pub oss_provider: Option<String>,
+
+    /// Use the Bedrock + Indubitably provider path.
+    #[arg(long = "indubitably", default_value_t = false)]
+    pub indubitably: bool,
 
     /// Select the sandbox policy to use when executing model-generated shell
     /// commands.
@@ -262,6 +266,18 @@ pub enum Color {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    #[test]
+    fn parse_accepts_indubitably_flag() {
+        let parsed = Cli::parse_from(["codex-exec", "--indubitably", "echo hello"]);
+        assert!(parsed.indubitably);
+    }
+
+    #[test]
+    fn parse_rejects_oss_and_indubitably_together() {
+        let parsed = Cli::try_parse_from(["codex-exec", "--oss", "--indubitably", "echo hello"]);
+        assert!(parsed.is_err());
+    }
 
     #[test]
     fn resume_parses_prompt_after_global_flags() {
