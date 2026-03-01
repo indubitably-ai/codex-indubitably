@@ -1,0 +1,16 @@
+# Indubitably/AWS Bedrock overlay paths to protect during upstream intake.
+# Copy relevant lines into your repo-local .upstream-sync-protected-paths
+# and trim entries that do not apply.
+
+codex-rs/cli/src/main.rs
+codex-rs/core/src/bedrock/*
+codex-rs/core/src/indubitably/*
+codex-rs/core/src/provider_*
+codex-rs/core/src/model_*
+codex-rs/core/src/config*
+codex-rs/core/tests/suite/bedrock_runtime.rs
+codex-rs/exec/tests/suite/bedrock_runtime.rs
+codex-rs/app-server/src/*
+codex-rs/app-server-protocol/src/*
+docs/*
+specs/*
