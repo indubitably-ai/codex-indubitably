@@ -28,6 +28,26 @@ Notes:
 - `experimental_bearer_token` is also supported but discouraged for long-lived config.
 - `--indubitably` is an alias for provider selection; it is not a separate execution engine.
 
+### Supported Bedrock Modes
+
+- Supported: Indubitably proxy mode (`base_url = "https://api.indubitably.ai"` plus bearer token).
+- Not implemented in this fork: direct AWS credential-chain auth (`AWS_ACCESS_KEY_ID`, task role, IMDS/ECS role) for Bedrock runtime calls.
+  - Today, Bedrock runtime/model discovery uses CLI proxy endpoints (`/cli/models`, `/cli/bedrock/invoke`) and bearer auth.
+  - Pointing `base_url` directly at AWS Bedrock runtime endpoints (for example `https://bedrock-runtime.us-east-1.amazonaws.com`) is not supported.
+
+### Headless/ECS Recommended Setup (Current)
+
+Use the Indubitably proxy from ECS and inject a short-lived bearer token via environment variables:
+
+```toml
+model_provider = "bedrock"
+
+[model_providers.bedrock]
+name = "AWS Bedrock"
+base_url = "https://api.indubitably.ai"
+env_key = "INDUBITABLY_API_TOKEN"
+```
+
 ## Provider-Aware Model Selection
 
 - `--model` is validated against the active provider model catalog.
@@ -53,6 +73,9 @@ If you are migrating from the older October-era fork:
   - Fix: verify the configured provider endpoint serves the model catalog for the same token/provider.
 - Authentication expired error from Bedrock proxy
   - Fix: refresh your Indubitably token and re-run.
+- Error like `UnknownOperationException` or HTTP 404 from Bedrock paths
+  - Cause: `base_url` points at a direct AWS Bedrock endpoint instead of the Indubitably CLI proxy.
+  - Fix: set `[model_providers.bedrock].base_url = "https://api.indubitably.ai"` and provide a bearer token (`env_key` recommended).
 
 ## Connecting to MCP servers
 

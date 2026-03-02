@@ -616,6 +616,7 @@ mod tests {
     use codex_protocol::openai_models::ModelsResponse;
     use core_test_support::responses::mount_models_once;
     use pretty_assertions::assert_eq;
+    use reqwest::StatusCode;
     use serde_json::json;
     use tempfile::tempdir;
     use wiremock::Mock;
@@ -935,6 +936,39 @@ mod tests {
             !available.iter().any(|preset| preset.model == "gpt-5-codex"),
             "bedrock fallback catalog should not include bundled OpenAI models"
         );
+    }
+
+    #[tokio::test]
+    async fn refresh_available_models_surfaces_unknown_operation_for_non_proxy_bedrock_base_url() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/cli/models"))
+            .respond_with(
+                ResponseTemplate::new(404)
+                    .insert_header("content-type", "application/xml")
+                    .set_body_string("<UnknownOperationException/>"),
+            )
+            .mount(&server)
+            .await;
+
+        let codex_home = tempdir().expect("temp dir");
+        let auth_manager =
+            AuthManager::from_auth_for_testing(CodexAuth::from_api_key("unused-auth-manager-key"));
+        let provider = bedrock_provider_for(server.uri());
+        let manager = ModelsManager::with_provider_for_tests(
+            codex_home.path().to_path_buf(),
+            auth_manager,
+            provider,
+        );
+
+        let result = manager
+            .refresh_available_models(RefreshStrategy::Online)
+            .await;
+        let Err(CodexErr::UnexpectedStatus(error)) = result else {
+            panic!("expected refresh to return UnexpectedStatus");
+        };
+        assert_eq!(error.status, StatusCode::NOT_FOUND);
+        assert!(error.body.contains("UnknownOperationException"));
     }
 
     #[tokio::test]

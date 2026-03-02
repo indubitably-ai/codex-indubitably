@@ -215,3 +215,97 @@ fn map_bedrock_error(err: BedrockError) -> CodexErr {
         BedrockError::Cancelled => CodexErr::Stream("bedrock request cancelled".to_string(), None),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model_provider_info::BEDROCK_PROVIDER_ID;
+    use crate::model_provider_info::built_in_model_providers;
+    use pretty_assertions::assert_eq;
+    use serial_test::serial;
+
+    struct EnvGuard {
+        key: &'static str,
+        previous: Option<String>,
+    }
+
+    impl EnvGuard {
+        fn set(key: &'static str, value: impl Into<String>) -> Self {
+            let previous = std::env::var(key).ok();
+            // SAFETY: tests use this guard in a scoped manner and restore on drop.
+            unsafe {
+                std::env::set_var(key, value.into());
+            }
+            Self { key, previous }
+        }
+    }
+
+    impl Drop for EnvGuard {
+        fn drop(&mut self) {
+            // SAFETY: tests use this guard in a scoped manner and restore on drop.
+            unsafe {
+                match self.previous.take() {
+                    Some(value) => std::env::set_var(self.key, value),
+                    None => std::env::remove_var(self.key),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn proxy_adapter_new_requires_base_url() {
+        let provider = built_in_model_providers()
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        let adapter = ProxyBedrockRuntimeAdapter::new(provider, None, ThreadId::new());
+        assert!(adapter.is_none());
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn resolve_bearer_token_ignores_aws_credentials() {
+        let mut provider = built_in_model_providers()
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        provider.base_url = Some("https://bedrock-runtime.us-east-1.amazonaws.com".to_string());
+
+        let adapter = ProxyBedrockRuntimeAdapter::new(provider, None, ThreadId::new())
+            .expect("adapter should be constructed");
+
+        let _aws_access_key_id = EnvGuard::set("AWS_ACCESS_KEY_ID", "AKIA_TEST_ACCESS_KEY");
+        let _aws_secret_access_key =
+            EnvGuard::set("AWS_SECRET_ACCESS_KEY", "test-secret-access-key");
+        let _aws_session_token = EnvGuard::set("AWS_SESSION_TOKEN", "test-session-token");
+
+        let token = adapter
+            .resolve_bearer_token()
+            .await
+            .expect("token resolution should not fail");
+        assert_eq!(token, None);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn resolve_bearer_token_prefers_provider_env_key() {
+        let mut provider = built_in_model_providers()
+            .get(BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        provider.base_url = Some("https://api.indubitably.ai".to_string());
+        provider.env_key = Some("BEDROCK_TEST_API_TOKEN".to_string());
+        provider.experimental_bearer_token = Some("inline-token".to_string());
+
+        let adapter = ProxyBedrockRuntimeAdapter::new(provider, None, ThreadId::new())
+            .expect("adapter should be constructed");
+
+        let _env_token = EnvGuard::set("BEDROCK_TEST_API_TOKEN", "env-token");
+
+        let token = adapter
+            .resolve_bearer_token()
+            .await
+            .expect("token resolution should not fail");
+        assert_eq!(token, Some("env-token".to_string()));
+    }
+}

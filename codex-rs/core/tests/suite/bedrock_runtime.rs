@@ -185,6 +185,141 @@ async fn bedrock_provider_stream_uses_proxy_runtime_and_avoids_responses_api() -
     Ok(())
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bedrock_provider_stream_surfaces_auth_expired_for_proxy_unauthorized() -> Result<()> {
+    skip_if_no_network!(Ok(()));
+
+    let server = start_mock_server().await;
+
+    Mock::given(method("POST"))
+        .and(path("/cli/bedrock/invoke"))
+        .and(query_param("stream", "true"))
+        .respond_with(
+            ResponseTemplate::new(401)
+                .insert_header("content-type", "application/json")
+                .set_body_string(r#"{"error":"Unauthorized"}"#),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let provider = provider_for_mock_server_uri(server.uri().as_str());
+
+    let client = ModelClient::new(
+        None::<Arc<AuthManager>>,
+        ThreadId::new(),
+        BEDROCK_PROVIDER_ID.to_string(),
+        provider,
+        SessionSource::Cli,
+        None,
+        None,
+        false,
+        false,
+        None,
+    );
+    let mut session = client.new_session();
+
+    let result = session
+        .stream(
+            &Prompt::default(),
+            &test_model_info(),
+            &test_otel_manager(),
+            None,
+            ReasoningSummary::Auto,
+            None,
+        )
+        .await;
+
+    match result {
+        Err(CodexErr::Stream(message, _)) => {
+            assert_eq!(
+                message,
+                "indubitably authentication expired; run `codex login --indubitably`"
+            );
+        }
+        Err(other) => panic!("expected stream auth error, got {other:?}"),
+        Ok(_) => panic!("expected bedrock stream to return an auth error"),
+    }
+
+    let requests = server
+        .received_requests()
+        .await
+        .unwrap_or_else(|| panic!("wiremock request log should be readable"));
+    let responses_calls = requests
+        .iter()
+        .filter(|request| request.url.path() == "/v1/responses")
+        .count();
+    assert_eq!(
+        responses_calls, 0,
+        "bedrock provider stream should not issue OpenAI responses requests"
+    );
+
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn bedrock_provider_stream_reports_unknown_operation_from_non_proxy_endpoint() -> Result<()> {
+    skip_if_no_network!(Ok(()));
+
+    let server = start_mock_server().await;
+
+    Mock::given(method("POST"))
+        .and(path("/cli/bedrock/invoke"))
+        .and(query_param("stream", "true"))
+        .respond_with(
+            ResponseTemplate::new(404)
+                .insert_header("content-type", "application/xml")
+                .set_body_string("<UnknownOperationException/>"),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let provider = provider_for_mock_server_uri(server.uri().as_str());
+
+    let client = ModelClient::new(
+        None::<Arc<AuthManager>>,
+        ThreadId::new(),
+        BEDROCK_PROVIDER_ID.to_string(),
+        provider,
+        SessionSource::Cli,
+        None,
+        None,
+        false,
+        false,
+        None,
+    );
+    let mut session = client.new_session();
+
+    let result = session
+        .stream(
+            &Prompt::default(),
+            &test_model_info(),
+            &test_otel_manager(),
+            None,
+            ReasoningSummary::Auto,
+            None,
+        )
+        .await;
+
+    match result {
+        Err(CodexErr::Stream(message, _)) => {
+            assert!(
+                message.contains("bedrock proxy returned status 404 Not Found"),
+                "unexpected error message: {message}"
+            );
+            assert!(
+                message.contains("UnknownOperationException"),
+                "unexpected error message: {message}"
+            );
+        }
+        Err(other) => panic!("expected stream status error, got {other:?}"),
+        Ok(_) => panic!("expected bedrock stream to return an endpoint error"),
+    }
+
+    Ok(())
+}
+
 fn bedrock_sse() -> String {
     [
         "event: bedrock.chunk\n",

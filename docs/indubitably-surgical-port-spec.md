@@ -123,7 +123,7 @@ Status values:
 | `codex-rs/core/src/bedrock/retry.rs` | `codex-rs/core/src/bedrock/retry.rs` (new) | Reimplement | Retry policy should align with current provider retry behavior and telemetry hooks. |
 | `codex-rs/core/src/bedrock/tools.rs` | `codex-rs/core/src/bedrock/tools.rs` (new) | Reimplement | Tool schema handling must match current tool/spec definitions. |
 | `codex-rs/core/src/bedrock/model_capabilities.rs` + `codex-rs/core/bedrock_models.toml` | `codex-rs/core/src/bedrock/model_capabilities.rs` + catalog file (new or integrated into models manager) | Reimplement | Must reconcile with upstream `models_manager` and remote catalog behavior. |
-| `codex-rs/core/src/bedrock/aws_credentials.rs` | `codex-rs/core/src/bedrock/aws_credentials.rs` (new) | Port as-is | Credential loader is relatively self-contained; only minor API adaptation expected. |
+| `codex-rs/core/src/bedrock/aws_credentials.rs` | `codex-rs/core/src/bedrock/aws_credentials.rs` (new) | Defer | Direct AWS credential-chain Bedrock auth is not implemented in this surgical-port runtime; current runtime expects proxy bearer auth. |
 | `codex-rs/core/src/bedrock/proxy_runtime.rs` | `codex-rs/core/src/bedrock/proxy_runtime.rs` (new) | Reimplement | Needs integration with current auth/session abstractions. |
 | `codex-rs/core/src/bedrock/account.rs` + `usage.rs` | `codex-rs/core/src/bedrock/account.rs` + `usage.rs` (new) | Defer | Useful after base runtime is stable; not required for initial functional parity. |
 | `codex-rs/core/src/bedrock/mod.rs` | `codex-rs/core/src/bedrock/mod.rs` (new) | Port as-is | Module export shell is low risk once file set is finalized. |
@@ -156,6 +156,17 @@ Status values:
 - `ConfigToml` / profile changes are likely (provider/auth aliasing and optional Bedrock/Indubitably config fields). If changed, regenerate config schema (`just write-config-schema`) during implementation.
 - App-server protocol fields may need review if introducing provider-specific auth-status flags; avoid renaming existing wire fields unless required.
 - Model list semantics likely change by active provider; update docs and app-server tests to pin behavior.
+
+### Runtime Status Update (2026-03-02)
+
+- Current supported path:
+  - `--indubitably` + `model_provider = "bedrock"` + proxy base URL (`https://api.indubitably.ai`) + bearer token.
+  - Model discovery and runtime use proxy endpoints (`/cli/models`, `/cli/bedrock/invoke`).
+- Current gap:
+  - Direct AWS credential-chain Bedrock auth (ECS/task-role/IMDS) is not wired in this fork.
+  - Pointing `base_url` at AWS runtime endpoints (for example `https://bedrock-runtime.us-east-1.amazonaws.com`) does not provide direct Bedrock compatibility for current CLI proxy paths.
+- Validation evidence:
+  - AWS credentials can be valid independently (`aws sts get-caller-identity`, `aws bedrock list-foundation-models`) while Codex Bedrock path still requires proxy bearer auth.
 
 ## Phase 2 Test Contract Plan
 
@@ -321,6 +332,14 @@ Use this section as work progresses.
 
 | Date | Command | Result | Notes |
 | --- | --- | --- | --- |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib resolve_bearer_token_` | Pass | New Bedrock runtime adapter token-resolution unit tests passed (`resolve_bearer_token_*`). |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib refresh_available_models_surfaces_unknown_operation_for_non_proxy_bedrock_base_url` | Pass | New provider-aware model refresh regression for non-proxy Bedrock endpoint behavior passed. |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all suite::bedrock_runtime::` | Pass | Core Bedrock runtime integration suite passed with added unauthorized + UnknownOperation coverage. |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec` | Pass | Exec unit + integration + e2e suite passed with new proxy-auth unauthorized scenario. |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core` | Fail (env/deps) | Core integration suite had existing environment-dependent failures (missing `codex`/`test_stdio_server` binaries in test env and search-tool mock expectations) unrelated to new Bedrock-path tests. |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core` | Pass | Scoped clippy fix for core completed after local disk cleanup. |
+| 2026-03-02 | `CARGO_BUILD_JOBS=1 RUSTFLAGS='-C debuginfo=0' just fix -p codex-exec` | Pass | Scoped clippy fix for exec completed. |
+| 2026-03-02 | `just fmt` | Pass | Rust formatting completed after test and clippy runs. |
 | 2026-02-28 | `just fmt` | Pass | Ran after code changes and again after clippy fixes |
 | 2026-02-28 | `just fix -p codex-exec` | Pass | No lint errors |
 | 2026-02-28 | `just fix -p codex-tui` | Pass | No lint errors |

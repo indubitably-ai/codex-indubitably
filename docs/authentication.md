@@ -26,3 +26,12 @@ Recommended setup:
 - Define `env_key` on `[model_providers.bedrock]`.
 - Export that environment variable before launching the CLI.
 - Keep long-lived static bearer tokens out of checked-in config files.
+
+### Headless/ECS Auth (Current)
+
+For headless runs in ECS, this fork currently supports proxy bearer-token auth only:
+
+- Supported: inject `INDUBITABLY_API_TOKEN` (or your configured `env_key`) in the task environment.
+- Not implemented yet: direct AWS credential-chain auth for Bedrock runtime requests.
+  - Setting AWS credentials alone (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/task role) does not authenticate Bedrock runtime in this fork.
+  - Keep `base_url` on the Indubitably proxy (`https://api.indubitably.ai`) for CLI Bedrock flows.
