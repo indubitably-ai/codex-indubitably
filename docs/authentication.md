@@ -4,6 +4,16 @@ For information about Codex CLI authentication, see [this documentation](https:/
 
 ## Bedrock/Indubitably Token Sources (Fork-Specific)
 
+### Browser Login Flow
+
+Use:
+
+```sh
+codex login --indubitably
+```
+
+This opens the Indubitably web login flow (for example `app.indubitably.ai`) and saves the issued bearer token in the Indubitably token store (`$CODEX_HOME/indubitably-auth.json` by default, or `INDUBITABLY_AUTH_FILE` when set).
+
 When `model_provider = "bedrock"` (including runs started with `--indubitably`), bearer token resolution follows this order:
 
 1. Provider `env_key` (recommended).

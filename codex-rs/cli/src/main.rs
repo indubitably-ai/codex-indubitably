@@ -15,6 +15,7 @@ use codex_cli::login::run_login_status;
 use codex_cli::login::run_login_with_api_key;
 use codex_cli::login::run_login_with_chatgpt;
 use codex_cli::login::run_login_with_device_code;
+use codex_cli::login::run_login_with_indubitably;
 use codex_cli::login::run_logout;
 use codex_cloud_tasks::Cli as CloudTasksCli;
 use codex_exec::Cli as ExecCli;
@@ -281,6 +282,10 @@ struct LoginCommand {
 
     #[arg(long = "device-auth")]
     use_device_code: bool,
+
+    /// Use the Indubitably browser login flow for Bedrock token auth.
+    #[arg(long = "indubitably", default_value_t = false)]
+    use_indubitably: bool,
 
     /// EXPERIMENTAL: Use custom OAuth issuer base URL (advanced)
     /// Override the OAuth issuer base URL (advanced)
@@ -585,8 +590,7 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
             codex_exec::run_main(exec_cli, arg0_paths.clone()).await?;
         }
         Some(Subcommand::Review(review_args)) => {
-            let mut exec_cli = ExecCli::try_parse_from(["codex", "exec"])?;
-            exec_cli.command = Some(ExecCommand::Review(review_args));
+            let mut exec_cli = build_exec_cli_for_review(&interactive, review_args)?;
             prepend_config_flags(
                 &mut exec_cli.config_overrides,
                 root_config_overrides.clone(),
@@ -676,10 +680,18 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
             );
             match login_cli.action {
                 Some(LoginSubcommand::Status) => {
-                    run_login_status(login_cli.config_overrides).await;
+                    run_login_status(login_cli.config_overrides, login_cli.use_indubitably).await;
                 }
                 None => {
-                    if login_cli.use_device_code {
+                    if login_cli.use_indubitably {
+                        if login_cli.use_device_code || login_cli.with_api_key {
+                            eprintln!(
+                                "Indubitably login does not support device or API key flows."
+                            );
+                            std::process::exit(1);
+                        }
+                        run_login_with_indubitably(login_cli.config_overrides).await;
+                    } else if login_cli.use_device_code {
                         run_login_with_device_code(
                             login_cli.config_overrides,
                             login_cli.issuer_base_url,
@@ -949,6 +961,32 @@ fn prepend_config_flags(
     subcommand_config_overrides
         .raw_overrides
         .splice(0..0, cli_config_overrides.raw_overrides);
+}
+
+fn build_exec_cli_for_review(
+    interactive: &TuiCli,
+    review_args: ReviewArgs,
+) -> anyhow::Result<ExecCli> {
+    let mut exec_cli = ExecCli::try_parse_from(["codex", "exec"])?;
+    exec_cli.command = Some(ExecCommand::Review(review_args));
+    apply_interactive_exec_flags(&mut exec_cli, interactive);
+    Ok(exec_cli)
+}
+
+fn apply_interactive_exec_flags(exec_cli: &mut ExecCli, interactive: &TuiCli) {
+    exec_cli.model = interactive.model.clone();
+    exec_cli.oss = interactive.oss;
+    exec_cli.oss_provider = interactive.oss_provider.clone();
+    exec_cli.indubitably = interactive.indubitably;
+    exec_cli.sandbox_mode = interactive.sandbox_mode;
+    exec_cli.config_profile = interactive.config_profile.clone();
+    exec_cli.full_auto = interactive.full_auto;
+    exec_cli.dangerously_bypass_approvals_and_sandbox =
+        interactive.dangerously_bypass_approvals_and_sandbox;
+    exec_cli.cwd = interactive.cwd.clone();
+    if !interactive.add_dir.is_empty() {
+        exec_cli.add_dir = interactive.add_dir.clone();
+    }
 }
 
 async fn run_interactive_tui(
@@ -1485,6 +1523,51 @@ mod tests {
         let parse_result =
             MultitoolCli::try_parse_from(["codex", "app-server", "--listen", "http://foo"]);
         assert!(parse_result.is_err());
+    }
+
+    #[test]
+    fn review_subcommand_propagates_indubitably_exec_flags() {
+        let cli = MultitoolCli::try_parse_from([
+            "codex",
+            "--indubitably",
+            "--model",
+            "claude-3-5-sonnet-latest",
+            "--sandbox",
+            "workspace-write",
+            "--full-auto",
+            "--add-dir",
+            "/tmp/extra",
+            "review",
+            "--base",
+            "HEAD",
+        ])
+        .expect("parse should succeed");
+
+        let MultitoolCli {
+            interactive,
+            subcommand,
+            ..
+        } = cli;
+        let Some(Subcommand::Review(review_args)) = subcommand else {
+            panic!("expected review subcommand");
+        };
+
+        let exec_cli = build_exec_cli_for_review(&interactive, review_args).expect("build review");
+
+        assert_eq!(exec_cli.model.as_deref(), Some("claude-3-5-sonnet-latest"));
+        assert!(exec_cli.indubitably);
+        assert_matches!(
+            exec_cli.sandbox_mode,
+            Some(codex_utils_cli::SandboxModeCliArg::WorkspaceWrite)
+        );
+        assert!(exec_cli.full_auto);
+        assert_eq!(
+            exec_cli.add_dir,
+            vec![std::path::PathBuf::from("/tmp/extra")]
+        );
+        let Some(codex_exec::Command::Review(_)) = exec_cli.command else {
+            panic!("expected review command");
+        };
     }
 
     #[test]

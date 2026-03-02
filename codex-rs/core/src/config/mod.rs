@@ -1801,7 +1801,7 @@ impl Config {
         let mut model_providers = built_in_model_providers();
         // Merge user-defined providers into the built-in list.
         for (key, provider) in cfg.model_providers.into_iter() {
-            model_providers.entry(key).or_insert(provider);
+            model_providers.insert(key, provider);
         }
 
         let model_provider_id = model_provider
@@ -5596,6 +5596,35 @@ trust_level = "trusted"
 
         assert_eq!(config.model_provider_id, "bedrock");
         assert!(!config.model_provider.requires_openai_auth);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_load_config_user_bedrock_provider_overrides_builtin() -> std::io::Result<()> {
+        let codex_home = TempDir::new()?;
+
+        let mut custom_bedrock = built_in_model_providers()
+            .get("bedrock")
+            .expect("bedrock provider should exist")
+            .clone();
+        custom_bedrock.base_url = Some("https://api.indubitably.ai/v1".to_string());
+        custom_bedrock.env_key = Some("INDUBITABLY_API_TOKEN".to_string());
+
+        let cfg = ConfigToml {
+            model_provider: Some("bedrock".to_string()),
+            model_providers: HashMap::from([("bedrock".to_string(), custom_bedrock.clone())]),
+            ..Default::default()
+        };
+
+        let config = Config::load_from_base_config_with_overrides(
+            cfg,
+            ConfigOverrides::default(),
+            codex_home.path().to_path_buf(),
+        )?;
+
+        assert_eq!(config.model_provider_id, "bedrock");
+        assert_eq!(config.model_provider, custom_bedrock);
 
         Ok(())
     }

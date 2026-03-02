@@ -45,7 +45,8 @@ pub(crate) fn adapt_converse_stream(
         }
 
         let mut state = AdapterState {
-            aggregated_text: String::new(),
+            active_message: None,
+            next_message_index: 0,
             usage: None,
             tool_index,
             call_kinds: HashMap::new(),
@@ -100,12 +101,18 @@ fn index_tools(tools: Vec<ToolSpec>) -> HashMap<String, ToolKind> {
 }
 
 struct AdapterState {
-    aggregated_text: String,
+    active_message: Option<ActiveMessage>,
+    next_message_index: usize,
     usage: Option<TokenUsage>,
     tool_index: HashMap<String, ToolKind>,
     call_kinds: HashMap<String, ToolKind>,
     seen_tool_calls: HashSet<String>,
     seen_tool_results: HashSet<String>,
+}
+
+struct ActiveMessage {
+    id: String,
+    text: String,
 }
 
 impl AdapterState {
@@ -136,7 +143,13 @@ impl AdapterState {
             return true;
         };
 
-        self.aggregated_text.push_str(delta);
+        if !self.ensure_assistant_message_started(tx).await {
+            return false;
+        }
+        if let Some(message) = self.active_message.as_mut() {
+            message.text.push_str(delta);
+        }
+
         tx.send(Ok(ResponseEvent::OutputTextDelta(delta.to_string())))
             .await
             .is_ok()
@@ -164,6 +177,9 @@ impl AdapterState {
 
         if self.seen_tool_calls.contains(call_id) {
             return true;
+        }
+        if !self.flush_active_assistant_message(tx).await {
+            return false;
         }
         self.seen_tool_calls.insert(call_id.to_string());
 
@@ -215,6 +231,9 @@ impl AdapterState {
         if self.seen_tool_results.contains(tool_use_id) {
             return true;
         }
+        if !self.flush_active_assistant_message(tx).await {
+            return false;
+        }
         self.seen_tool_results.insert(tool_use_id.to_string());
 
         let content = tool_result
@@ -253,24 +272,11 @@ impl AdapterState {
     }
 
     async fn finish(
-        self,
+        mut self,
         tx: &mpsc::Sender<crate::error::Result<ResponseEvent>>,
         conversation_id: &str,
     ) {
-        if !self.aggregated_text.is_empty()
-            && tx
-                .send(Ok(ResponseEvent::OutputItemDone(ResponseItem::Message {
-                    id: None,
-                    role: "assistant".to_string(),
-                    content: vec![ContentItem::OutputText {
-                        text: self.aggregated_text,
-                    }],
-                    end_turn: None,
-                    phase: None,
-                })))
-                .await
-                .is_err()
-        {
+        if !self.flush_active_assistant_message(tx).await {
             return;
         }
 
@@ -280,6 +286,63 @@ impl AdapterState {
             can_append: false,
         };
         let _ = tx.send(Ok(completed)).await;
+    }
+
+    async fn ensure_assistant_message_started(
+        &mut self,
+        tx: &mpsc::Sender<crate::error::Result<ResponseEvent>>,
+    ) -> bool {
+        if self.active_message.is_some() {
+            return true;
+        }
+
+        let id = format!("bedrock-msg-{}", self.next_message_index);
+        self.next_message_index += 1;
+        let started = ResponseItem::Message {
+            id: Some(id.clone()),
+            role: "assistant".to_string(),
+            content: vec![ContentItem::OutputText {
+                text: String::new(),
+            }],
+            end_turn: None,
+            phase: None,
+        };
+
+        if tx
+            .send(Ok(ResponseEvent::OutputItemAdded(started)))
+            .await
+            .is_err()
+        {
+            return false;
+        }
+
+        self.active_message = Some(ActiveMessage {
+            id,
+            text: String::new(),
+        });
+        true
+    }
+
+    async fn flush_active_assistant_message(
+        &mut self,
+        tx: &mpsc::Sender<crate::error::Result<ResponseEvent>>,
+    ) -> bool {
+        let Some(message) = self.active_message.take() else {
+            return true;
+        };
+        if message.text.is_empty() {
+            return true;
+        }
+
+        tx.send(Ok(ResponseEvent::OutputItemDone(ResponseItem::Message {
+            id: Some(message.id),
+            role: "assistant".to_string(),
+            content: vec![ContentItem::OutputText { text: message.text }],
+            end_turn: None,
+            phase: None,
+        })))
+        .await
+        .is_ok()
     }
 }
 
@@ -414,4 +477,106 @@ fn flatten_tool_result_content(content: &[Value]) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures::StreamExt;
+    use pretty_assertions::assert_eq;
+    use serde_json::json;
+
+    fn stream_with_chunks(
+        chunks: Vec<Result<StreamChunk, crate::bedrock::runtime::BedrockError>>,
+    ) -> ConverseStream {
+        let buffer = chunks.len().max(1);
+        let (tx, rx) = mpsc::channel(buffer);
+        for chunk in chunks {
+            tx.try_send(chunk).expect("send chunk");
+        }
+        ConverseStream::new(rx)
+    }
+
+    #[tokio::test]
+    async fn emits_output_item_added_before_text_delta() {
+        let stream = stream_with_chunks(vec![
+            Ok(StreamChunk::MessageDelta(json!({"delta":{"text":"Hello"}}))),
+            Ok(StreamChunk::Done),
+        ]);
+
+        let events: Vec<_> = adapt_converse_stream("conv-1".to_string(), vec![], stream)
+            .collect()
+            .await;
+
+        assert_eq!(events.len(), 5);
+        assert!(matches!(events[0], Ok(ResponseEvent::Created)));
+        assert!(matches!(
+            &events[1],
+            Ok(ResponseEvent::OutputItemAdded(ResponseItem::Message { .. }))
+        ));
+        match events[2].as_ref().expect("delta event") {
+            ResponseEvent::OutputTextDelta(delta) => assert_eq!(delta, "Hello"),
+            other => panic!("unexpected delta event: {other:?}"),
+        }
+        match &events[3] {
+            Ok(ResponseEvent::OutputItemDone(ResponseItem::Message { content, .. })) => {
+                assert_eq!(
+                    content,
+                    &vec![ContentItem::OutputText {
+                        text: "Hello".to_string(),
+                    }]
+                );
+            }
+            other => panic!("unexpected item done event: {other:?}"),
+        }
+        assert!(matches!(events[4], Ok(ResponseEvent::Completed { .. })));
+    }
+
+    #[tokio::test]
+    async fn flushes_text_message_before_tool_output() {
+        let stream = stream_with_chunks(vec![
+            Ok(StreamChunk::MessageDelta(json!({"delta":{"text":"Hello"}}))),
+            Ok(StreamChunk::ToolUse(json!({
+                "toolUse":{
+                    "name":"shell",
+                    "id":"call-1",
+                    "input":{"command":"pwd"}
+                }
+            }))),
+            Ok(StreamChunk::Done),
+        ]);
+
+        let events: Vec<_> =
+            adapt_converse_stream("conv-2".to_string(), vec![ToolSpec::LocalShell {}], stream)
+                .collect()
+                .await;
+
+        assert!(matches!(events[0], Ok(ResponseEvent::Created)));
+        assert!(matches!(
+            events[1],
+            Ok(ResponseEvent::OutputItemAdded(ResponseItem::Message { .. }))
+        ));
+        match events[2].as_ref().expect("delta event") {
+            ResponseEvent::OutputTextDelta(delta) => assert_eq!(delta, "Hello"),
+            other => panic!("unexpected delta event: {other:?}"),
+        }
+        assert!(matches!(
+            events[3],
+            Ok(ResponseEvent::OutputItemDone(ResponseItem::Message { .. }))
+        ));
+        assert!(matches!(
+            events[4],
+            Ok(ResponseEvent::OutputItemDone(
+                ResponseItem::LocalShellCall { .. }
+            ))
+        ));
+        assert!(matches!(
+            &events[5],
+            Ok(ResponseEvent::Completed {
+                response_id,
+                token_usage: None,
+                can_append: false
+            }) if response_id == "conv-2"
+        ));
+    }
 }

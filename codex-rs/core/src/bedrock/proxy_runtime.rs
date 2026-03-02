@@ -183,21 +183,95 @@ fn map_http_error(status: StatusCode, body: &str) -> BedrockError {
         return BedrockError::Throttled;
     }
 
-    if matches!(status, StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN) {
+    if status == StatusCode::UNAUTHORIZED
+        || (status == StatusCode::FORBIDDEN && is_authentication_error(body))
+    {
         return BedrockError::InvalidResponse(
-            "indubitably authentication expired; run `indubitably login`".to_string(),
+            "indubitably authentication expired; run `codex login --indubitably`".to_string(),
         );
     }
 
-    let message = if body.trim().is_empty() {
-        format!("bedrock proxy returned status {status}")
+    if status == StatusCode::PAYMENT_REQUIRED {
+        return BedrockError::InvalidResponse(
+            "insufficient indubitably credits; run `codex login status --indubitably`".to_string(),
+        );
+    }
+
+    let detail = parse_error_detail(body);
+    let message = if let Some(detail) = detail {
+        format!("bedrock proxy returned status {status}: {detail}")
     } else {
-        format!("bedrock proxy returned status {status}: {body}")
+        format!("bedrock proxy returned status {status}")
     };
 
     BedrockError::InvalidResponse(message)
 }
 
+fn parse_error_detail(body: &str) -> Option<String> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let Ok(parsed) = serde_json::from_str::<Value>(trimmed) else {
+        return Some(trimmed.to_string());
+    };
+    if let Some(error) = parsed.get("error") {
+        if let Some(message) = error.as_str() {
+            return Some(message.to_string());
+        }
+        if let Some(message) = error.get("message").and_then(Value::as_str) {
+            return Some(message.to_string());
+        }
+    }
+    if let Some(message) = parsed.get("message").and_then(Value::as_str) {
+        return Some(message.to_string());
+    }
+
+    Some(trimmed.to_string())
+}
+
+fn is_authentication_error(body: &str) -> bool {
+    let message = parse_error_detail(body)
+        .map(|msg| msg.to_ascii_lowercase())
+        .unwrap_or_default();
+    !message.is_empty()
+        && (message.contains("unauthorized")
+            || message.contains("authentication")
+            || message.contains("not authenticated")
+            || message.contains("token"))
+}
+
 fn map_reqwest_error(error: reqwest::Error) -> BedrockError {
     BedrockError::transport(anyhow::anyhow!(error))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn forbidden_model_not_allowed_does_not_map_to_auth_expired() {
+        let err = map_http_error(StatusCode::FORBIDDEN, r#"{"error":"Model not allowed"}"#);
+        let BedrockError::InvalidResponse(message) = err else {
+            panic!("expected invalid response");
+        };
+        assert_eq!(
+            message,
+            "bedrock proxy returned status 403 Forbidden: Model not allowed"
+        );
+    }
+
+    #[test]
+    fn unauthorized_maps_to_auth_expired() {
+        let err = map_http_error(StatusCode::UNAUTHORIZED, r#"{"error":"Unauthorized"}"#);
+        let BedrockError::InvalidResponse(message) = err else {
+            panic!("expected invalid response");
+        };
+        assert_eq!(
+            message,
+            "indubitably authentication expired; run `codex login --indubitably`"
+        );
+    }
 }

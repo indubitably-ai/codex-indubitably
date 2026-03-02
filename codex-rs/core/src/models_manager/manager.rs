@@ -1,4 +1,5 @@
 use super::cache::ModelsCacheManager;
+use crate::api_bridge::CoreAuthProvider;
 use crate::api_bridge::auth_provider_from_auth;
 use crate::api_bridge::map_api_error;
 use crate::auth::AuthManager;
@@ -7,17 +8,23 @@ use crate::config::Config;
 use crate::default_client::build_reqwest_client;
 use crate::error::CodexErr;
 use crate::error::Result as CoreResult;
+use crate::error::UnexpectedResponseError;
 use crate::model_provider_info::ModelProviderInfo;
 use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::models_manager::collaboration_mode_presets::builtin_collaboration_mode_presets;
 use crate::models_manager::model_info;
+use codex_api::AuthProvider as ApiAuthProvider;
 use codex_api::ModelsClient;
+use codex_api::Provider as ApiProvider;
 use codex_api::ReqwestTransport;
 use codex_protocol::config_types::CollaborationModeMask;
 use codex_protocol::openai_models::ModelInfo;
 use codex_protocol::openai_models::ModelPreset;
+use codex_protocol::openai_models::ModelVisibility;
 use codex_protocol::openai_models::ModelsResponse;
 use http::HeaderMap;
+use reqwest::header::ETAG;
+use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -30,6 +37,21 @@ use tracing::info;
 const MODEL_CACHE_FILE: &str = "models_cache.json";
 const DEFAULT_MODEL_CACHE_TTL: Duration = Duration::from_secs(300);
 const MODELS_REFRESH_TIMEOUT: Duration = Duration::from_secs(5);
+const BEDROCK_FALLBACK_MODEL_SLUG: &str = "claude-3-5-sonnet";
+const BEDROCK_FALLBACK_MODEL_DISPLAY_NAME: &str = "Claude 3.5 Sonnet";
+
+#[derive(Debug, Deserialize)]
+struct CliModelsResponse {
+    models: Vec<CliModelInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CliModelInfo {
+    id: String,
+    display_name: String,
+    #[serde(default)]
+    tool_use: bool,
+}
 
 /// Strategy for refreshing available models.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -98,12 +120,10 @@ impl ModelsManager {
         } else {
             CatalogMode::Default
         };
-        let remote_models = model_catalog
-            .map(|catalog| catalog.models)
-            .unwrap_or_else(|| {
-                Self::load_remote_models_from_file()
-                    .unwrap_or_else(|err| panic!("failed to load bundled models.json: {err}"))
-            });
+        let remote_models = model_catalog.map_or_else(
+            || Self::load_default_remote_models(&provider),
+            |catalog| catalog.models,
+        );
         Self {
             remote_models: RwLock::new(remote_models),
             catalog_mode,
@@ -244,7 +264,9 @@ impl ModelsManager {
     pub(crate) async fn refresh_if_new_etag(&self, etag: String) {
         let current_etag = self.get_etag().await;
         if current_etag.clone().is_some() && current_etag.as_deref() == Some(etag.as_str()) {
-            if let Err(err) = self.cache_manager.renew_cache_ttl().await {
+            if !self.provider.is_bedrock()
+                && let Err(err) = self.cache_manager.renew_cache_ttl().await
+            {
                 error!("failed to renew cache TTL: {err}");
             }
             return;
@@ -276,6 +298,12 @@ impl ModelsManager {
             return Ok(());
         }
 
+        if self.provider.is_bedrock() {
+            return self
+                .refresh_bedrock_available_models(refresh_strategy)
+                .await;
+        }
+
         match refresh_strategy {
             RefreshStrategy::Offline => {
                 // Only try to load from cache, never fetch
@@ -298,6 +326,22 @@ impl ModelsManager {
         }
     }
 
+    async fn refresh_bedrock_available_models(
+        &self,
+        refresh_strategy: RefreshStrategy,
+    ) -> CoreResult<()> {
+        match refresh_strategy {
+            RefreshStrategy::Offline => Ok(()),
+            RefreshStrategy::OnlineIfUncached => {
+                if self.get_etag().await.is_some() {
+                    return Ok(());
+                }
+                self.fetch_and_update_models().await
+            }
+            RefreshStrategy::Online => self.fetch_and_update_models().await,
+        }
+    }
+
     async fn fetch_and_update_models(&self) -> CoreResult<()> {
         let _timer =
             codex_otel::start_global_timer("codex.remote_models.fetch_update.duration_ms", &[]);
@@ -305,24 +349,118 @@ impl ModelsManager {
         let auth_mode = self.auth_manager.auth_mode();
         let api_provider = self.provider.to_api_provider(auth_mode)?;
         let api_auth = auth_provider_from_auth(auth.clone(), &self.provider)?;
-        let transport = ReqwestTransport::new(build_reqwest_client());
-        let client = ModelsClient::new(transport, api_provider, api_auth);
-
         let client_version = crate::models_manager::client_version_to_whole();
-        let (models, etag) = timeout(
-            MODELS_REFRESH_TIMEOUT,
-            client.list_models(&client_version, HeaderMap::new()),
-        )
-        .await
-        .map_err(|_| CodexErr::Timeout)?
-        .map_err(map_api_error)?;
+        let (models, etag) = if self.provider.is_bedrock() {
+            timeout(
+                MODELS_REFRESH_TIMEOUT,
+                self.fetch_bedrock_models(&api_provider, &api_auth),
+            )
+            .await
+            .map_err(|_| CodexErr::Timeout)??
+        } else {
+            let transport = ReqwestTransport::new(build_reqwest_client());
+            let client = ModelsClient::new(transport, api_provider, api_auth);
+            timeout(
+                MODELS_REFRESH_TIMEOUT,
+                client.list_models(&client_version, HeaderMap::new()),
+            )
+            .await
+            .map_err(|_| CodexErr::Timeout)?
+            .map_err(map_api_error)?
+        };
 
         self.apply_remote_models(models.clone()).await;
-        *self.etag.write().await = etag.clone();
-        self.cache_manager
-            .persist_cache(&models, etag, client_version)
-            .await;
+        *self.etag.write().await = Some(
+            etag.clone()
+                .unwrap_or_else(|| "bedrock-fetched".to_string()),
+        );
+        if !self.provider.is_bedrock() {
+            self.cache_manager
+                .persist_cache(&models, etag, client_version)
+                .await;
+        }
         Ok(())
+    }
+
+    async fn fetch_bedrock_models(
+        &self,
+        api_provider: &ApiProvider,
+        api_auth: &CoreAuthProvider,
+    ) -> CoreResult<(Vec<ModelInfo>, Option<String>)> {
+        let url = match Self::bedrock_models_url(&api_provider.base_url) {
+            Some(url) => url,
+            None => return Ok((Self::bedrock_fallback_models(), None)),
+        };
+        let mut req = build_reqwest_client().get(&url);
+
+        if !api_provider.headers.is_empty() {
+            req = req.headers(api_provider.headers.clone());
+        }
+        if let Some(query_params) = api_provider.query_params.as_ref() {
+            req = req.query(query_params);
+        }
+        if let Some(token) = api_auth.bearer_token() {
+            req = req.bearer_auth(token);
+        }
+
+        let response = req.send().await.map_err(|err| {
+            CodexErr::Stream(
+                format!("failed to fetch bedrock model allowlist: {err}"),
+                None,
+            )
+        })?;
+        let status = response.status();
+        let header_etag = response
+            .headers()
+            .get(ETAG)
+            .and_then(|value| value.to_str().ok())
+            .map(ToString::to_string);
+        let body = response.text().await.unwrap_or_default();
+
+        if !status.is_success() {
+            return Err(CodexErr::UnexpectedStatus(UnexpectedResponseError {
+                status,
+                body,
+                url: Some(url),
+                cf_ray: None,
+                request_id: None,
+            }));
+        }
+
+        let cli_models: CliModelsResponse = serde_json::from_str(&body)?;
+        Ok((Self::map_bedrock_models(cli_models.models), header_etag))
+    }
+
+    fn bedrock_models_url(base_url: &str) -> Option<String> {
+        let trimmed = base_url.trim().trim_end_matches('/');
+        if trimmed.is_empty() {
+            return None;
+        }
+        let root = if let Some(without_v1) = trimmed.strip_suffix("/v1") {
+            without_v1
+        } else {
+            trimmed
+        };
+        Some(format!("{root}/cli/models"))
+    }
+
+    fn map_bedrock_models(models: Vec<CliModelInfo>) -> Vec<ModelInfo> {
+        models
+            .into_iter()
+            .enumerate()
+            .map(|(index, model)| {
+                let mut mapped = model_info::model_info_from_slug(&model.id);
+                mapped.display_name = model.display_name;
+                mapped.priority = i32::try_from(index).unwrap_or(i32::MAX);
+                mapped.visibility = if model.tool_use {
+                    ModelVisibility::List
+                } else {
+                    ModelVisibility::Hide
+                };
+                mapped.used_fallback_model_metadata = false;
+                mapped
+            })
+            .collect()
     }
 
     async fn get_etag(&self) -> Option<String> {
@@ -331,6 +469,11 @@ impl ModelsManager {
 
     /// Replace the cached remote models and rebuild the derived presets list.
     async fn apply_remote_models(&self, models: Vec<ModelInfo>) {
+        if self.provider.is_bedrock() {
+            *self.remote_models.write().await = models;
+            return;
+        }
+
         let mut existing_models = Self::load_remote_models_from_file().unwrap_or_default();
         for model in models {
             if let Some(existing_index) = existing_models
@@ -349,6 +492,23 @@ impl ModelsManager {
         let file_contents = include_str!("../../models.json");
         let response: ModelsResponse = serde_json::from_str(file_contents)?;
         Ok(response.models)
+    }
+
+    fn load_default_remote_models(provider: &ModelProviderInfo) -> Vec<ModelInfo> {
+        if provider.is_bedrock() {
+            return Self::bedrock_fallback_models();
+        }
+        Self::load_remote_models_from_file()
+            .unwrap_or_else(|err| panic!("failed to load bundled models.json: {err}"))
+    }
+
+    fn bedrock_fallback_models() -> Vec<ModelInfo> {
+        let mut fallback = model_info::model_info_from_slug(BEDROCK_FALLBACK_MODEL_SLUG);
+        fallback.display_name = BEDROCK_FALLBACK_MODEL_DISPLAY_NAME.to_string();
+        fallback.visibility = ModelVisibility::List;
+        fallback.priority = 0;
+        fallback.used_fallback_model_metadata = false;
+        vec![fallback]
     }
 
     /// Attempt to satisfy the refresh from the cache when it matches the provider and TTL.
@@ -405,10 +565,7 @@ impl ModelsManager {
         let cache_path = codex_home.join(MODEL_CACHE_FILE);
         let cache_manager = ModelsCacheManager::new(cache_path, DEFAULT_MODEL_CACHE_TTL);
         Self {
-            remote_models: RwLock::new(
-                Self::load_remote_models_from_file()
-                    .unwrap_or_else(|err| panic!("failed to load bundled models.json: {err}")),
-            ),
+            remote_models: RwLock::new(Self::load_default_remote_models(&provider)),
             catalog_mode: CatalogMode::Default,
             collaboration_modes_config: CollaborationModesConfig::default(),
             auth_manager,
@@ -461,7 +618,11 @@ mod tests {
     use pretty_assertions::assert_eq;
     use serde_json::json;
     use tempfile::tempdir;
+    use wiremock::Mock;
     use wiremock::MockServer;
+    use wiremock::ResponseTemplate;
+    use wiremock::matchers::method;
+    use wiremock::matchers::path;
 
     fn remote_model(slug: &str, display: &str, priority: i32) -> ModelInfo {
         remote_model_with_visibility(slug, display, priority, "list")
@@ -530,6 +691,19 @@ mod tests {
     fn openai_provider_for(base_url: String) -> ModelProviderInfo {
         let mut provider = ModelProviderInfo::create_openai_provider();
         provider.base_url = Some(base_url);
+        provider.request_max_retries = Some(0);
+        provider.stream_max_retries = Some(0);
+        provider.stream_idle_timeout_ms = Some(5_000);
+        provider
+    }
+
+    fn bedrock_provider_for(base_url: String) -> ModelProviderInfo {
+        let mut provider = crate::model_provider_info::built_in_model_providers()
+            .get(crate::model_provider_info::BEDROCK_PROVIDER_ID)
+            .expect("bedrock provider should exist")
+            .clone();
+        provider.base_url = Some(base_url);
+        provider.experimental_bearer_token = Some("bedrock-test-token".to_string());
         provider.request_max_retries = Some(0);
         provider.stream_max_retries = Some(0);
         provider.stream_idle_timeout_ms = Some(5_000);
@@ -662,6 +836,105 @@ mod tests {
 
         assert_eq!(model_info.slug, namespaced_model);
         assert!(model_info.used_fallback_model_metadata);
+    }
+
+    #[tokio::test]
+    async fn refresh_available_models_fetches_bedrock_allowlist_from_cli_models_endpoint() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/cli/models"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+                "models": [
+                    {
+                        "id": "claude-3-5-sonnet",
+                        "display_name": "Claude 3.5 Sonnet",
+                        "provider": "bedrock",
+                        "tool_use": true
+                    },
+                    {
+                        "id": "claude-lite-no-tools",
+                        "display_name": "Claude Lite",
+                        "provider": "bedrock",
+                        "tool_use": false
+                    }
+                ]
+            })))
+            .mount(&server)
+            .await;
+
+        let codex_home = tempdir().expect("temp dir");
+        let auth_manager =
+            AuthManager::from_auth_for_testing(CodexAuth::from_api_key("unused-auth-manager-key"));
+        let provider = bedrock_provider_for(format!("{}/v1", server.uri()));
+        let manager = ModelsManager::with_provider_for_tests(
+            codex_home.path().to_path_buf(),
+            auth_manager,
+            provider,
+        );
+
+        manager
+            .refresh_available_models(RefreshStrategy::OnlineIfUncached)
+            .await
+            .expect("bedrock refresh should succeed");
+
+        let requests = server
+            .received_requests()
+            .await
+            .expect("requests should be captured");
+        let cli_models_calls = requests
+            .iter()
+            .filter(|request| request.url.path() == "/cli/models")
+            .count();
+        let models_calls = requests
+            .iter()
+            .filter(|request| request.url.path() == "/models")
+            .count();
+        assert_eq!(cli_models_calls, 1);
+        assert_eq!(models_calls, 0);
+
+        let authorization_header = requests
+            .iter()
+            .find(|request| request.url.path() == "/cli/models")
+            .and_then(|request| request.headers.get("authorization"))
+            .and_then(|value| value.to_str().ok());
+        assert_eq!(authorization_header, Some("Bearer bedrock-test-token"));
+
+        let available = manager.list_models(RefreshStrategy::Offline).await;
+        assert!(
+            available
+                .iter()
+                .any(|preset| preset.model == "claude-3-5-sonnet"),
+            "bedrock allowlist model should appear in picker"
+        );
+        assert!(
+            !available.iter().any(|preset| preset.model == "gpt-5-codex"),
+            "bedrock picker should not include bundled OpenAI models"
+        );
+    }
+
+    #[tokio::test]
+    async fn bedrock_provider_uses_bedrock_only_fallback_catalog() {
+        let codex_home = tempdir().expect("temp dir");
+        let auth_manager =
+            AuthManager::from_auth_for_testing(CodexAuth::from_api_key("Test API Key"));
+        let provider = bedrock_provider_for("https://api.indubitably.ai/v1".to_string());
+        let manager = ModelsManager::with_provider_for_tests(
+            codex_home.path().to_path_buf(),
+            auth_manager,
+            provider,
+        );
+
+        let available = manager.list_models(RefreshStrategy::Offline).await;
+        assert!(
+            available
+                .iter()
+                .any(|preset| preset.model == BEDROCK_FALLBACK_MODEL_SLUG),
+            "bedrock fallback model should exist"
+        );
+        assert!(
+            !available.iter().any(|preset| preset.model == "gpt-5-codex"),
+            "bedrock fallback catalog should not include bundled OpenAI models"
+        );
     }
 
     #[tokio::test]
