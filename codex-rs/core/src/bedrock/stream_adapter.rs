@@ -94,6 +94,9 @@ fn index_tools(tools: Vec<ToolSpec>) -> HashMap<String, ToolKind> {
                 map.insert("web_search".to_string(), ToolKind::WebSearch);
                 map.insert("web-search".to_string(), ToolKind::WebSearch);
             }
+            ToolSpec::ImageGeneration {} => {
+                map.insert("image_generation".to_string(), ToolKind::Unknown);
+            }
         }
     }
 
@@ -283,7 +286,6 @@ impl AdapterState {
         let completed = ResponseEvent::Completed {
             response_id: conversation_id.to_string(),
             token_usage: self.usage,
-            can_append: false,
         };
         let _ = tx.send(Ok(completed)).await;
     }
@@ -574,8 +576,7 @@ mod tests {
             &events[5],
             Ok(ResponseEvent::Completed {
                 response_id,
-                token_usage: None,
-                can_append: false
+                token_usage: None
             }) if response_id == "conv-2"
         ));
     }

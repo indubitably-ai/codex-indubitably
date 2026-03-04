@@ -243,7 +243,7 @@ impl ModelClient {
             provider,
             session_source,
             model_verbosity,
-            responses_websocket_version,
+            responses_websockets_enabled_by_feature,
             enable_request_compression,
             include_timing_metrics,
             beta_features_header,
@@ -262,7 +262,7 @@ impl ModelClient {
         provider: ModelProviderInfo,
         session_source: SessionSource,
         model_verbosity: Option<VerbosityConfig>,
-        responses_websocket_version: Option<ResponsesWebsocketVersion>,
+        responses_websockets_enabled_by_feature: bool,
         enable_request_compression: bool,
         include_timing_metrics: bool,
         beta_features_header: Option<String>,
@@ -1386,7 +1386,6 @@ mod tests {
             tx.send(Ok(ResponseEvent::Completed {
                 response_id: "bedrock-runtime-response".to_string(),
                 token_usage: None,
-                can_append: false,
             }))
             .await
             .expect("send Completed");
@@ -1497,7 +1496,7 @@ mod tests {
             provider,
             SessionSource::Cli,
             None,
-            None,
+            false,
             false,
             false,
             None,
@@ -1513,6 +1512,7 @@ mod tests {
                 &otel_manager,
                 None,
                 ReasoningSummary::Auto,
+                None,
                 None,
             )
             .await;
@@ -1540,7 +1540,7 @@ mod tests {
             provider,
             SessionSource::Cli,
             None,
-            None,
+            false,
             false,
             false,
             None,
@@ -1557,6 +1557,7 @@ mod tests {
                 &otel_manager,
                 None,
                 ReasoningSummary::Auto,
+                None,
                 None,
             )
             .await

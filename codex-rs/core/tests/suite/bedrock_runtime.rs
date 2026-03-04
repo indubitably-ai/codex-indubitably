@@ -68,7 +68,7 @@ async fn bedrock_provider_stream_without_runtime_config_returns_unsupported_oper
         provider,
         SessionSource::Cli,
         None,
-        None,
+        false,
         false,
         false,
         None,
@@ -82,6 +82,7 @@ async fn bedrock_provider_stream_without_runtime_config_returns_unsupported_oper
             &test_otel_manager(),
             None,
             ReasoningSummary::Auto,
+            None,
             None,
         )
         .await;
@@ -122,7 +123,7 @@ async fn bedrock_provider_stream_uses_proxy_runtime_and_avoids_responses_api() -
         provider,
         SessionSource::Cli,
         None,
-        None,
+        false,
         false,
         false,
         None,
@@ -136,6 +137,7 @@ async fn bedrock_provider_stream_uses_proxy_runtime_and_avoids_responses_api() -
             &test_otel_manager(),
             None,
             ReasoningSummary::Auto,
+            None,
             None,
         )
         .await?;
@@ -212,7 +214,7 @@ async fn bedrock_provider_stream_surfaces_auth_expired_for_proxy_unauthorized() 
         provider,
         SessionSource::Cli,
         None,
-        None,
+        false,
         false,
         false,
         None,
@@ -226,6 +228,7 @@ async fn bedrock_provider_stream_surfaces_auth_expired_for_proxy_unauthorized() 
             &test_otel_manager(),
             None,
             ReasoningSummary::Auto,
+            None,
             None,
         )
         .await;
@@ -284,7 +287,7 @@ async fn bedrock_provider_stream_reports_unknown_operation_from_non_proxy_endpoi
         provider,
         SessionSource::Cli,
         None,
-        None,
+        false,
         false,
         false,
         None,
@@ -298,6 +301,7 @@ async fn bedrock_provider_stream_reports_unknown_operation_from_non_proxy_endpoi
             &test_otel_manager(),
             None,
             ReasoningSummary::Auto,
+            None,
             None,
         )
         .await;

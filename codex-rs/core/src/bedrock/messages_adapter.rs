@@ -149,6 +149,7 @@ fn convert_item(item: &ResponseItem) -> Option<BedrockMessage> {
         ResponseItem::Reasoning { .. }
         | ResponseItem::GhostSnapshot { .. }
         | ResponseItem::Compaction { .. }
+        | ResponseItem::ImageGenerationCall { .. }
         | ResponseItem::Other => None,
     }
 }
