@@ -577,6 +577,7 @@ impl MessageProcessor {
             .submit_with_id(Submission {
                 id: request_id_string,
                 op: codex_protocol::protocol::Op::Interrupt,
+                trace: None,
             })
             .await
         {
