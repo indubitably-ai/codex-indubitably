@@ -2276,6 +2276,9 @@ impl App {
             AppEvent::OpenAllModelsPopup { models } => {
                 self.chat_widget.open_all_models_popup(models);
             }
+            AppEvent::OpenBedrockModelsPopup { models } => {
+                self.chat_widget.open_bedrock_model_popup(models);
+            }
             AppEvent::OpenFullAccessConfirmation {
                 preset,
                 return_to_permissions,

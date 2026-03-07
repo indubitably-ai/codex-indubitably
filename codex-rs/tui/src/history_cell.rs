@@ -506,7 +506,9 @@ impl HistoryCell for UpdateAvailableHistoryCell {
         } else {
             line![
                 "See ",
-                "https://github.com/openai/codex".cyan().underlined(),
+                crate::update_action::install_options_url()
+                    .cyan()
+                    .underlined(),
                 " for installation options."
             ]
         };
@@ -521,7 +523,7 @@ impl HistoryCell for UpdateAvailableHistoryCell {
             update_instruction,
             "",
             "See full release notes:",
-            "https://github.com/openai/codex/releases/latest"
+            crate::update_action::release_notes_url()
                 .cyan()
                 .underlined(),
         ];

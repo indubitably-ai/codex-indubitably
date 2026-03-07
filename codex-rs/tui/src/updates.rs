@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Stdio;
 
 use crate::version::CODEX_CLI_VERSION;
 
@@ -55,8 +56,8 @@ struct VersionInfo {
 }
 
 const VERSION_FILENAME: &str = "version.json";
-// We use the latest version from the cask if installation is via homebrew - homebrew does not immediately pick up the latest release and can lag behind.
-const HOMEBREW_CASK_API_URL: &str = "https://formulae.brew.sh/api/cask/codex.json";
+const INDUBITABLY_VERSION_FILENAME: &str = "indubitably-version.json";
+const INDUBITABLY_COMMAND_NAME: &str = "indubitably";
 const LATEST_RELEASE_URL: &str = "https://api.github.com/repos/openai/codex/releases/latest";
 
 #[derive(Deserialize, Debug, Clone)]
@@ -69,8 +70,23 @@ struct HomebrewCaskInfo {
     version: String,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+struct BrewInfo {
+    casks: Vec<BrewCaskInfo>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct BrewCaskInfo {
+    version: String,
+}
+
 fn version_filepath(config: &Config) -> PathBuf {
-    config.codex_home.join(VERSION_FILENAME)
+    let filename = if is_indubitably_update_channel() {
+        INDUBITABLY_VERSION_FILENAME
+    } else {
+        VERSION_FILENAME
+    };
+    config.codex_home.join(filename)
 }
 
 fn read_version_info(version_file: &Path) -> anyhow::Result<VersionInfo> {
@@ -79,28 +95,38 @@ fn read_version_info(version_file: &Path) -> anyhow::Result<VersionInfo> {
 }
 
 async fn check_for_update(version_file: &Path) -> anyhow::Result<()> {
-    let latest_version = match update_action::get_update_action() {
-        Some(UpdateAction::BrewUpgrade) => {
-            let HomebrewCaskInfo { version } = create_client()
-                .get(HOMEBREW_CASK_API_URL)
-                .send()
-                .await?
-                .error_for_status()?
-                .json::<HomebrewCaskInfo>()
-                .await?;
-            version
-        }
-        _ => {
-            let ReleaseInfo {
-                tag_name: latest_tag_name,
-            } = create_client()
-                .get(LATEST_RELEASE_URL)
-                .send()
-                .await?
-                .error_for_status()?
-                .json::<ReleaseInfo>()
-                .await?;
-            extract_version_from_latest_tag(&latest_tag_name)?
+    let latest_version = if is_indubitably_update_channel() {
+        let Some(version) = fetch_latest_indubitably_version_from_brew().await? else {
+            return Ok(());
+        };
+        version
+    } else {
+        match update_action::get_update_action() {
+            Some(UpdateAction::BrewUpgrade) => {
+                let cask_name = update_action::brew_cask_name();
+                let cask_token = cask_name.rsplit('/').next().unwrap_or(cask_name);
+                let cask_api_url = format!("https://formulae.brew.sh/api/cask/{cask_token}.json");
+                let HomebrewCaskInfo { version } = create_client()
+                    .get(&cask_api_url)
+                    .send()
+                    .await?
+                    .error_for_status()?
+                    .json::<HomebrewCaskInfo>()
+                    .await?;
+                version
+            }
+            _ => {
+                let ReleaseInfo {
+                    tag_name: latest_tag_name,
+                } = create_client()
+                    .get(LATEST_RELEASE_URL)
+                    .send()
+                    .await?
+                    .error_for_status()?
+                    .json::<ReleaseInfo>()
+                    .await?;
+                extract_version_from_latest_tag(&latest_tag_name)?
+            }
         }
     };
 
@@ -118,6 +144,37 @@ async fn check_for_update(version_file: &Path) -> anyhow::Result<()> {
     }
     tokio::fs::write(version_file, json_line).await?;
     Ok(())
+}
+
+fn is_indubitably_update_channel() -> bool {
+    codex_core::util::cli_command_name().eq_ignore_ascii_case(INDUBITABLY_COMMAND_NAME)
+}
+
+async fn fetch_latest_indubitably_version_from_brew() -> anyhow::Result<Option<String>> {
+    let output = match tokio::process::Command::new("brew")
+        .env("HOMEBREW_NO_AUTO_UPDATE", "1")
+        .env("HOMEBREW_NO_ENV_HINTS", "1")
+        .args([
+            "info",
+            "--cask",
+            "--json=v2",
+            update_action::brew_cask_name(),
+        ])
+        .stdin(Stdio::null())
+        .output()
+        .await
+    {
+        Ok(output) => output,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(err) => return Err(err.into()),
+    };
+
+    if !output.status.success() {
+        return Ok(None);
+    }
+
+    let info: BrewInfo = serde_json::from_slice(&output.stdout)?;
+    Ok(info.casks.first().map(|cask| cask.version.clone()))
 }
 
 fn is_newer(latest: &str, current: &str) -> Option<bool> {
@@ -194,6 +251,20 @@ mod tests {
         let HomebrewCaskInfo { version } = serde_json::from_str::<HomebrewCaskInfo>(cask_json)
             .expect("failed to parse version from cask json");
         assert_eq!(version, "0.96.0");
+    }
+
+    #[test]
+    fn extract_version_from_brew_info_json() {
+        let cask_json = r#"{
+            "casks": [
+                {
+                    "token": "indubitably",
+                    "version": "0.1.16"
+                }
+            ]
+        }"#;
+        let info = serde_json::from_str::<BrewInfo>(cask_json).expect("failed to parse cask json");
+        assert_eq!(info.casks[0].version, "0.1.16");
     }
 
     #[test]

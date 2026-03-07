@@ -1484,7 +1484,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn bedrock_provider_stream_returns_unsupported_operation() {
+    async fn bedrock_provider_stream_returns_auth_error_without_token() {
         let provider = built_in_model_providers()
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
@@ -1518,10 +1518,10 @@ mod tests {
             .await;
 
         match result {
-            Err(CodexErr::UnsupportedOperation(message)) => {
-                assert!(message.contains("Bedrock runtime adapter is not configured"));
+            Err(CodexErr::Stream(message, None)) => {
+                assert!(message.contains("indubitably authentication expired"));
             }
-            Err(other) => panic!("expected UnsupportedOperation, got {other:?}"),
+            Err(other) => panic!("expected auth stream error, got {other:?}"),
             Ok(_) => panic!("expected bedrock stream to return an error"),
         }
     }

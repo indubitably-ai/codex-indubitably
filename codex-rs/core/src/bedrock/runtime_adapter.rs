@@ -24,6 +24,7 @@ use crate::error::Result;
 use crate::indubitably_auth::load_access_token_for_base_url;
 use crate::model_provider_info::BEDROCK_PROVIDER_ID;
 use crate::model_provider_info::ModelProviderInfo;
+use crate::util::command_with_args;
 
 #[async_trait]
 pub trait BedrockRuntimeAdapter: std::fmt::Debug + Send + Sync {
@@ -144,11 +145,19 @@ impl BedrockRuntimeAdapter for ProxyBedrockRuntimeAdapter {
         );
 
         let request = ConverseRequest::new(serde_json::to_value(request_payload)?);
-        let bearer_token = self.resolve_bearer_token().await?;
+        let Some(bearer_token) = self.resolve_bearer_token().await? else {
+            return Err(CodexErr::Stream(
+                format!(
+                    "indubitably authentication expired; run `{}`",
+                    command_with_args("login --indubitably")
+                ),
+                None,
+            ));
+        };
 
         let stream = self
             .runtime
-            .converse_stream(request, bearer_token.as_deref())
+            .converse_stream(request, Some(&bearer_token))
             .await
             .map_err(map_bedrock_error)?;
 
@@ -253,13 +262,13 @@ mod tests {
     }
 
     #[test]
-    fn proxy_adapter_new_requires_base_url() {
+    fn proxy_adapter_new_uses_default_proxy_base_url() {
         let provider = built_in_model_providers()
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();
         let adapter = ProxyBedrockRuntimeAdapter::new(provider, None, ThreadId::new());
-        assert!(adapter.is_none());
+        assert!(adapter.is_some());
     }
 
     #[tokio::test]

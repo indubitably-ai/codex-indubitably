@@ -66,6 +66,7 @@ use codex_core::git_info::get_git_repo_root;
 use codex_core::git_info::local_git_branches;
 use codex_core::mcp::McpManager;
 use codex_core::models_manager::manager::ModelsManager;
+use codex_core::models_manager::manager::RefreshStrategy;
 use codex_core::plugins::PluginsManager;
 use codex_core::project_doc::DEFAULT_PROJECT_DOC_FILENAME;
 use codex_core::skills::model::SkillMetadata;
@@ -161,6 +162,8 @@ use tokio::sync::mpsc::UnboundedSender;
 use tokio::task::JoinHandle;
 use tracing::debug;
 use tracing::warn;
+
+use crate::BEDROCK_PROVIDER_ID;
 
 const DEFAULT_MODEL_DISPLAY_NAME: &str = "loading";
 const PLAN_IMPLEMENTATION_TITLE: &str = "Implement this plan?";
@@ -5585,6 +5588,11 @@ impl ChatWidget {
             return;
         }
 
+        if self.current_provider_is_bedrock() {
+            self.request_bedrock_model_popup();
+            return;
+        }
+
         let presets: Vec<ModelPreset> = match self.models_manager.try_list_models() {
             Ok(models) => models,
             Err(_) => {
@@ -5596,6 +5604,48 @@ impl ChatWidget {
             }
         };
         self.open_model_popup_with_presets(presets);
+    }
+
+    fn current_provider_is_bedrock(&self) -> bool {
+        self.config
+            .model_provider_id
+            .eq_ignore_ascii_case(BEDROCK_PROVIDER_ID)
+    }
+
+    fn request_bedrock_model_popup(&mut self) {
+        let fallback_models = self.models_manager.try_list_models().ok();
+        let Ok(handle) = tokio::runtime::Handle::try_current() else {
+            if let Some(models) = fallback_models {
+                self.open_bedrock_model_popup(models);
+            } else {
+                self.add_info_message(
+                    "Models are being updated; please try /model again in a moment.".to_string(),
+                    None,
+                );
+            }
+            return;
+        };
+
+        let models_manager = Arc::clone(&self.models_manager);
+        let app_event_tx = self.app_event_tx.clone();
+        handle.spawn(async move {
+            let models = match models_manager
+                .list_models_with_refresh_status(RefreshStrategy::OnlineIfUncached)
+                .await
+            {
+                Ok(models) => models,
+                Err(err) => {
+                    app_event_tx.send(AppEvent::InsertHistoryCell(Box::new(
+                        history_cell::new_error_event(format!(
+                            "Failed to refresh models; showing the last known Bedrock catalog: {err}"
+                        )),
+                    )));
+                    models_manager.try_list_models().unwrap_or_default()
+                }
+            };
+
+            app_event_tx.send(AppEvent::OpenBedrockModelsPopup { models });
+        });
     }
 
     pub(crate) fn open_personality_popup(&mut self) {
@@ -5972,7 +6022,7 @@ impl ChatWidget {
             let description =
                 (!preset.description.is_empty()).then_some(preset.description.to_string());
             let is_current = preset.model.as_str() == self.current_model();
-            let single_supported_effort = preset.supported_reasoning_efforts.len() == 1;
+            let single_supported_effort = preset.supported_reasoning_efforts.len() <= 1;
             let preset_for_action = preset.clone();
             let actions: Vec<SelectionAction> = vec![Box::new(move |tx| {
                 let preset_for_event = preset_for_action.clone();
@@ -5997,6 +6047,74 @@ impl ChatWidget {
         );
         self.bottom_pane.show_selection_view(SelectionViewParams {
             footer_hint: Some("Press enter to select reasoning effort, or esc to dismiss.".into()),
+            items,
+            header,
+            ..Default::default()
+        });
+    }
+
+    pub(crate) fn open_bedrock_model_popup(&mut self, presets: Vec<ModelPreset>) {
+        let mut presets: Vec<ModelPreset> = presets
+            .into_iter()
+            .filter(|preset| preset.show_in_picker)
+            .collect();
+        if presets.is_empty() {
+            self.add_info_message(
+                "No Bedrock models are available right now.".to_string(),
+                None,
+            );
+            return;
+        }
+
+        presets.sort_by(|left, right| {
+            left.display_name
+                .cmp(&right.display_name)
+                .then(left.model.cmp(&right.model))
+        });
+
+        let items: Vec<SelectionItem> = presets
+            .into_iter()
+            .map(|preset| {
+                let name = if preset.display_name.trim().is_empty() {
+                    preset.model.clone()
+                } else {
+                    preset.display_name.clone()
+                };
+                let description = if !preset.description.is_empty() {
+                    Some(preset.description.clone())
+                } else if name != preset.model {
+                    Some(preset.model.clone())
+                } else {
+                    None
+                };
+                let model = preset.model.clone();
+                let actions: Vec<SelectionAction> = vec![Box::new(move |tx| {
+                    tx.send(AppEvent::UpdateModel(model.clone()));
+                    tx.send(AppEvent::UpdateReasoningEffort(None));
+                    tx.send(AppEvent::PersistModelSelection {
+                        model: model.clone(),
+                        effort: None,
+                    });
+                })];
+
+                SelectionItem {
+                    name,
+                    description,
+                    is_current: preset.model == self.current_model(),
+                    is_default: preset.is_default,
+                    actions,
+                    dismiss_on_select: true,
+                    ..Default::default()
+                }
+            })
+            .collect();
+
+        let header = self.model_menu_header(
+            "Select Model",
+            "Choose a Bedrock model for this and future sessions.",
+        );
+        self.bottom_pane.show_selection_view(SelectionViewParams {
+            footer_hint: Some(standard_popup_hint_line()),
             items,
             header,
             ..Default::default()
@@ -7566,7 +7684,7 @@ impl ChatWidget {
 
     fn rename_confirmation_cell(name: &str, thread_id: Option<ThreadId>) -> PlainHistoryCell {
         let resume_cmd = codex_core::util::resume_command(Some(name), thread_id)
-            .unwrap_or_else(|| format!("codex resume {name}"));
+            .unwrap_or_else(|| codex_core::util::command_with_args(&format!("resume {name}")));
         let name = name.to_string();
         let line = vec![
             "• ".into(),

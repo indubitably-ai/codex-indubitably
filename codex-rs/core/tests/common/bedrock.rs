@@ -15,6 +15,7 @@ pub fn provider_for_mock_server_uri(server_uri: &str) -> ModelProviderInfo {
         .unwrap_or_else(|| panic!("bedrock provider should exist"))
         .clone();
     provider.base_url = Some(format!("{server_uri}/v1"));
+    provider.experimental_bearer_token = Some("bedrock-test-token".to_string());
     provider
 }
 
@@ -68,6 +69,10 @@ mod tests {
         assert_eq!(
             provider.base_url,
             Some("http://localhost:8181/v1".to_string())
+        );
+        assert_eq!(
+            provider.experimental_bearer_token.as_deref(),
+            Some("bedrock-test-token")
         );
     }
 

@@ -239,6 +239,11 @@ pub(crate) enum AppEvent {
         models: Vec<ModelPreset>,
     },
 
+    /// Open the direct Bedrock model picker.
+    OpenBedrockModelsPopup {
+        models: Vec<ModelPreset>,
+    },
+
     /// Open the confirmation prompt before enabling full access mode.
     OpenFullAccessConfirmation {
         preset: ApprovalPreset,

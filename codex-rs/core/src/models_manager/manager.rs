@@ -13,6 +13,7 @@ use crate::model_provider_info::ModelProviderInfo;
 use crate::models_manager::collaboration_mode_presets::CollaborationModesConfig;
 use crate::models_manager::collaboration_mode_presets::builtin_collaboration_mode_presets;
 use crate::models_manager::model_info;
+use crate::util::command_with_args;
 use codex_api::AuthProvider as ApiAuthProvider;
 use codex_api::ModelsClient;
 use codex_api::Provider as ApiProvider;
@@ -139,11 +140,23 @@ impl ModelsManager {
     ///
     /// Returns model presets sorted by priority and filtered by auth mode and visibility.
     pub async fn list_models(&self, refresh_strategy: RefreshStrategy) -> Vec<ModelPreset> {
-        if let Err(err) = self.refresh_available_models(refresh_strategy).await {
-            error!("failed to refresh available models: {err}");
+        match self.list_models_with_refresh_status(refresh_strategy).await {
+            Ok(models) => return models,
+            Err(err) => {
+                error!("failed to refresh available models: {err}");
+            }
         }
+        self.build_available_models(self.get_remote_models().await)
+    }
+
+    /// List all available models and surface refresh failures to the caller.
+    pub async fn list_models_with_refresh_status(
+        &self,
+        refresh_strategy: RefreshStrategy,
+    ) -> CoreResult<Vec<ModelPreset>> {
+        self.refresh_available_models(refresh_strategy).await?;
         let remote_models = self.get_remote_models().await;
-        self.build_available_models(remote_models)
+        Ok(self.build_available_models(remote_models))
     }
 
     /// List collaboration mode presets.
@@ -399,9 +412,16 @@ impl ModelsManager {
         if let Some(query_params) = api_provider.query_params.as_ref() {
             req = req.query(query_params);
         }
-        if let Some(token) = api_auth.bearer_token() {
-            req = req.bearer_auth(token);
-        }
+        let Some(token) = api_auth.bearer_token() else {
+            return Err(CodexErr::Stream(
+                format!(
+                    "indubitably authentication expired; run `{}`",
+                    command_with_args("login --indubitably")
+                ),
+                None,
+            ));
+        };
+        req = req.bearer_auth(token);
 
         let response = req.send().await.map_err(|err| {
             CodexErr::Stream(
@@ -971,6 +991,38 @@ mod tests {
         };
         assert_eq!(error.status, StatusCode::NOT_FOUND);
         assert!(error.body.contains("UnknownOperationException"));
+    }
+
+    #[tokio::test]
+    async fn refresh_available_models_without_bearer_token_returns_auth_error_before_network() {
+        let server = MockServer::start().await;
+        let codex_home = tempdir().expect("temp dir");
+        let auth_manager = Arc::new(AuthManager::new(
+            codex_home.path().to_path_buf(),
+            false,
+            AuthCredentialsStoreMode::File,
+        ));
+        let mut provider = bedrock_provider_for(server.uri());
+        provider.experimental_bearer_token = None;
+        let manager = ModelsManager::with_provider_for_tests(
+            codex_home.path().to_path_buf(),
+            auth_manager,
+            provider,
+        );
+
+        let result = manager
+            .refresh_available_models(RefreshStrategy::OnlineIfUncached)
+            .await;
+        let Err(CodexErr::Stream(message, None)) = result else {
+            panic!("expected refresh to return auth stream error");
+        };
+        assert!(message.contains("indubitably authentication expired"));
+
+        let requests = server
+            .received_requests()
+            .await
+            .expect("requests should be captured");
+        assert!(requests.is_empty(), "auth failure should avoid network I/O");
     }
 
     #[tokio::test]

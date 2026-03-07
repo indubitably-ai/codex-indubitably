@@ -79,6 +79,7 @@ use crate::codex::INITIAL_SUBMIT_ID;
 use crate::config::types::McpServerConfig;
 use crate::config::types::McpServerTransportConfig;
 use crate::connectors::is_connector_id_allowed;
+use crate::util::command_with_args;
 
 /// Delimiter used to separate the server name from the tool name in a fully
 /// qualified tool name.
@@ -1535,7 +1536,8 @@ fn mcp_init_error_display(
         )
     } else if is_mcp_client_auth_required_error(err) {
         format!(
-            "The {server_name} MCP server is not logged in. Run `codex mcp login {server_name}`."
+            "The {server_name} MCP server is not logged in. Run `{}`.",
+            command_with_args(&format!("mcp login {server_name}"))
         )
     } else if is_mcp_client_startup_timeout_error(err) {
         let startup_timeout_secs = match entry {
@@ -2138,7 +2140,8 @@ mod tests {
         let display = mcp_init_error_display(server_name, None, &err);
 
         let expected = format!(
-            "The {server_name} MCP server is not logged in. Run `codex mcp login {server_name}`."
+            "The {server_name} MCP server is not logged in. Run `{}`.",
+            command_with_args(&format!("mcp login {server_name}"))
         );
 
         assert_eq!(expected, display);

@@ -1,0 +1,16 @@
+cask "indubitably" do
+  version "{{VERSION}}"
+  arch arm: "aarch64", intel: "x86_64"
+
+  sha256 arm:   "{{SHA_ARM}}",
+         intel: "{{SHA_INTEL}}"
+
+  url "{{BASE_URL}}/#{version}/indubitably-#{arch}-apple-darwin.tar.gz"
+  name "Indubitably CLI"
+  desc "Indubitably CLI (Codex fork)"
+  homepage "https://www.indubitably.ai/"
+
+  binary "indubitably-#{arch}-apple-darwin", target: "indubitably"
+
+  zap trash: "~/.codex"
+end

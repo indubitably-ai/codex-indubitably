@@ -55,7 +55,11 @@ pub struct Cli {
 
     /// Convenience flag to select the local open source model provider. Equivalent to -c
     /// model_provider=oss; verifies a local LM Studio or Ollama server is running.
-    #[arg(long = "oss", default_value_t = false, conflicts_with = "indubitably")]
+    #[arg(
+        long = "oss",
+        default_value_t = false,
+        conflicts_with_all = ["indubitably", "openai"]
+    )]
     pub oss: bool,
 
     /// Specify which local provider to use (lmstudio or ollama).
@@ -64,8 +68,20 @@ pub struct Cli {
     pub oss_provider: Option<String>,
 
     /// Use the Bedrock + Indubitably provider path.
-    #[arg(long = "indubitably", default_value_t = false)]
+    #[arg(
+        long = "indubitably",
+        default_value_t = false,
+        conflicts_with_all = ["oss", "openai"]
+    )]
     pub indubitably: bool,
+
+    /// Force OpenAI provider path (overrides implicit indubitably invocation default).
+    #[arg(
+        long = "openai",
+        default_value_t = false,
+        conflicts_with_all = ["oss", "indubitably"]
+    )]
+    pub openai: bool,
 
     /// Configuration profile from config.toml to specify default options.
     #[arg(long = "profile", short = 'p')]
@@ -131,6 +147,24 @@ mod tests {
     #[test]
     fn parse_rejects_oss_and_indubitably_together() {
         let parsed = Cli::try_parse_from(["codex", "--oss", "--indubitably", "echo hello"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn parse_accepts_openai_flag() {
+        let parsed = Cli::parse_from(["codex", "--openai", "echo hello"]);
+        assert!(parsed.openai);
+    }
+
+    #[test]
+    fn parse_rejects_openai_and_indubitably_together() {
+        let parsed = Cli::try_parse_from(["codex", "--openai", "--indubitably", "echo hello"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn parse_rejects_openai_and_oss_together() {
+        let parsed = Cli::try_parse_from(["codex", "--openai", "--oss", "echo hello"]);
         assert!(parsed.is_err());
     }
 }

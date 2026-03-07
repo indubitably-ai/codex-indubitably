@@ -34,6 +34,7 @@ use codex_core::path_utils;
 use codex_core::read_session_meta_line;
 use codex_core::state_db::get_state_db;
 use codex_core::terminal::Multiplexer;
+use codex_core::util::command_with_args;
 use codex_core::windows_sandbox::WindowsSandboxLevelExt;
 use codex_protocol::ThreadId;
 use codex_protocol::config_types::AltScreenMode;
@@ -338,7 +339,7 @@ pub async fn run_main(mut cli: Cli, arg0_paths: Arg0DispatchPaths) -> std::io::R
         resolve_model_provider_override(&cli, &config_toml, &codex_home).await?;
 
     // When using `--oss`, let the bootstrapper pick the model based on selected provider.
-    // `--indubitably` only selects the provider; model defaults come from provider-aware refresh.
+    // `--indubitably`/`--openai` only select the provider; model defaults come from provider-aware refresh.
     let model = resolve_model_override(&cli.model, cli.oss, model_provider_override.as_deref());
 
     let additional_dirs = cli.add_dir.clone();
@@ -508,6 +509,10 @@ async fn resolve_model_provider_override(
     config_toml: &ConfigToml,
     codex_home: &std::path::Path,
 ) -> std::io::Result<Option<String>> {
+    if cli.openai {
+        return Ok(Some("openai".to_string()));
+    }
+
     if cli.indubitably {
         return Ok(Some(BEDROCK_PROVIDER_ID.to_string()));
     }
@@ -678,7 +683,8 @@ async fn run_ratatui_app(
             thread_name: None,
             update_action: None,
             exit_reason: ExitReason::Fatal(format!(
-                "No saved session found with ID {id_str}. Run `codex {action}` without an ID to choose from existing sessions."
+                "No saved session found with ID {id_str}. Run `{}` without an ID to choose from existing sessions.",
+                command_with_args(action)
             )),
         })
     };
@@ -745,7 +751,8 @@ async fn run_ratatui_app(
                                     thread_name: None,
                                     update_action: None,
                                     exit_reason: ExitReason::Fatal(format!(
-                                        "Found latest saved session at {rollout_path}, but failed to read its metadata. Run `codex fork` to choose from existing sessions."
+                                        "Found latest saved session at {rollout_path}, but failed to read its metadata. Run `{}` to choose from existing sessions.",
+                                        command_with_args("fork")
                                     )),
                                 });
                             }
@@ -836,7 +843,8 @@ async fn run_ratatui_app(
                         thread_name: None,
                         update_action: None,
                         exit_reason: ExitReason::Fatal(format!(
-                            "Found latest saved session at {rollout_path}, but failed to read its metadata. Run `codex resume` to choose from existing sessions."
+                            "Found latest saved session at {rollout_path}, but failed to read its metadata. Run `{}` to choose from existing sessions.",
+                            command_with_args("resume")
                         )),
                     });
                 }
@@ -1286,6 +1294,41 @@ mod tests {
         .await?;
 
         assert_eq!(provider.as_deref(), Some(BEDROCK_PROVIDER_ID));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn resolve_model_provider_override_uses_openai_when_requested() -> std::io::Result<()> {
+        let cli = Cli {
+            openai: true,
+            ..Cli::parse_from(["codex"])
+        };
+        let provider = resolve_model_provider_override(
+            &cli,
+            &ConfigToml::default(),
+            std::path::Path::new("."),
+        )
+        .await?;
+
+        assert_eq!(provider.as_deref(), Some("openai"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn resolve_model_provider_override_openai_beats_indubitably() -> std::io::Result<()> {
+        let cli = Cli {
+            openai: true,
+            indubitably: true,
+            ..Cli::parse_from(["codex"])
+        };
+        let provider = resolve_model_provider_override(
+            &cli,
+            &ConfigToml::default(),
+            std::path::Path::new("."),
+        )
+        .await?;
+
+        assert_eq!(provider.as_deref(), Some("openai"));
         Ok(())
     }
 

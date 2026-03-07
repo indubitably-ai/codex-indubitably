@@ -1,0 +1,11 @@
+---
+source: tui/src/chatwidget/tests.rs
+expression: popup
+---
+  Select Model
+  Choose a Bedrock model for this and future sessions.
+
+  1. Claude 3.5 Haiku             claude-3-5-haiku
+› 2. Claude 3.5 Sonnet (current)  claude-3-5-sonnet
+
+  Press enter to confirm or esc to go back

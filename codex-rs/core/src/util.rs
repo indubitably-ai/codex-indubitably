@@ -11,6 +11,7 @@ use crate::parse_command::shlex_join;
 
 const INITIAL_DELAY_MS: u64 = 200;
 const BACKOFF_FACTOR: f64 = 2.0;
+pub const INVOKED_COMMAND_NAME_ENV_VAR: &str = "CODEX_INVOKED_COMMAND_NAME";
 
 /// Emit structured feedback metadata as key/value pairs.
 ///
@@ -75,6 +76,40 @@ pub fn resolve_path(base: &Path, path: &PathBuf) -> PathBuf {
     }
 }
 
+pub fn cli_command_name() -> String {
+    std::env::var(INVOKED_COMMAND_NAME_ENV_VAR)
+        .ok()
+        .and_then(|value| normalize_command_name(&value))
+        .unwrap_or_else(|| "codex".to_string())
+}
+
+pub fn command_with_args(args: &str) -> String {
+    let command_name = cli_command_name();
+    format!("{command_name} {args}")
+}
+
+fn normalize_command_name(name: &str) -> Option<String> {
+    let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let basename = Path::new(trimmed)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or(trimmed);
+    let normalized = basename
+        .strip_suffix(".exe")
+        .or_else(|| basename.strip_suffix(".EXE"))
+        .unwrap_or(basename);
+
+    if normalized.is_empty() {
+        None
+    } else {
+        Some(normalized.to_string())
+    }
+}
+
 /// Trim a thread name and return `None` if it is empty after trimming.
 pub fn normalize_thread_name(name: &str) -> Option<String> {
     let trimmed = name.trim();
@@ -94,9 +129,9 @@ pub fn resume_command(thread_name: Option<&str>, thread_id: Option<ThreadId>) ->
         let needs_double_dash = target.starts_with('-');
         let escaped = shlex_join(&[target]);
         if needs_double_dash {
-            format!("codex resume -- {escaped}")
+            command_with_args(&format!("resume -- {escaped}"))
         } else {
-            format!("codex resume {escaped}")
+            command_with_args(&format!("resume {escaped}"))
         }
     })
 }
@@ -150,7 +185,7 @@ mod tests {
     fn resume_command_prefers_name_over_id() {
         let thread_id = ThreadId::from_string("123e4567-e89b-12d3-a456-426614174000").unwrap();
         let command = resume_command(Some("my-thread"), Some(thread_id));
-        assert_eq!(command, Some("codex resume my-thread".to_string()));
+        assert_eq!(command, Some(command_with_args("resume my-thread")));
     }
 
     #[test]
@@ -159,7 +194,9 @@ mod tests {
         let command = resume_command(None, Some(thread_id));
         assert_eq!(
             command,
-            Some("codex resume 123e4567-e89b-12d3-a456-426614174000".to_string())
+            Some(command_with_args(
+                "resume 123e4567-e89b-12d3-a456-426614174000"
+            ))
         );
     }
 
@@ -174,13 +211,23 @@ mod tests {
         let command = resume_command(Some("-starts-with-dash"), None);
         assert_eq!(
             command,
-            Some("codex resume -- -starts-with-dash".to_string())
+            Some(command_with_args("resume -- -starts-with-dash"))
         );
 
         let command = resume_command(Some("two words"), None);
-        assert_eq!(command, Some("codex resume 'two words'".to_string()));
+        assert_eq!(command, Some(command_with_args("resume 'two words'")));
 
         let command = resume_command(Some("quote'case"), None);
-        assert_eq!(command, Some("codex resume \"quote'case\"".to_string()));
+        assert_eq!(command, Some(command_with_args("resume \"quote'case\"")));
+    }
+
+    #[test]
+    fn normalize_command_name_handles_paths_and_exe_suffix() {
+        assert_eq!(
+            normalize_command_name("/tmp/indubitably.exe"),
+            Some("indubitably".to_string())
+        );
+        assert_eq!(normalize_command_name("codex"), Some("codex".to_string()));
+        assert_eq!(normalize_command_name("   "), None);
     }
 }

@@ -10,6 +10,7 @@ use crate::bedrock::runtime::BedrockError;
 use crate::bedrock::runtime::ConverseRequest;
 use crate::bedrock::runtime::ConverseStream;
 use crate::bedrock::runtime::StreamChunk;
+use crate::util::command_with_args;
 
 const STREAM_BUFFER_SIZE: usize = 32;
 
@@ -186,15 +187,17 @@ fn map_http_error(status: StatusCode, body: &str) -> BedrockError {
     if status == StatusCode::UNAUTHORIZED
         || (status == StatusCode::FORBIDDEN && is_authentication_error(body))
     {
-        return BedrockError::InvalidResponse(
-            "indubitably authentication expired; run `codex login --indubitably`".to_string(),
-        );
+        return BedrockError::InvalidResponse(format!(
+            "indubitably authentication expired; run `{}`",
+            command_with_args("login --indubitably")
+        ));
     }
 
     if status == StatusCode::PAYMENT_REQUIRED {
-        return BedrockError::InvalidResponse(
-            "insufficient indubitably credits; run `codex login status --indubitably`".to_string(),
-        );
+        return BedrockError::InvalidResponse(format!(
+            "insufficient indubitably credits; run `{}`",
+            command_with_args("login status --indubitably")
+        ));
     }
 
     let detail = parse_error_detail(body);
@@ -271,7 +274,10 @@ mod tests {
         };
         assert_eq!(
             message,
-            "indubitably authentication expired; run `codex login --indubitably`"
+            format!(
+                "indubitably authentication expired; run `{}`",
+                command_with_args("login --indubitably")
+            )
         );
     }
 }

@@ -1,3 +1,12 @@
+const OPENAI_NPM_PACKAGE_NAME: &str = "@openai/codex";
+const OPENAI_BREW_CASK_NAME: &str = "codex";
+const INDUBITABLY_BREW_CASK_NAME: &str = "indubitably-ai/tap/indubitably";
+const INDUBITABLY_COMMAND_NAME: &str = "indubitably";
+const OPENAI_RELEASE_NOTES_URL: &str = "https://github.com/openai/codex/releases/latest";
+const OPENAI_INSTALL_OPTIONS_URL: &str = "https://github.com/openai/codex";
+const INDUBITABLY_RELEASE_NOTES_URL: &str = "https://github.com/indubitably-ai/homebrew-tap";
+const INDUBITABLY_INSTALL_OPTIONS_URL: &str = "https://github.com/indubitably-ai/homebrew-tap";
+
 /// Update action the CLI should perform after the TUI exits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UpdateAction {
@@ -5,17 +14,31 @@ pub enum UpdateAction {
     NpmGlobalLatest,
     /// Update via `bun install -g @openai/codex@latest`.
     BunGlobalLatest,
-    /// Update via `brew upgrade codex`.
+    /// Update via `brew upgrade --cask <cask>`.
     BrewUpgrade,
 }
 
 impl UpdateAction {
     /// Returns the list of command-line arguments for invoking the update.
     pub fn command_args(self) -> (&'static str, &'static [&'static str]) {
+        let command_name = codex_core::util::cli_command_name();
+        self.command_args_for_command_name(&command_name)
+    }
+
+    fn command_args_for_command_name(
+        self,
+        command_name: &str,
+    ) -> (&'static str, &'static [&'static str]) {
         match self {
-            UpdateAction::NpmGlobalLatest => ("npm", &["install", "-g", "@openai/codex"]),
-            UpdateAction::BunGlobalLatest => ("bun", &["install", "-g", "@openai/codex"]),
-            UpdateAction::BrewUpgrade => ("brew", &["upgrade", "--cask", "codex"]),
+            UpdateAction::NpmGlobalLatest => ("npm", &["install", "-g", OPENAI_NPM_PACKAGE_NAME]),
+            UpdateAction::BunGlobalLatest => ("bun", &["install", "-g", OPENAI_NPM_PACKAGE_NAME]),
+            UpdateAction::BrewUpgrade => {
+                if uses_indubitably_update_channel(command_name) {
+                    ("brew", &["upgrade", "--cask", INDUBITABLY_BREW_CASK_NAME])
+                } else {
+                    ("brew", &["upgrade", "--cask", OPENAI_BREW_CASK_NAME])
+                }
+            }
         }
     }
 
@@ -24,6 +47,49 @@ impl UpdateAction {
         let (command, args) = self.command_args();
         shlex::try_join(std::iter::once(command).chain(args.iter().copied()))
             .unwrap_or_else(|_| format!("{command} {}", args.join(" ")))
+    }
+}
+
+pub fn brew_cask_name() -> &'static str {
+    let command_name = codex_core::util::cli_command_name();
+    brew_cask_name_for_command_name(&command_name)
+}
+
+pub fn release_notes_url() -> &'static str {
+    let command_name = codex_core::util::cli_command_name();
+    release_notes_url_for_command_name(&command_name)
+}
+
+pub fn install_options_url() -> &'static str {
+    let command_name = codex_core::util::cli_command_name();
+    install_options_url_for_command_name(&command_name)
+}
+
+fn uses_indubitably_update_channel(command_name: &str) -> bool {
+    command_name.eq_ignore_ascii_case(INDUBITABLY_COMMAND_NAME)
+}
+
+fn brew_cask_name_for_command_name(command_name: &str) -> &'static str {
+    if uses_indubitably_update_channel(command_name) {
+        INDUBITABLY_BREW_CASK_NAME
+    } else {
+        OPENAI_BREW_CASK_NAME
+    }
+}
+
+fn release_notes_url_for_command_name(command_name: &str) -> &'static str {
+    if uses_indubitably_update_channel(command_name) {
+        INDUBITABLY_RELEASE_NOTES_URL
+    } else {
+        OPENAI_RELEASE_NOTES_URL
+    }
+}
+
+fn install_options_url_for_command_name(command_name: &str) -> &'static str {
+    if uses_indubitably_update_channel(command_name) {
+        INDUBITABLY_INSTALL_OPTIONS_URL
+    } else {
+        OPENAI_INSTALL_OPTIONS_URL
     }
 }
 
@@ -96,6 +162,41 @@ mod tests {
                 false
             ),
             Some(UpdateAction::BrewUpgrade)
+        );
+    }
+
+    #[test]
+    fn brew_update_command_changes_for_indubitably_invocation() {
+        assert_eq!(
+            UpdateAction::BrewUpgrade.command_args_for_command_name("indubitably"),
+            (
+                "brew",
+                &["upgrade", "--cask", "indubitably-ai/tap/indubitably"][..]
+            )
+        );
+        assert_eq!(
+            UpdateAction::BrewUpgrade.command_args_for_command_name("codex"),
+            ("brew", &["upgrade", "--cask", "codex"][..])
+        );
+    }
+
+    #[test]
+    fn release_urls_change_for_indubitably_invocation() {
+        assert_eq!(
+            release_notes_url_for_command_name("indubitably"),
+            "https://github.com/indubitably-ai/homebrew-tap"
+        );
+        assert_eq!(
+            install_options_url_for_command_name("indubitably"),
+            "https://github.com/indubitably-ai/homebrew-tap"
+        );
+        assert_eq!(
+            release_notes_url_for_command_name("codex"),
+            "https://github.com/openai/codex/releases/latest"
+        );
+        assert_eq!(
+            install_options_url_for_command_name("codex"),
+            "https://github.com/openai/codex"
         );
     }
 }

@@ -1,5 +1,6 @@
 use clap::Args;
 use clap::CommandFactory;
+use clap::FromArgMatches;
 use clap::Parser;
 use clap_complete::Shell;
 use clap_complete::generate;
@@ -52,6 +53,13 @@ use codex_core::config::find_codex_home;
 use codex_core::features::Stage;
 use codex_core::features::is_known_feature_key;
 use codex_core::terminal::TerminalName;
+use codex_core::util::INVOKED_COMMAND_NAME_ENV_VAR;
+use codex_core::util::command_with_args;
+
+const CLI_VERSION: &str = match option_env!("INDUBITABLY_CLI_VERSION") {
+    Some(version) => version,
+    None => env!("CARGO_PKG_VERSION"),
+};
 
 /// Codex CLI
 ///
@@ -59,14 +67,9 @@ use codex_core::terminal::TerminalName;
 #[derive(Debug, Parser)]
 #[clap(
     author,
-    version,
-    // If a sub‑command is given, ignore requirements of the default args.
-    subcommand_negates_reqs = true,
-    // The executable is sometimes invoked via a platform‑specific name like
-    // `codex-x86_64-unknown-linux-musl`, but the help output should always use
-    // the generic `codex` command name that users run.
-    bin_name = "codex",
-    override_usage = "codex [OPTIONS] [PROMPT]\n       codex [OPTIONS] <COMMAND> [ARGS]"
+    version = CLI_VERSION,
+    // If a sub-command is given, ignore requirements of the default args.
+    subcommand_negates_reqs = true
 )]
 struct MultitoolCli {
     #[clap(flatten)]
@@ -268,7 +271,7 @@ struct LoginCommand {
 
     #[arg(
         long = "with-api-key",
-        help = "Read the API key from stdin (e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`)"
+        help = "Read the API key from stdin (expects key text piped over stdin)"
     )]
     with_api_key: bool,
 
@@ -284,8 +287,16 @@ struct LoginCommand {
     use_device_code: bool,
 
     /// Use the Indubitably browser login flow for Bedrock token auth.
-    #[arg(long = "indubitably", default_value_t = false)]
+    #[arg(
+        long = "indubitably",
+        default_value_t = false,
+        conflicts_with = "use_openai"
+    )]
     use_indubitably: bool,
+
+    /// Force OpenAI login flow (overrides indubitably invocation defaults).
+    #[arg(long = "openai", default_value_t = false)]
+    use_openai: bool,
 
     /// EXPERIMENTAL: Use custom OAuth issuer base URL (advanced)
     /// Override the OAuth issuer base URL (advanced)
@@ -444,7 +455,7 @@ fn handle_app_exit(exit_info: AppExitInfo) -> anyhow::Result<()> {
 fn run_update_action(action: UpdateAction) -> anyhow::Result<()> {
     println!();
     let cmd_str = action.command_str();
-    println!("Updating Codex via `{cmd_str}`...");
+    println!("Running update command `{cmd_str}`...");
 
     let status = {
         #[cfg(windows)]
@@ -470,7 +481,10 @@ fn run_update_action(action: UpdateAction) -> anyhow::Result<()> {
     if !status.success() {
         anyhow::bail!("`{cmd_str}` failed with status {status}");
     }
-    println!("\n🎉 Update ran successfully! Please restart Codex.");
+    println!(
+        "\nUpdate ran successfully! Please restart {}.",
+        codex_core::util::cli_command_name()
+    );
     Ok(())
 }
 
@@ -554,6 +568,49 @@ fn stage_str(stage: codex_core::features::Stage) -> &'static str {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum InvokedCommand {
+    Codex,
+    Indubitably,
+}
+
+impl InvokedCommand {
+    fn from_env_arg0() -> Self {
+        let Some(arg0) = std::env::args_os().next() else {
+            return Self::Codex;
+        };
+        let Some(basename) = std::path::Path::new(&arg0)
+            .file_name()
+            .and_then(|value| value.to_str())
+            .map(str::to_ascii_lowercase)
+        else {
+            return Self::Codex;
+        };
+        let normalized = basename.strip_suffix(".exe").unwrap_or(&basename);
+        if normalized == "indubitably" {
+            Self::Indubitably
+        } else {
+            Self::Codex
+        }
+    }
+
+    fn command_name(self) -> &'static str {
+        match self {
+            Self::Codex => "codex",
+            Self::Indubitably => "indubitably",
+        }
+    }
+}
+
+fn should_use_implicit_indubitably(
+    invoked_command: InvokedCommand,
+    openai: bool,
+    indubitably: bool,
+    oss: bool,
+) -> bool {
+    matches!(invoked_command, InvokedCommand::Indubitably) && !openai && !indubitably && !oss
+}
+
 fn main() -> anyhow::Result<()> {
     arg0_dispatch_or_else(|arg0_paths: Arg0DispatchPaths| async move {
         cli_main(arg0_paths).await?;
@@ -562,12 +619,30 @@ fn main() -> anyhow::Result<()> {
 }
 
 async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
+    let invoked_command = InvokedCommand::from_env_arg0();
+    // SAFETY: this happens at CLI startup on the main thread before any new
+    // worker threads are spawned, so process-wide env mutation is safe here.
+    unsafe {
+        std::env::set_var(INVOKED_COMMAND_NAME_ENV_VAR, invoked_command.command_name());
+    }
+
+    let app = MultitoolCli::command().name(invoked_command.command_name());
+    let matches = app.get_matches();
     let MultitoolCli {
         config_overrides: mut root_config_overrides,
         feature_toggles,
         mut interactive,
         subcommand,
-    } = MultitoolCli::parse();
+    } = MultitoolCli::from_arg_matches(&matches).unwrap_or_else(|err| err.exit());
+
+    if should_use_implicit_indubitably(
+        invoked_command,
+        interactive.openai,
+        interactive.indubitably,
+        interactive.oss,
+    ) {
+        interactive.indubitably = true;
+    }
 
     // Fold --enable/--disable into config overrides so they flow to all subcommands.
     let toggle_overrides = feature_toggles.to_overrides()?;
@@ -583,6 +658,15 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
             handle_app_exit(exit_info)?;
         }
         Some(Subcommand::Exec(mut exec_cli)) => {
+            merge_exec_provider_flags(&mut exec_cli, &interactive);
+            if should_use_implicit_indubitably(
+                invoked_command,
+                exec_cli.openai,
+                exec_cli.indubitably,
+                exec_cli.oss,
+            ) {
+                exec_cli.indubitably = true;
+            }
             prepend_config_flags(
                 &mut exec_cli.config_overrides,
                 root_config_overrides.clone(),
@@ -674,6 +758,15 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
             handle_app_exit(exit_info)?;
         }
         Some(Subcommand::Login(mut login_cli)) => {
+            merge_login_provider_flags(&mut login_cli, &interactive);
+            if should_use_implicit_indubitably(
+                invoked_command,
+                login_cli.use_openai,
+                login_cli.use_indubitably,
+                false,
+            ) {
+                login_cli.use_indubitably = true;
+            }
             prepend_config_flags(
                 &mut login_cli.config_overrides,
                 root_config_overrides.clone(),
@@ -699,8 +792,9 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
                         )
                         .await;
                     } else if login_cli.api_key.is_some() {
+                        let with_api_key_command = command_with_args("login --with-api-key");
                         eprintln!(
-                            "The --api-key flag is no longer supported. Pipe the key instead, e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`."
+                            "The --api-key flag is no longer supported. Pipe the key instead, e.g. `printenv OPENAI_API_KEY | {with_api_key_command}`."
                         );
                         std::process::exit(1);
                     } else if login_cli.with_api_key {
@@ -720,7 +814,7 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
             run_logout(logout_cli.config_overrides).await;
         }
         Some(Subcommand::Completion(completion_cli)) => {
-            print_completion(completion_cli);
+            print_completion(completion_cli, invoked_command.command_name());
         }
         Some(Subcommand::Cloud(mut cloud_cli)) => {
             prepend_config_flags(
@@ -978,6 +1072,7 @@ fn apply_interactive_exec_flags(exec_cli: &mut ExecCli, interactive: &TuiCli) {
     exec_cli.oss = interactive.oss;
     exec_cli.oss_provider = interactive.oss_provider.clone();
     exec_cli.indubitably = interactive.indubitably;
+    exec_cli.openai = interactive.openai;
     exec_cli.sandbox_mode = interactive.sandbox_mode;
     exec_cli.config_profile = interactive.config_profile.clone();
     exec_cli.full_auto = interactive.full_auto;
@@ -986,6 +1081,33 @@ fn apply_interactive_exec_flags(exec_cli: &mut ExecCli, interactive: &TuiCli) {
     exec_cli.cwd = interactive.cwd.clone();
     if !interactive.add_dir.is_empty() {
         exec_cli.add_dir = interactive.add_dir.clone();
+    }
+}
+
+fn merge_exec_provider_flags(exec_cli: &mut ExecCli, interactive: &TuiCli) {
+    if exec_cli.openai || exec_cli.indubitably || exec_cli.oss {
+        return;
+    }
+    if interactive.openai {
+        exec_cli.openai = true;
+    } else if interactive.indubitably {
+        exec_cli.indubitably = true;
+    } else if interactive.oss {
+        exec_cli.oss = true;
+        if exec_cli.oss_provider.is_none() {
+            exec_cli.oss_provider = interactive.oss_provider.clone();
+        }
+    }
+}
+
+fn merge_login_provider_flags(login_cli: &mut LoginCommand, interactive: &TuiCli) {
+    if login_cli.use_openai || login_cli.use_indubitably {
+        return;
+    }
+    if interactive.openai {
+        login_cli.use_openai = true;
+    } else if interactive.indubitably {
+        login_cli.use_indubitably = true;
     }
 }
 
@@ -1087,11 +1209,18 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
     if let Some(model) = subcommand_cli.model {
         interactive.model = Some(model);
     }
-    if subcommand_cli.oss {
-        interactive.oss = true;
-    }
-    if subcommand_cli.indubitably {
+    if subcommand_cli.openai {
+        interactive.openai = true;
+        interactive.indubitably = false;
+        interactive.oss = false;
+    } else if subcommand_cli.indubitably {
         interactive.indubitably = true;
+        interactive.openai = false;
+        interactive.oss = false;
+    } else if subcommand_cli.oss {
+        interactive.oss = true;
+        interactive.indubitably = false;
+        interactive.openai = false;
     }
     if let Some(profile) = subcommand_cli.config_profile {
         interactive.config_profile = Some(profile);
@@ -1131,10 +1260,9 @@ fn merge_interactive_cli_flags(interactive: &mut TuiCli, subcommand_cli: TuiCli)
         .extend(subcommand_cli.config_overrides.raw_overrides);
 }
 
-fn print_completion(cmd: CompletionCommand) {
-    let mut app = MultitoolCli::command();
-    let name = "codex";
-    generate(cmd.shell, &mut app, name, &mut std::io::stdout());
+fn print_completion(cmd: CompletionCommand, command_name: &'static str) {
+    let mut app = MultitoolCli::command().name(command_name);
+    generate(cmd.shell, &mut app, command_name, &mut std::io::stdout());
 }
 
 #[cfg(test)]
@@ -1215,6 +1343,39 @@ mod tests {
     }
 
     #[test]
+    fn parse_accepts_openai_flag() {
+        let cli = MultitoolCli::try_parse_from(["codex", "--openai", "hello"]).expect("parse");
+        assert!(cli.interactive.openai);
+    }
+
+    #[test]
+    fn parse_rejects_openai_and_indubitably_together() {
+        let parsed = MultitoolCli::try_parse_from(["codex", "--openai", "--indubitably", "hello"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn parse_rejects_openai_and_oss_together() {
+        let parsed = MultitoolCli::try_parse_from(["codex", "--openai", "--oss", "hello"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
+    fn login_parse_accepts_openai_flag() {
+        let cli = MultitoolCli::try_parse_from(["codex", "login", "--openai"]).expect("parse");
+        let Some(Subcommand::Login(login)) = cli.subcommand else {
+            panic!("expected login subcommand");
+        };
+        assert!(login.use_openai);
+    }
+
+    #[test]
+    fn login_parse_rejects_openai_and_indubitably_together() {
+        let parsed = MultitoolCli::try_parse_from(["codex", "login", "--openai", "--indubitably"]);
+        assert!(parsed.is_err());
+    }
+
+    #[test]
     fn exec_resume_accepts_output_last_message_flag_after_subcommand() {
         let cli = MultitoolCli::try_parse_from([
             "codex",
@@ -1288,8 +1449,10 @@ mod tests {
             lines,
             vec![
                 "Token usage: total=2 input=0 output=2".to_string(),
-                "To continue this session, run codex resume 123e4567-e89b-12d3-a456-426614174000"
-                    .to_string(),
+                format!(
+                    "To continue this session, run {}",
+                    command_with_args("resume 123e4567-e89b-12d3-a456-426614174000")
+                ),
             ]
         );
     }
@@ -1313,7 +1476,10 @@ mod tests {
             lines,
             vec![
                 "Token usage: total=2 input=0 output=2".to_string(),
-                "To continue this session, run codex resume my-thread".to_string(),
+                format!(
+                    "To continue this session, run {}",
+                    command_with_args("resume my-thread")
+                ),
             ]
         );
     }
@@ -1565,9 +1731,94 @@ mod tests {
             exec_cli.add_dir,
             vec![std::path::PathBuf::from("/tmp/extra")]
         );
+        assert!(!exec_cli.openai);
         let Some(codex_exec::Command::Review(_)) = exec_cli.command else {
             panic!("expected review command");
         };
+    }
+
+    #[test]
+    fn review_subcommand_propagates_openai_exec_flag() {
+        let cli = MultitoolCli::try_parse_from([
+            "codex", "--openai", "--model", "gpt-5", "review", "--base", "HEAD",
+        ])
+        .expect("parse should succeed");
+
+        let MultitoolCli {
+            interactive,
+            subcommand,
+            ..
+        } = cli;
+        let Some(Subcommand::Review(review_args)) = subcommand else {
+            panic!("expected review subcommand");
+        };
+
+        let exec_cli = build_exec_cli_for_review(&interactive, review_args).expect("build review");
+        assert!(exec_cli.openai);
+        assert!(!exec_cli.indubitably);
+        assert!(!exec_cli.oss);
+    }
+
+    #[test]
+    fn implicit_indubitably_is_only_used_for_indubitably_invocation_without_explicit_provider() {
+        assert!(should_use_implicit_indubitably(
+            InvokedCommand::Indubitably,
+            false,
+            false,
+            false
+        ));
+        assert!(!should_use_implicit_indubitably(
+            InvokedCommand::Codex,
+            false,
+            false,
+            false
+        ));
+        assert!(!should_use_implicit_indubitably(
+            InvokedCommand::Indubitably,
+            true,
+            false,
+            false
+        ));
+        assert!(!should_use_implicit_indubitably(
+            InvokedCommand::Indubitably,
+            false,
+            true,
+            false
+        ));
+        assert!(!should_use_implicit_indubitably(
+            InvokedCommand::Indubitably,
+            false,
+            false,
+            true
+        ));
+    }
+
+    #[test]
+    fn merge_exec_provider_flags_uses_root_openai_when_subcommand_not_set() {
+        let interactive = TuiCli::parse_from(["codex", "--openai"]);
+        let mut exec_cli = ExecCli::parse_from(["codex", "exec"]);
+        merge_exec_provider_flags(&mut exec_cli, &interactive);
+        assert!(exec_cli.openai);
+        assert!(!exec_cli.indubitably);
+        assert!(!exec_cli.oss);
+    }
+
+    #[test]
+    fn merge_exec_provider_flags_does_not_override_subcommand_provider() {
+        let interactive = TuiCli::parse_from(["codex", "--openai"]);
+        let mut exec_cli = ExecCli::parse_from(["codex", "exec", "--indubitably"]);
+        merge_exec_provider_flags(&mut exec_cli, &interactive);
+        assert!(!exec_cli.openai);
+        assert!(exec_cli.indubitably);
+    }
+
+    #[test]
+    fn merge_login_provider_flags_uses_root_openai_when_subcommand_not_set() {
+        let interactive = TuiCli::parse_from(["codex", "--openai"]);
+        let mut login = LoginCommand::parse_from(["codex"]);
+        merge_login_provider_flags(&mut login, &interactive);
+        assert!(login.use_openai);
+        assert!(!login.use_indubitably);
     }
 
     #[test]

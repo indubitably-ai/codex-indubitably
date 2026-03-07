@@ -139,6 +139,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
         oss,
         oss_provider,
         indubitably,
+        openai,
         config_profile,
         full_auto,
         dangerously_bypass_approvals_and_sandbox,
@@ -270,6 +271,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
         cloud_requirements_loader(cloud_auth_manager, chatgpt_base_url, codex_home.clone());
 
     let model_provider = resolve_model_provider_override(
+        openai,
         oss,
         indubitably,
         oss_provider.as_deref(),
@@ -278,7 +280,7 @@ pub async fn run_main(cli: Cli, arg0_paths: Arg0DispatchPaths) -> anyhow::Result
     )?;
 
     // When using `--oss`, let the bootstrapper pick the model based on selected provider.
-    // `--indubitably` only selects the provider; model defaults come from provider-aware refresh.
+    // `--indubitably`/`--openai` only select the provider; model defaults come from provider-aware refresh.
     let model = resolve_model_override(model_cli_arg, oss, model_provider.as_deref());
 
     // Load configuration and determine approval policy
@@ -722,12 +724,17 @@ async fn run_exec_session(args: ExecRunArgs) -> anyhow::Result<()> {
 }
 
 fn resolve_model_provider_override(
+    openai: bool,
     oss: bool,
     indubitably: bool,
     oss_provider: Option<&str>,
     config_toml: &ConfigToml,
     config_profile: Option<String>,
 ) -> anyhow::Result<Option<String>> {
+    if openai {
+        return Ok(Some("openai".to_string()));
+    }
+
     if indubitably {
         return Ok(Some(BEDROCK_PROVIDER_ID.to_string()));
     }
@@ -1217,7 +1224,7 @@ mod tests {
     #[test]
     fn resolve_model_provider_override_uses_bedrock_for_indubitably() {
         let provider =
-            resolve_model_provider_override(false, true, None, &ConfigToml::default(), None)
+            resolve_model_provider_override(false, false, true, None, &ConfigToml::default(), None)
                 .expect("provider override resolves");
 
         assert_eq!(provider.as_deref(), Some(BEDROCK_PROVIDER_ID));
@@ -1229,9 +1236,28 @@ mod tests {
             oss_provider: Some(OLLAMA_OSS_PROVIDER_ID.to_string()),
             ..Default::default()
         };
-        let provider = resolve_model_provider_override(true, false, None, &config_toml, None)
-            .expect("provider override resolves");
+        let provider =
+            resolve_model_provider_override(false, true, false, None, &config_toml, None)
+                .expect("provider override resolves");
 
         assert_eq!(provider.as_deref(), Some(OLLAMA_OSS_PROVIDER_ID));
+    }
+
+    #[test]
+    fn resolve_model_provider_override_uses_openai_when_requested() {
+        let provider =
+            resolve_model_provider_override(true, false, false, None, &ConfigToml::default(), None)
+                .expect("provider override resolves");
+
+        assert_eq!(provider.as_deref(), Some("openai"));
+    }
+
+    #[test]
+    fn resolve_model_provider_override_openai_beats_indubitably() {
+        let provider =
+            resolve_model_provider_override(true, false, true, None, &ConfigToml::default(), None)
+                .expect("provider override resolves");
+
+        assert_eq!(provider.as_deref(), Some("openai"));
     }
 }

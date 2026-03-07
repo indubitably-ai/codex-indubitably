@@ -49,6 +49,18 @@ just test
 cargo test --all-features
 ```
 
+### Fork Homebrew publish helpers
+
+This fork keeps Homebrew/tap helpers in-repo under `packaging/homebrew/`.
+
+- Local packaging guide: `packaging/homebrew/README.md`
+- Build macOS Homebrew artifacts:
+  - `./packaging/homebrew/scripts/build_macos_homebrew_artifacts.py --codesign-identity "Developer ID Application: <TEAM/NAME>" --notarytool-profile <NOTARY_PROFILE>`
+- Run local release checklist (artifact validation + smoke checks + cask generation):
+  - `./packaging/homebrew/scripts/release_checklist.py --version <VERSION>`
+
+These helpers are fork-owned and separate from upstream release tooling.
+
 ## Tracing / verbose logging
 
 Codex is written in Rust, so it honors the `RUST_LOG` environment variable to configure its logging behavior.

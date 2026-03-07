@@ -5,6 +5,7 @@ use codex_core::auth::AuthCredentialsStoreMode;
 use codex_core::config::Config;
 use codex_core::config::find_codex_home;
 use codex_core::default_client::get_codex_user_agent;
+use codex_core::util::command_with_args;
 use codex_login::AuthMode;
 use codex_login::CodexAuth;
 use codex_protocol::protocol::ConversationAudioParams;
@@ -767,7 +768,12 @@ async fn resolve_auth() -> Result<TranscriptionAuthContext, String> {
     let codex_home = find_codex_home().map_err(|e| format!("failed to find codex home: {e}"))?;
     let auth = CodexAuth::from_auth_storage(&codex_home, AuthCredentialsStoreMode::Auto)
         .map_err(|e| format!("failed to read auth.json: {e}"))?
-        .ok_or_else(|| "No Codex auth is configured; please run `codex login`".to_string())?;
+        .ok_or_else(|| {
+            format!(
+                "No Codex auth is configured; please run `{}`",
+                command_with_args("login")
+            )
+        })?;
 
     let chatgpt_account_id = auth.get_account_id();
 

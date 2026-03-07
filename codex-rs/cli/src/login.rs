@@ -9,6 +9,7 @@ use codex_core::auth::CLIENT_ID;
 use codex_core::auth::login_with_api_key;
 use codex_core::auth::logout;
 use codex_core::config::Config;
+use codex_core::util::command_with_args;
 use codex_login::ServerOptions;
 use codex_login::run_device_code_login;
 use codex_login::run_login_server;
@@ -41,8 +42,9 @@ const INDUBITABLY_AUTH_FILE_ENV_VAR: &str = "INDUBITABLY_AUTH_FILE";
 const INDUBITABLY_AUTH_FILE_NAME: &str = "indubitably-auth.json";
 
 fn print_login_server_start(actual_port: u16, auth_url: &str) {
+    let device_auth_command = command_with_args("login --device-auth");
     eprintln!(
-        "Starting local login server on http://localhost:{actual_port}.\nIf your browser did not open, navigate to this URL to authenticate:\n\n{auth_url}\n\nOn a remote or headless machine? Use `codex login --device-auth` instead."
+        "Starting local login server on http://localhost:{actual_port}.\nIf your browser did not open, navigate to this URL to authenticate:\n\n{auth_url}\n\nOn a remote or headless machine? Use `{device_auth_command}` instead."
     );
 }
 
@@ -138,8 +140,9 @@ pub fn read_api_key_from_stdin() -> String {
     let mut stdin = std::io::stdin();
 
     if stdin.is_terminal() {
+        let command = command_with_args("login --with-api-key");
         eprintln!(
-            "--with-api-key expects the API key on stdin. Try piping it, e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`."
+            "--with-api-key expects the API key on stdin. Try piping it, e.g. `printenv OPENAI_API_KEY | {command}`."
         );
         std::process::exit(1);
     }
@@ -195,7 +198,7 @@ pub async fn run_login_with_device_code(
 }
 
 /// Prefers device-code login (with `open_browser = false`) when headless environment is detected, but keeps
-/// `codex login` working in environments where device-code may be disabled/feature-gated.
+/// CLI login working in environments where device-code may be disabled/feature-gated.
 /// If `run_device_code_login` returns `ErrorKind::NotFound` ("device-code unsupported"), this
 /// falls back to starting the local browser login server.
 pub async fn run_login_with_device_code_fallback_to_browser(
@@ -610,18 +613,25 @@ fn handle_login_request(
     }
 
     if state.as_deref() != Some(expected_state) {
+        let command = command_with_args("login --indubitably");
+        let message =
+            format!("State mismatch. Please return to your terminal and run `{command}` again.");
         request.respond(html_response(build_callback_html(CallbackPage::Error {
             heading: "Authentication Failed",
-            message: "State mismatch. Please return to your terminal and run `codex login --indubitably` again.",
+            message: message.as_str(),
             details: None,
         }))?)?;
         return Ok(None);
     }
 
     let Some(code) = code else {
+        let command = command_with_args("login --indubitably");
+        let message = format!(
+            "Missing authorization code. Please return to your terminal and run `{command}` again."
+        );
         request.respond(html_response(build_callback_html(CallbackPage::Error {
             heading: "Authentication Failed",
-            message: "Missing authorization code. Please return to your terminal and run `codex login --indubitably` again.",
+            message: message.as_str(),
             details: None,
         }))?)?;
         return Ok(None);

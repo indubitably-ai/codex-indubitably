@@ -34,7 +34,7 @@ supports_websockets = false
         .assert()
         .code(1)
         .stdout(contains(
-            "unsupported operation: Bedrock runtime adapter is not configured",
+            "indubitably authentication expired; run `codex login --indubitably`",
         ));
 
     let requests = server

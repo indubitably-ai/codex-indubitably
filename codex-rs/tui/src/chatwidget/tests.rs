@@ -6725,6 +6725,82 @@ async fn model_selection_popup_snapshot() {
     assert_snapshot!("model_selection_popup", popup);
 }
 
+fn bedrock_preset(model: &str, display_name: &str, is_default: bool) -> ModelPreset {
+    ModelPreset {
+        id: model.to_string(),
+        model: model.to_string(),
+        display_name: display_name.to_string(),
+        description: String::new(),
+        default_reasoning_effort: ReasoningEffortConfig::None,
+        supported_reasoning_efforts: Vec::new(),
+        supports_personality: false,
+        is_default,
+        upgrade: None,
+        show_in_picker: true,
+        availability_nux: None,
+        supported_in_api: true,
+        input_modalities: default_input_modalities(),
+    }
+}
+
+#[tokio::test]
+async fn bedrock_model_selection_popup_snapshot() {
+    let (mut chat, _rx, _op_rx) = make_chatwidget_manual(Some("claude-3-5-sonnet")).await;
+    chat.open_bedrock_model_popup(vec![
+        bedrock_preset("claude-3-5-sonnet", "Claude 3.5 Sonnet", true),
+        bedrock_preset("claude-3-5-haiku", "Claude 3.5 Haiku", false),
+    ]);
+
+    let popup = render_bottom_popup(&chat, 80);
+    assert_snapshot!("bedrock_model_selection_popup", popup);
+}
+
+#[tokio::test]
+async fn bedrock_model_selection_applies_immediately_and_dismisses_popup() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(Some("claude-3-5-sonnet")).await;
+    chat.set_reasoning_effort(Some(ReasoningEffortConfig::High));
+    chat.open_bedrock_model_popup(vec![
+        bedrock_preset("claude-3-5-sonnet", "Claude 3.5 Sonnet", true),
+        bedrock_preset("claude-3-5-haiku", "Claude 3.5 Haiku", false),
+    ]);
+
+    chat.handle_key_event(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    chat.handle_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
+    assert!(
+        chat.bottom_pane.no_modal_or_popup_active(),
+        "expected Bedrock picker to dismiss after selection"
+    );
+
+    let events = std::iter::from_fn(|| rx.try_recv().ok()).collect::<Vec<_>>();
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            AppEvent::UpdateModel(model) if model == "claude-3-5-haiku"
+        )),
+        "expected Bedrock picker to update the selected model; events: {events:?}"
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, AppEvent::UpdateReasoningEffort(None))),
+        "expected Bedrock picker to clear the explicit reasoning effort; events: {events:?}"
+    );
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            AppEvent::PersistModelSelection { model, effort: None } if model == "claude-3-5-haiku"
+        )),
+        "expected Bedrock picker to persist the selected model; events: {events:?}"
+    );
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, AppEvent::OpenReasoningPopup { .. })),
+        "Bedrock picker should not open the reasoning popup; events: {events:?}"
+    );
+}
+
 #[tokio::test]
 async fn personality_selection_popup_snapshot() {
     let (mut chat, _rx, _op_rx) = make_chatwidget_manual(Some("gpt-5.2-codex")).await;
@@ -6827,6 +6903,45 @@ async fn model_picker_hides_show_in_picker_false_models_from_cache() {
     assert!(
         !popup.contains("test-hidden-model"),
         "expected hidden model to be excluded from picker:\n{popup}"
+    );
+}
+
+#[tokio::test]
+async fn all_models_picker_with_zero_reasoning_options_dismisses_on_select() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(Some("gpt-5")).await;
+    let preset = ModelPreset {
+        id: "bedrock-style-model".to_string(),
+        model: "bedrock-style-model".to_string(),
+        display_name: "bedrock-style-model".to_string(),
+        description: String::new(),
+        default_reasoning_effort: ReasoningEffortConfig::None,
+        supported_reasoning_efforts: Vec::new(),
+        supports_personality: false,
+        is_default: false,
+        upgrade: None,
+        show_in_picker: true,
+        availability_nux: None,
+        supported_in_api: true,
+        input_modalities: default_input_modalities(),
+    };
+    chat.open_all_models_popup(vec![preset]);
+
+    chat.handle_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
+    assert!(
+        chat.bottom_pane.no_modal_or_popup_active(),
+        "expected zero-effort model selection to dismiss the picker"
+    );
+
+    let event = rx.try_recv().expect("expected OpenReasoningPopup event");
+    let AppEvent::OpenReasoningPopup { model } = event else {
+        panic!("expected OpenReasoningPopup event");
+    };
+    chat.open_reasoning_popup(model);
+
+    assert!(
+        chat.bottom_pane.no_modal_or_popup_active(),
+        "expected zero-effort reasoning selection to apply immediately"
     );
 }
 

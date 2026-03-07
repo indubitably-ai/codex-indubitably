@@ -28,6 +28,7 @@ const MAX_REQUEST_MAX_RETRIES: u64 = 100;
 
 const OPENAI_PROVIDER_NAME: &str = "OpenAI";
 const BEDROCK_PROVIDER_NAME: &str = "AWS Bedrock";
+const INDUBITABLY_DEFAULT_BEDROCK_BASE_URL: &str = "https://api.indubitably.ai";
 const CHAT_WIRE_API_REMOVED_ERROR: &str = "`wire_api = \"chat\"` is no longer supported.\nHow to fix: set `wire_api = \"responses\"` in your provider config.\nMore info: https://github.com/openai/codex/discussions/7782";
 pub(crate) const LEGACY_OLLAMA_CHAT_PROVIDER_ID: &str = "ollama-chat";
 pub(crate) const OLLAMA_CHAT_PROVIDER_REMOVED_ERROR: &str = "`ollama-chat` is no longer supported.\nHow to fix: replace `ollama-chat` with `ollama` in `model_provider`, `oss_provider`, or `--local-provider`.\nMore info: https://github.com/openai/codex/discussions/7782";
@@ -300,7 +301,7 @@ pub fn built_in_model_providers() -> HashMap<String, ModelProviderInfo> {
 fn create_bedrock_provider() -> ModelProviderInfo {
     ModelProviderInfo {
         name: BEDROCK_PROVIDER_NAME.into(),
-        base_url: None,
+        base_url: Some(INDUBITABLY_DEFAULT_BEDROCK_BASE_URL.into()),
         env_key: None,
         env_key_instructions: None,
         experimental_bearer_token: None,
@@ -472,6 +473,10 @@ wire_api = "chat"
             .expect("bedrock provider should exist");
 
         assert_eq!(bedrock.name, "AWS Bedrock");
+        assert_eq!(
+            bedrock.base_url.as_deref(),
+            Some(INDUBITABLY_DEFAULT_BEDROCK_BASE_URL)
+        );
         assert!(!bedrock.requires_openai_auth);
         assert!(!bedrock.supports_websockets);
         assert_eq!(bedrock.wire_api, WireApi::Responses);

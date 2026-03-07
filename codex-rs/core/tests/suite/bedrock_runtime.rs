@@ -55,7 +55,7 @@ fn bedrock_stream_fixture_parses_expected_chunk_sequence() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn bedrock_provider_stream_without_runtime_config_returns_unsupported_operation() {
+async fn bedrock_provider_stream_without_token_returns_auth_error() {
     let provider = built_in_model_providers()
         .get(BEDROCK_PROVIDER_ID)
         .unwrap_or_else(|| panic!("bedrock provider should exist"))
@@ -88,10 +88,10 @@ async fn bedrock_provider_stream_without_runtime_config_returns_unsupported_oper
         .await;
 
     match result {
-        Err(CodexErr::UnsupportedOperation(message)) => {
-            assert!(message.contains("Bedrock runtime adapter is not configured"));
+        Err(CodexErr::Stream(message, None)) => {
+            assert!(message.contains("indubitably authentication expired"));
         }
-        Err(other) => panic!("expected UnsupportedOperation, got {other:?}"),
+        Err(other) => panic!("expected auth stream error, got {other:?}"),
         Ok(_) => panic!("expected bedrock stream to return an error"),
     }
 }
