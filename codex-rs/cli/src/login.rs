@@ -2,14 +2,14 @@ use anyhow::Context;
 use base64::Engine;
 use chrono::Duration as ChronoDuration;
 use chrono::Utc;
-//! CLI login commands and their direct-user observability surfaces.
-//!
-//! The TUI path already installs a broader tracing stack with feedback, OpenTelemetry, and other
-//! interactive-session layers. Direct `codex login` intentionally does less: it preserves the
-//! existing stderr/browser UX and adds only a small file-backed tracing layer for login-specific
-//! targets. Keeping that setup local avoids pulling the TUI's session-oriented logging machinery
-//! into a one-shot CLI command while still producing a durable `codex-login.log` artifact that
-//! support can request from users.
+// CLI login commands and their direct-user observability surfaces.
+//
+// The TUI path already installs a broader tracing stack with feedback, OpenTelemetry, and other
+// interactive-session layers. Direct `codex login` intentionally does less: it preserves the
+// existing stderr/browser UX and adds only a small file-backed tracing layer for login-specific
+// targets. Keeping that setup local avoids pulling the TUI's session-oriented logging machinery
+// into a one-shot CLI command while still producing a durable `codex-login.log` artifact that
+// support can request from users.
 use codex_core::CodexAuth;
 use codex_core::auth::AuthCredentialsStoreMode;
 use codex_core::auth::AuthMode;
@@ -36,13 +36,13 @@ use std::path::PathBuf;
 use tiny_http::Header;
 use tiny_http::Response;
 use tiny_http::Server;
-use url::Url;
 use tracing_appender::non_blocking;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::Layer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use url::Url;
 
 const CHATGPT_LOGIN_DISABLED_MESSAGE: &str =
     "ChatGPT login is disabled. Use API key login instead.";
