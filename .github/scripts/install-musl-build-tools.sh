@@ -252,9 +252,14 @@ target_cxx_var="CXX_${TARGET}"
 target_cxx_var="${target_cxx_var//-/_}"
 echo "${target_cxx_var}=${cxx}" >> "$GITHUB_ENV"
 
+cargo_linker="${musl_linker}"
+if command -v zig >/dev/null; then
+  cargo_linker="${cc}"
+fi
+
 cargo_linker_var="CARGO_TARGET_${TARGET^^}_LINKER"
 cargo_linker_var="${cargo_linker_var//-/_}"
-echo "${cargo_linker_var}=${musl_linker}" >> "$GITHUB_ENV"
+echo "${cargo_linker_var}=${cargo_linker}" >> "$GITHUB_ENV"
 
 echo "CMAKE_C_COMPILER=${cc}" >> "$GITHUB_ENV"
 echo "CMAKE_CXX_COMPILER=${cxx}" >> "$GITHUB_ENV"
