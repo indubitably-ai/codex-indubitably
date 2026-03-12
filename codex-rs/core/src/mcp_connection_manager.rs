@@ -254,7 +254,7 @@ fn elicitation_is_rejected_by_policy(approval_policy: AskForApproval) -> bool {
         AskForApproval::OnFailure => false,
         AskForApproval::OnRequest => false,
         AskForApproval::UnlessTrusted => false,
-        AskForApproval::Reject(reject_config) => reject_config.rejects_mcp_elicitations(),
+        AskForApproval::Granular(granular_config) => !granular_config.allows_mcp_elicitations(),
     }
 }
 
@@ -1706,8 +1706,8 @@ mod mcp_init_error_display_tests {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use codex_protocol::protocol::GranularApprovalConfig;
     use codex_protocol::protocol::McpAuthStatus;
-    use codex_protocol::protocol::RejectConfig;
     use rmcp::model::JsonObject;
     use std::collections::HashSet;
     use std::sync::Arc;
@@ -1768,7 +1768,7 @@ mod tests {
     }
 
     #[test]
-    fn elicitation_reject_policy_defaults_to_prompting() {
+    fn elicitation_granular_policy_defaults_to_prompting() {
         assert!(!elicitation_is_rejected_by_policy(
             AskForApproval::OnFailure
         ));
@@ -1778,8 +1778,8 @@ mod tests {
         assert!(!elicitation_is_rejected_by_policy(
             AskForApproval::UnlessTrusted
         ));
-        assert!(!elicitation_is_rejected_by_policy(AskForApproval::Reject(
-            RejectConfig {
+        assert!(!elicitation_is_rejected_by_policy(AskForApproval::Granular(
+            GranularApprovalConfig {
                 sandbox_approval: false,
                 rules: false,
                 skill_approval: false,
@@ -1790,10 +1790,10 @@ mod tests {
     }
 
     #[test]
-    fn elicitation_reject_policy_respects_never_and_reject_config() {
+    fn elicitation_granular_policy_respects_never_and_config() {
         assert!(elicitation_is_rejected_by_policy(AskForApproval::Never));
-        assert!(elicitation_is_rejected_by_policy(AskForApproval::Reject(
-            RejectConfig {
+        assert!(elicitation_is_rejected_by_policy(AskForApproval::Granular(
+            GranularApprovalConfig {
                 sandbox_approval: false,
                 rules: false,
                 skill_approval: false,
