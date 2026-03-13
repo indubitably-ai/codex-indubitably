@@ -3390,6 +3390,9 @@ impl Session {
                 turn_context
                     .features
                     .enabled(Feature::ExecPermissionApprovals),
+                turn_context
+                    .features
+                    .enabled(Feature::RequestPermissionsTool),
             )
             .into_text(),
         );
