@@ -106,6 +106,7 @@ use codex_protocol::protocol::TurnContextNetworkItem;
 use codex_protocol::protocol::TurnStartedEvent;
 use codex_protocol::protocol::W3cTraceContext;
 use codex_protocol::request_permissions::PermissionGrantScope;
+use codex_protocol::request_permissions::RequestPermissionProfile;
 use codex_protocol::request_permissions::RequestPermissionsArgs;
 use codex_protocol::request_permissions::RequestPermissionsEvent;
 use codex_protocol::request_permissions::RequestPermissionsResponse;
@@ -2913,7 +2914,7 @@ impl Session {
         match turn_context.approval_policy.value() {
             AskForApproval::Never => {
                 return Some(RequestPermissionsResponse {
-                    permissions: PermissionProfile::default(),
+                    permissions: RequestPermissionProfile::default(),
                     scope: PermissionGrantScope::Turn,
                 });
             }
@@ -2921,7 +2922,7 @@ impl Session {
                 if !granular_config.allows_request_permissions() =>
             {
                 return Some(RequestPermissionsResponse {
-                    permissions: PermissionProfile::default(),
+                    permissions: RequestPermissionProfile::default(),
                     scope: PermissionGrantScope::Turn,
                 });
             }
@@ -3107,7 +3108,7 @@ impl Session {
                     if entry.is_some() && !response.permissions.is_empty() {
                         match response.scope {
                             PermissionGrantScope::Turn => {
-                                ts.record_granted_permissions(response.permissions.clone());
+                                ts.record_granted_permissions(response.permissions.clone().into());
                             }
                             PermissionGrantScope::Session => {
                                 granted_for_session = Some(response.permissions.clone());
@@ -3121,7 +3122,7 @@ impl Session {
         };
         if let Some(permissions) = granted_for_session {
             let mut state = self.state.lock().await;
-            state.record_granted_permissions(permissions);
+            state.record_granted_permissions(permissions.into());
         }
         match entry {
             Some(tx_response) => {
