@@ -250,6 +250,7 @@ use crate::protocol::TokenCountEvent;
 use crate::protocol::TokenUsage;
 use crate::protocol::TokenUsageInfo;
 use crate::protocol::TurnDiffEvent;
+use crate::protocol::TurnSkillContextEvent;
 use crate::protocol::WarningEvent;
 use crate::rollout::RolloutRecorder;
 use crate::rollout::RolloutRecorderParams;
@@ -263,6 +264,8 @@ use crate::skills::SkillInjections;
 use crate::skills::SkillLoadOutcome;
 use crate::skills::SkillMetadata;
 use crate::skills::SkillsManager;
+use crate::skills::build_effective_skill_descriptors;
+use crate::skills::build_selected_skill_descriptors;
 use crate::skills::build_skill_injections;
 use crate::skills::collect_env_var_dependencies;
 use crate::skills::collect_explicit_skill_mentions;
@@ -279,6 +282,7 @@ use crate::tasks::RegularTask;
 use crate::tasks::ReviewTask;
 use crate::tasks::SessionTask;
 use crate::tasks::SessionTaskContext;
+use crate::tasks::resolve_review_model;
 use crate::tools::ToolRouter;
 use crate::tools::context::SharedTurnDiffTracker;
 use crate::tools::handlers::SEARCH_TOOL_BM25_TOOL_NAME;
@@ -1573,6 +1577,7 @@ impl Session {
             model_client: ModelClient::new(
                 Some(Arc::clone(&auth_manager)),
                 conversation_id,
+                config.model_provider_id.clone(),
                 session_configuration.provider.clone(),
                 session_configuration.session_source.clone(),
                 config.model_verbosity,
@@ -4917,10 +4922,12 @@ async fn spawn_review_thread(
     sub_id: String,
     resolved: crate::review_prompts::ResolvedReviewRequest,
 ) {
-    let model = config
-        .review_model
-        .clone()
-        .unwrap_or_else(|| parent_turn_context.model_info.slug.clone());
+    let model = resolve_review_model(
+        config.as_ref(),
+        parent_turn_context.model_info.slug.as_str(),
+        &parent_turn_context.provider,
+    )
+    .await;
     let review_model_info = sess
         .services
         .models_manager
@@ -5230,8 +5237,24 @@ pub(crate) async fn run_turn(
         thread_id,
         turn_context.sub_id.clone(),
     );
+    let selected_skills = skills_outcome.as_ref().map_or_else(Vec::new, |outcome| {
+        build_selected_skill_descriptors(&input, &outcome.skills, &mentioned_skills)
+    });
+    let effective_skills = skills_outcome.as_ref().map_or_else(Vec::new, |outcome| {
+        build_effective_skill_descriptors(outcome)
+    });
+    sess.send_event(
+        &turn_context,
+        EventMsg::TurnSkillContext(TurnSkillContextEvent {
+            turn_id: turn_context.sub_id.clone(),
+            selected_skills,
+            effective_skills,
+        }),
+    )
+    .await;
     let SkillInjections {
         items: skill_items,
+        invocations: skill_invocations,
         warnings: skill_warnings,
     } = build_skill_injections(
         &mentioned_skills,
@@ -5304,6 +5327,10 @@ pub(crate) async fn run_turn(
 
     if !skill_items.is_empty() {
         sess.record_conversation_items(&turn_context, &skill_items)
+            .await;
+    }
+    for invocation in skill_invocations {
+        sess.send_event(&turn_context, EventMsg::SkillInvocation(invocation))
             .await;
     }
     if !plugin_items.is_empty() {
@@ -6231,6 +6258,8 @@ fn realtime_text_for_event(msg: &EventMsg) -> Option<String> {
         | EventMsg::ListRemoteSkillsResponse(_)
         | EventMsg::RemoteSkillDownloaded(_)
         | EventMsg::SkillsUpdateAvailable
+        | EventMsg::TurnSkillContext(_)
+        | EventMsg::SkillInvocation(_)
         | EventMsg::PlanUpdate(_)
         | EventMsg::TurnAborted(_)
         | EventMsg::ShutdownComplete

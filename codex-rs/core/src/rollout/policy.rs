@@ -117,6 +117,9 @@ fn event_msg_persistence_mode(ev: &EventMsg) -> Option<EventPersistenceMode> {
         | EventMsg::ExecCommandEnd(_)
         | EventMsg::PatchApplyEnd(_)
         | EventMsg::McpToolCallEnd(_)
+        | EventMsg::TurnSkillContext(_)
+        | EventMsg::SkillInvocation(_)
+        | EventMsg::PlanUpdate(_)
         | EventMsg::ViewImageToolCall(_)
         | EventMsg::ImageGenerationEnd(_)
         | EventMsg::CollabAgentSpawnEnd(_)
@@ -160,7 +163,6 @@ fn event_msg_persistence_mode(ev: &EventMsg) -> Option<EventPersistenceMode> {
         | EventMsg::ListSkillsResponse(_)
         | EventMsg::ListRemoteSkillsResponse(_)
         | EventMsg::RemoteSkillDownloaded(_)
-        | EventMsg::PlanUpdate(_)
         | EventMsg::ShutdownComplete
         | EventMsg::DeprecationNotice(_)
         | EventMsg::ItemStarted(_)

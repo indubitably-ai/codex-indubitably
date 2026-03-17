@@ -94,7 +94,7 @@ fn index_tools(tools: Vec<ToolSpec>) -> HashMap<String, ToolKind> {
                 map.insert("web_search".to_string(), ToolKind::WebSearch);
                 map.insert("web-search".to_string(), ToolKind::WebSearch);
             }
-            ToolSpec::ImageGeneration {} => {
+            ToolSpec::ImageGeneration { .. } => {
                 map.insert("image_generation".to_string(), ToolKind::Unknown);
             }
         }

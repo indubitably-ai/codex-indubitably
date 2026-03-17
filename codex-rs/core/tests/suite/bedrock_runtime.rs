@@ -5,7 +5,7 @@ use codex_core::ResponseEvent;
 use codex_core::auth::AuthManager;
 use codex_core::built_in_model_providers;
 use codex_core::error::CodexErr;
-use codex_otel::OtelManager;
+use codex_otel::SessionTelemetry;
 use codex_protocol::ThreadId;
 use codex_protocol::config_types::ReasoningSummary;
 use codex_protocol::protocol::SessionSource;
@@ -25,8 +25,8 @@ use wiremock::matchers::query_param;
 
 const BEDROCK_PROVIDER_ID: &str = "bedrock";
 
-fn test_otel_manager() -> OtelManager {
-    OtelManager::new(
+fn test_session_telemetry() -> SessionTelemetry {
+    SessionTelemetry::new(
         ThreadId::new(),
         "claude-3-7-sonnet",
         "claude-3-7-sonnet",
@@ -79,7 +79,7 @@ async fn bedrock_provider_stream_without_token_returns_auth_error() {
         .stream(
             &Prompt::default(),
             &test_model_info(),
-            &test_otel_manager(),
+            &test_session_telemetry(),
             None,
             ReasoningSummary::Auto,
             None,
@@ -134,7 +134,7 @@ async fn bedrock_provider_stream_uses_proxy_runtime_and_avoids_responses_api() -
         .stream(
             &Prompt::default(),
             &test_model_info(),
-            &test_otel_manager(),
+            &test_session_telemetry(),
             None,
             ReasoningSummary::Auto,
             None,
@@ -225,7 +225,7 @@ async fn bedrock_provider_stream_surfaces_auth_expired_for_proxy_unauthorized() 
         .stream(
             &Prompt::default(),
             &test_model_info(),
-            &test_otel_manager(),
+            &test_session_telemetry(),
             None,
             ReasoningSummary::Auto,
             None,
@@ -298,7 +298,7 @@ async fn bedrock_provider_stream_reports_unknown_operation_from_non_proxy_endpoi
         .stream(
             &Prompt::default(),
             &test_model_info(),
-            &test_otel_manager(),
+            &test_session_telemetry(),
             None,
             ReasoningSummary::Auto,
             None,

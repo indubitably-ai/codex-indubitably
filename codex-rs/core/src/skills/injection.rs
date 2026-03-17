@@ -11,12 +11,17 @@ use crate::mentions::build_skill_name_counts;
 use crate::skills::SkillMetadata;
 use codex_otel::SessionTelemetry;
 use codex_protocol::models::ResponseItem;
+use codex_protocol::protocol::SkillInvocationEvent;
+use codex_protocol::protocol::SkillInvocationStatus;
+use codex_protocol::protocol::SkillInvocationTriggerMode;
+use codex_protocol::protocol::TurnSkillDescriptor;
 use codex_protocol::user_input::UserInput;
 use tokio::fs;
 
 #[derive(Debug, Default)]
 pub(crate) struct SkillInjections {
     pub(crate) items: Vec<ResponseItem>,
+    pub(crate) invocations: Vec<SkillInvocationEvent>,
     pub(crate) warnings: Vec<String>,
 }
 
@@ -32,6 +37,7 @@ pub(crate) async fn build_skill_injections(
 
     let mut result = SkillInjections {
         items: Vec::with_capacity(mentioned_skills.len()),
+        invocations: Vec::with_capacity(mentioned_skills.len()),
         warnings: Vec::new(),
     };
     let mut invocations = Vec::new();
@@ -51,6 +57,16 @@ pub(crate) async fn build_skill_injections(
                     path: skill.path_to_skills_md.to_string_lossy().into_owned(),
                     contents,
                 }));
+                result.invocations.push(SkillInvocationEvent {
+                    turn_id: tracking.turn_id.clone(),
+                    skill: skill_descriptor(skill),
+                    trigger_mode: SkillInvocationTriggerMode::Explicit,
+                    status: SkillInvocationStatus::Completed,
+                    input_summary: Some("Selected explicitly for this turn.".to_string()),
+                    output_summary: Some(
+                        "Injected SKILL.md instructions into the turn context.".to_string(),
+                    ),
+                });
             }
             Err(err) => {
                 emit_skill_injected_metric(otel, skill, "error");
@@ -59,6 +75,14 @@ pub(crate) async fn build_skill_injections(
                     name = skill.name,
                     path = skill.path_to_skills_md.display()
                 );
+                result.invocations.push(SkillInvocationEvent {
+                    turn_id: tracking.turn_id.clone(),
+                    skill: skill_descriptor(skill),
+                    trigger_mode: SkillInvocationTriggerMode::Explicit,
+                    status: SkillInvocationStatus::Failed,
+                    input_summary: Some("Selected explicitly for this turn.".to_string()),
+                    output_summary: Some(message.clone()),
+                });
                 result.warnings.push(message);
             }
         }
@@ -67,6 +91,72 @@ pub(crate) async fn build_skill_injections(
     analytics_client.track_skill_invocations(tracking, invocations);
 
     result
+}
+
+pub(crate) fn skill_descriptor(skill: &SkillMetadata) -> TurnSkillDescriptor {
+    TurnSkillDescriptor {
+        name: skill.name.clone(),
+        display_name: skill
+            .interface
+            .as_ref()
+            .and_then(|interface| interface.display_name.clone()),
+        source_path: Some(skill.path_to_skills_md.clone()),
+        scope: Some(skill.scope),
+    }
+}
+
+pub(crate) fn build_selected_skill_descriptors(
+    inputs: &[UserInput],
+    available_skills: &[SkillMetadata],
+    mentioned_skills: &[SkillMetadata],
+) -> Vec<TurnSkillDescriptor> {
+    let mut selected = Vec::new();
+    let mut seen_paths = HashSet::<PathBuf>::new();
+    let mut seen_names = HashSet::<String>::new();
+
+    for input in inputs {
+        if let UserInput::Skill { name, path } = input {
+            if !seen_paths.insert(path.clone()) {
+                continue;
+            }
+            if let Some(skill) = available_skills
+                .iter()
+                .find(|skill| skill.path_to_skills_md == *path)
+            {
+                seen_names.insert(skill.name.clone());
+                selected.push(skill_descriptor(skill));
+            } else {
+                seen_names.insert(name.clone());
+                selected.push(TurnSkillDescriptor {
+                    name: name.clone(),
+                    display_name: None,
+                    source_path: Some(path.clone()),
+                    scope: None,
+                });
+            }
+        }
+    }
+
+    for skill in mentioned_skills {
+        if seen_names.contains(&skill.name) || seen_paths.contains(&skill.path_to_skills_md) {
+            continue;
+        }
+        seen_names.insert(skill.name.clone());
+        seen_paths.insert(skill.path_to_skills_md.clone());
+        selected.push(skill_descriptor(skill));
+    }
+
+    selected
+}
+
+pub(crate) fn build_effective_skill_descriptors(
+    outcome: &crate::skills::SkillLoadOutcome,
+) -> Vec<TurnSkillDescriptor> {
+    outcome
+        .skills_with_enabled()
+        .filter(|(_, enabled)| *enabled)
+        .map(|(skill, _)| skill_descriptor(skill))
+        .collect()
 }
 
 fn emit_skill_injected_metric(

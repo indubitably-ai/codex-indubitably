@@ -232,7 +232,7 @@ To branch from a stored session, call `thread/fork` with the `thread.id`. This c
 { "method": "thread/started", "params": { "thread": { … } } }
 ```
 
-Experimental API: `thread/start`, `thread/resume`, and `thread/fork` accept `persistExtendedHistory: true` to persist a richer subset of ThreadItems for non-lossy history when calling `thread/read`, `thread/resume`, and `thread/fork` later. This does not backfill events that were not persisted previously.
+Experimental API: `thread/start`, `thread/resume`, and `thread/fork` accept `persistExtendedHistory: true` to persist a richer subset of ThreadItems for non-lossy history when calling `thread/read`, `thread/resume`, and `thread/fork` later. This does not backfill events that were not persisted previously. Newer enriched histories also retain the data needed to reconstruct canonical full-trace events from rollout lines, including plan updates plus selected/effective skill context and actual skill invocations.
 
 ### Example: List threads (with pagination & filters)
 

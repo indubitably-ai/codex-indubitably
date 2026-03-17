@@ -21,6 +21,7 @@ use crate::codex::TurnContext;
 use crate::codex_delegate::run_codex_thread_one_shot;
 use crate::config::Constrained;
 use crate::features::Feature;
+use crate::model_provider_info::ModelProviderInfo;
 use crate::review_format::format_review_findings_block;
 use crate::review_format::render_review_output_text;
 use crate::state::TaskKind;
@@ -36,6 +37,27 @@ impl ReviewTask {
     pub(crate) fn new() -> Self {
         Self
     }
+}
+
+pub(crate) async fn resolve_review_model(
+    config: &crate::config::Config,
+    current_model: &str,
+    provider: &ModelProviderInfo,
+) -> String {
+    let Some(review_model) = config.review_model.as_ref() else {
+        return current_model.to_string();
+    };
+    if !provider.is_bedrock() {
+        return review_model.clone();
+    }
+
+    tracing::warn!(
+        review_model,
+        current_model,
+        provider = provider.name.as_str(),
+        "configured review model is overridden for bedrock provider; using current session model"
+    );
+    current_model.to_string()
 }
 
 #[async_trait]
@@ -106,15 +128,14 @@ async fn start_review_conversation(
     sub_agent_config.base_instructions = Some(crate::REVIEW_PROMPT.to_string());
     sub_agent_config.permissions.approval_policy = Constrained::allow_only(AskForApproval::Never);
 
-    let model = config
-        .review_model
-        .clone()
-        .unwrap_or_else(|| ctx.model_info.slug.clone());
+    let models_manager = session.models_manager();
+    let model =
+        resolve_review_model(config.as_ref(), ctx.model_info.slug.as_str(), &ctx.provider).await;
     sub_agent_config.model = Some(model);
     (run_codex_thread_one_shot(
         sub_agent_config,
         session.auth_manager(),
-        session.models_manager(),
+        models_manager,
         input,
         session.clone_session(),
         ctx.clone(),

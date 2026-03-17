@@ -1042,7 +1042,7 @@ impl ModelClientSession {
                 .stream(
                     prompt,
                     model_info,
-                    otel_manager,
+                    session_telemetry,
                     effort,
                     summary,
                     turn_metadata_header,
@@ -1337,7 +1337,6 @@ mod tests {
     use crate::model_provider_info::BEDROCK_PROVIDER_ID;
     use crate::model_provider_info::built_in_model_providers;
     use async_trait::async_trait;
-    use codex_otel::OtelManager;
     use codex_otel::SessionTelemetry;
     use codex_protocol::ThreadId;
     use codex_protocol::config_types::ReasoningSummary;
@@ -1372,7 +1371,7 @@ mod tests {
             &self,
             _prompt: &Prompt,
             _model_info: &ModelInfo,
-            _otel_manager: &OtelManager,
+            _session_telemetry: &SessionTelemetry,
             _effort: Option<ReasoningEffortConfig>,
             _summary: ReasoningSummary,
             _turn_metadata_header: Option<&str>,
@@ -1508,13 +1507,13 @@ mod tests {
         );
         let mut session = client.new_session();
         let model_info = test_model_info();
-        let otel_manager = test_otel_manager();
+        let session_telemetry = test_session_telemetry();
 
         let result = session
             .stream(
                 &Prompt::default(),
                 &model_info,
-                &otel_manager,
+                &session_telemetry,
                 None,
                 ReasoningSummary::Auto,
                 None,
@@ -1553,13 +1552,13 @@ mod tests {
         );
         let mut session = client.new_session();
         let model_info = test_model_info();
-        let otel_manager = test_otel_manager();
+        let session_telemetry = test_session_telemetry();
 
         let mut stream = session
             .stream(
                 &Prompt::default(),
                 &model_info,
-                &otel_manager,
+                &session_telemetry,
                 None,
                 ReasoningSummary::Auto,
                 None,

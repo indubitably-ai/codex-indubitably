@@ -45,6 +45,7 @@ pub(crate) use compact::CompactTask;
 pub(crate) use ghost_snapshot::GhostSnapshotTask;
 pub(crate) use regular::RegularTask;
 pub(crate) use review::ReviewTask;
+pub(crate) use review::resolve_review_model;
 pub(crate) use undo::UndoTask;
 pub(crate) use user_shell::UserShellCommandMode;
 pub(crate) use user_shell::UserShellCommandTask;

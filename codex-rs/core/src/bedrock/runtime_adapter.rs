@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use codex_otel::OtelManager;
+use codex_otel::SessionTelemetry;
 use codex_protocol::ThreadId;
 use codex_protocol::config_types::ReasoningSummary as ReasoningSummaryConfig;
 use codex_protocol::openai_models::ModelInfo;
@@ -33,7 +33,7 @@ pub trait BedrockRuntimeAdapter: std::fmt::Debug + Send + Sync {
         &self,
         prompt: &Prompt,
         model_info: &ModelInfo,
-        otel_manager: &OtelManager,
+        session_telemetry: &SessionTelemetry,
         effort: Option<ReasoningEffortConfig>,
         summary: ReasoningSummaryConfig,
         turn_metadata_header: Option<&str>,
@@ -50,7 +50,7 @@ impl BedrockRuntimeAdapter for UnconfiguredBedrockRuntimeAdapter {
         &self,
         _prompt: &Prompt,
         _model_info: &ModelInfo,
-        _otel_manager: &OtelManager,
+        _session_telemetry: &SessionTelemetry,
         _effort: Option<ReasoningEffortConfig>,
         _summary: ReasoningSummaryConfig,
         _turn_metadata_header: Option<&str>,
@@ -127,7 +127,7 @@ impl BedrockRuntimeAdapter for ProxyBedrockRuntimeAdapter {
         &self,
         prompt: &Prompt,
         model_info: &ModelInfo,
-        _otel_manager: &OtelManager,
+        _session_telemetry: &SessionTelemetry,
         _effort: Option<ReasoningEffortConfig>,
         _summary: ReasoningSummaryConfig,
         _turn_metadata_header: Option<&str>,

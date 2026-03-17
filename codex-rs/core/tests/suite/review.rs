@@ -17,6 +17,7 @@ use codex_protocol::protocol::ReviewTarget;
 use codex_protocol::protocol::RolloutItem;
 use codex_protocol::protocol::RolloutLine;
 use codex_protocol::user_input::UserInput;
+use core_test_support::bedrock::provider_for_mock_server_uri;
 use core_test_support::load_sse_fixture_with_id_from_str;
 use core_test_support::responses::ResponseMock;
 use core_test_support::responses::mount_sse_sequence;
@@ -30,7 +31,13 @@ use std::sync::Arc;
 use tempfile::TempDir;
 use tokio::io::AsyncWriteExt as _;
 use uuid::Uuid;
+use wiremock::Mock;
 use wiremock::MockServer;
+use wiremock::ResponseTemplate;
+use wiremock::matchers::body_partial_json;
+use wiremock::matchers::method;
+use wiremock::matchers::path;
+use wiremock::matchers::query_param;
 
 /// Verify that submitting `Op::Review` spawns a child task and emits
 /// EnteredReviewMode -> ExitedReviewMode(None) -> TurnComplete
@@ -482,6 +489,148 @@ async fn review_uses_session_model_when_review_model_unset() {
 
     let _codex_home_guard = codex_home;
     server.verify().await;
+}
+
+/// Ensure `/review` always uses the active session model for Bedrock, matching
+/// the legacy Indubitably proxy behavior.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn review_uses_session_model_for_bedrock_reviews() {
+    skip_if_no_network!();
+
+    let supported_models = [
+        ("Claude 3 Sonnet", "claude-3-sonnet"),
+        ("Claude 3.5 Sonnet", "claude-3-5-sonnet"),
+        (
+            "Claude Opus 4.5",
+            "global.anthropic.claude-opus-4-5-20251101-v1:0",
+        ),
+        ("Claude Opus 4.6", "global.anthropic.claude-opus-4-6-v1"),
+        (
+            "Claude Sonnet 4.5",
+            "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        ),
+        ("Claude Sonnet 4.6", "global.anthropic.claude-sonnet-4-6"),
+        ("GLM 4.7", "zai.glm-4.7"),
+        ("Kimi 2.5", "moonshotai.kimi-k2.5"),
+    ];
+
+    for (display_name, model) in supported_models {
+        let server = start_mock_server().await;
+        let provider = provider_for_mock_server_uri(server.uri().as_str());
+
+        Mock::given(method("POST"))
+            .and(path("/cli/bedrock/invoke"))
+            .and(query_param("stream", "true"))
+            .and(body_partial_json(serde_json::json!({ "model": "gpt-5.4" })))
+            .respond_with(
+                ResponseTemplate::new(403)
+                    .insert_header("content-type", "application/json")
+                    .set_body_string(r#"{"error":"Model not allowed"}"#),
+            )
+            .mount(&server)
+            .await;
+
+        Mock::given(method("POST"))
+            .and(path("/cli/bedrock/invoke"))
+            .and(query_param("stream", "true"))
+            .and(body_partial_json(serde_json::json!({ "model": model })))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", "text/event-stream")
+                    .set_body_string(
+                        [
+                            "event: bedrock.chunk\n",
+                            "data: {\"type\":\"message_delta\",\"payload\":{\"delta\":{\"text\":\"Hello\"}}}\n\n",
+                            "event: bedrock.chunk\n",
+                            "data: {\"type\":\"message_delta\",\"payload\":{\"delta\":{\"text\":\" world\"}}}\n\n",
+                            "event: bedrock.chunk\n",
+                            "data: {\"type\":\"usage\",\"payload\":{\"inputTokens\":12,\"outputTokens\":8,\"totalTokens\":20}}\n\n",
+                            "event: bedrock.done\n",
+                            "data: [DONE]\n\n",
+                        ]
+                        .join(""),
+                    ),
+            )
+            .mount(&server)
+            .await;
+
+        let codex_home = Arc::new(TempDir::new().unwrap());
+        let codex = test_codex()
+            .with_home(codex_home.clone())
+            .with_config({
+                let provider = provider.clone();
+                let model = model.to_string();
+                move |config| {
+                    config.model_provider_id = "bedrock".to_string();
+                    config.model_provider = provider;
+                    config.model = Some(model);
+                    config.review_model = Some("gpt-5.4".to_string());
+                }
+            })
+            .build(&server)
+            .await
+            .expect("create bedrock conversation")
+            .codex;
+
+        codex
+            .submit(Op::Review {
+                review_request: ReviewRequest {
+                    target: ReviewTarget::Custom {
+                        instructions: format!("review using {display_name}"),
+                    },
+                    user_facing_hint: None,
+                },
+            })
+            .await
+            .unwrap();
+
+        let _entered =
+            wait_for_event(&codex, |ev| matches!(ev, EventMsg::EnteredReviewMode(_))).await;
+        let review = match wait_for_event(&codex, |ev| {
+            matches!(
+                ev,
+                EventMsg::ExitedReviewMode(ExitedReviewModeEvent {
+                    review_output: Some(_)
+                })
+            )
+        })
+        .await
+        {
+            EventMsg::ExitedReviewMode(ev) => ev
+                .review_output
+                .expect("expected completed review output for supported model"),
+            other => panic!("expected ExitedReviewMode(..), got {other:?}"),
+        };
+        assert_eq!(
+            review.overall_explanation, "Hello world",
+            "expected successful review output for supported model {model}"
+        );
+        let _complete = wait_for_event(&codex, |ev| matches!(ev, EventMsg::TurnComplete(_))).await;
+
+        let requests = server
+            .received_requests()
+            .await
+            .expect("wiremock request log should be readable");
+        let invoke_requests = requests
+            .iter()
+            .filter(|request| request.url.path() == "/cli/bedrock/invoke")
+            .collect::<Vec<_>>();
+        assert_eq!(
+            invoke_requests.len(),
+            1,
+            "expected exactly one bedrock invoke request for supported model {model}"
+        );
+        let body: serde_json::Value = serde_json::from_slice(&invoke_requests[0].body)
+            .expect("bedrock invoke request body should be valid json");
+        assert_eq!(
+            body["model"].as_str(),
+            Some(model),
+            "review should use the active session model for bedrock provider {model}"
+        );
+
+        let _codex_home_guard = codex_home;
+        server.verify().await;
+    }
 }
 
 /// When a review session begins, it must not prepend prior chat history from

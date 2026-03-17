@@ -53,7 +53,7 @@ pub(crate) fn convert_tools(tools: &[ToolSpec]) -> Option<Vec<BedrockTool>> {
                     "required": ["query"]
                 })),
             }),
-            ToolSpec::ImageGeneration {} => out.push(BedrockTool {
+            ToolSpec::ImageGeneration { .. } => out.push(BedrockTool {
                 name: "image_generation".to_string(),
                 description: Some("Generate an image.".to_string()),
                 input_schema: Some(json!({

@@ -2096,6 +2096,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         model_client: ModelClient::new(
             Some(auth_manager.clone()),
             conversation_id,
+            config.model_provider_id.clone(),
             session_configuration.provider.clone(),
             session_configuration.session_source.clone(),
             config.model_verbosity,
@@ -2503,6 +2504,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         model_client: ModelClient::new(
             Some(Arc::clone(&auth_manager)),
             conversation_id,
+            config.model_provider_id.clone(),
             session_configuration.provider.clone(),
             session_configuration.session_source.clone(),
             config.model_verbosity,

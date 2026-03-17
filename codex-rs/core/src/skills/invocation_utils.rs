@@ -7,8 +7,13 @@ use crate::analytics_client::SkillInvocation;
 use crate::analytics_client::build_track_events_context;
 use crate::codex::Session;
 use crate::codex::TurnContext;
+use crate::protocol::EventMsg;
+use crate::protocol::SkillInvocationEvent;
+use crate::protocol::SkillInvocationStatus;
+use crate::protocol::SkillInvocationTriggerMode;
 use crate::skills::SkillLoadOutcome;
 use crate::skills::SkillMetadata;
+use crate::skills::skill_descriptor;
 
 pub(crate) fn build_implicit_skill_path_indexes(
     skills: Vec<SkillMetadata>,
@@ -68,9 +73,9 @@ pub(crate) async fn maybe_emit_implicit_skill_invocation(
         return;
     };
     let invocation = SkillInvocation {
-        skill_name: candidate.name,
+        skill_name: candidate.name.clone(),
         skill_scope: candidate.scope,
-        skill_path: candidate.path_to_skills_md,
+        skill_path: candidate.path_to_skills_md.clone(),
         invocation_type: InvocationType::Implicit,
     };
     let skill_scope = match invocation.skill_scope {
@@ -93,6 +98,22 @@ pub(crate) async fn maybe_emit_implicit_skill_invocation(
     if !inserted {
         return;
     }
+
+    sess.send_event(
+        turn_context,
+        EventMsg::SkillInvocation(SkillInvocationEvent {
+            turn_id: turn_context.sub_id.clone(),
+            skill: skill_descriptor(&candidate),
+            trigger_mode: SkillInvocationTriggerMode::Implicit,
+            status: SkillInvocationStatus::Completed,
+            input_summary: Some(format!("Detected command: {command}")),
+            output_summary: Some(
+                "Observed an implicit skill invocation from a skill script or skill document access."
+                    .to_string(),
+            ),
+        }),
+    )
+    .await;
 
     turn_context.session_telemetry.counter(
         "codex.skill.injected",

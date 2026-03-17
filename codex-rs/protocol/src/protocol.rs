@@ -1181,6 +1181,12 @@ pub enum EventMsg {
     /// Notification that skill data may have been updated and clients may want to reload.
     SkillsUpdateAvailable,
 
+    /// Snapshot of the skills requested for a turn and the skills effectively available.
+    TurnSkillContext(TurnSkillContextEvent),
+
+    /// A skill was actually invoked during a turn.
+    SkillInvocation(SkillInvocationEvent),
+
     PlanUpdate(UpdatePlanArgs),
 
     TurnAborted(TurnAbortedEvent),
@@ -1551,6 +1557,59 @@ pub struct ContextCompactedEvent;
 pub struct TurnCompleteEvent {
     pub turn_id: String,
     pub last_agent_message: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
+pub struct TurnSkillDescriptor {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub display_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub source_path: Option<PathBuf>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub scope: Option<SkillScope>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
+pub struct TurnSkillContextEvent {
+    pub turn_id: String,
+    #[serde(default)]
+    pub selected_skills: Vec<TurnSkillDescriptor>,
+    #[serde(default)]
+    pub effective_skills: Vec<TurnSkillDescriptor>,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(rename_all = "snake_case")]
+pub enum SkillInvocationTriggerMode {
+    Explicit,
+    Implicit,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(rename_all = "snake_case")]
+pub enum SkillInvocationStatus {
+    Completed,
+    Failed,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
+pub struct SkillInvocationEvent {
+    pub turn_id: String,
+    pub skill: TurnSkillDescriptor,
+    pub trigger_mode: SkillInvocationTriggerMode,
+    pub status: SkillInvocationStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub input_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub output_summary: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, TS)]
