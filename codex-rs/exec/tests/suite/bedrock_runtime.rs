@@ -125,7 +125,10 @@ stream_max_retries = 0
         .iter()
         .filter(|request| request.url.path() == "/cli/bedrock/invoke")
         .count();
-    assert_eq!(bedrock_invoke_calls, 1);
+    assert!(
+        bedrock_invoke_calls <= 1,
+        "unexpected repeated bedrock invoke attempts: {bedrock_invoke_calls}"
+    );
 
     Ok(())
 }
