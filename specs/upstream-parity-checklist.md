@@ -2,7 +2,7 @@
 
 ## Run Metadata
 
-- Date: 2026-03-17
+- Date: 2026-03-18
 - Fork branch: main
 - Upstream ref: upstream/main
 - Batch 1 start ahead/behind: ahead 40 / behind 273
@@ -13,11 +13,13 @@
 - Batch 3 end ahead/behind: ahead 79 / behind 293
 - Batch 4 start ahead/behind: ahead 80 / behind 301
 - Batch 4 end ahead/behind: ahead 90 / behind 301
+- Batch 5 start ahead/behind: ahead 91 / behind 304
+- Batch 5 end ahead/behind: ahead 101 / behind 304
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 4 of phased sync (10 commits/run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 5 of phased sync (10 commits/run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -675,4 +677,5 @@
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
-- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability.
+- Batch 5 summary: processed 10 (orders 41-50), blocked 0, skipped 0, branch now ahead 101 / behind 304 vs upstream/main.
+- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability. Two known environment-specific issues were observed: protocol `schema_fixtures` parity tests report existing fixture drift in current branch state, and one apply_patch/request_permissions integration test aborts with sandbox signal 6 in this runner.
