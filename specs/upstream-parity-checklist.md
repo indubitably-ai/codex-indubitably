@@ -27,6 +27,8 @@
 
 | 6 | `590cfa6176f2001d9289a062f7ada987f78bddd0` | cherry-pick | ported | 4 | 0.83 | cargo test -p codex-core mention_syntax --quiet && cargo test -p codex-tui mention --quiet | Plaintext mentions now use @plugin semantics. |
 
+| 7 | `a4a9536fd7477a4c323999c01afb4743766bf2ac` | cherry-pick+surgical | ported | 5 | 0.82 | cargo test -p codex-core mcp_tool_call --quiet && cargo build -p codex-rmcp-client --bin test_stdio_server --quiet && cargo test -p codex-tui elicitation --quiet | Always-allow MCP elicitation option; required rmcp test binary build for tui tests. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -94,6 +96,17 @@
 - Confidence: 0.83
 - Validation evidence: Core mention_syntax filter and TUI mention filter tests passed.
 - Rollback note: Revert this sync commit if mention parsing/routing behavior regresses.
+
+### Commit `a4a9536fd7477a4c323999c01afb4743766bf2ac`
+
+- Upstream intent: Support always-allow option for MCP tool-call elicitations in core and TUI approval UI.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Auth/provider/runtime overlays unchanged.
+- Risk factors: Approval-flow UX and state semantics changed across core+tui.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.82
+- Validation evidence: Core mcp_tool_call and TUI elicitation filters passed after building rmcp test stdio server binary.
+- Rollback note: Revert this sync commit if MCP approval behavior or elicitation UI regresses.
 
 ## Batch Validation
 
