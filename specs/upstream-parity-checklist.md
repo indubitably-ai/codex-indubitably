@@ -31,6 +31,8 @@
 
 | 8 | `07a30da3fb31b2c1f70c1ef92e0b11355039c0ab` | cherry-pick | ported | 5 | 0.80 | cargo test -p codex-linux-sandbox landlock --quiet && cargo test -p codex-core request_permissions --quiet | Split sandbox policy plumbing for linux helper and protocol. |
 
+| 9 | `46b8d127cf372378945b53f79c82cd0341fe870e` | cherry-pick | ported | 3 | 0.88 | cargo test -p codex-core request_permissions --quiet | Preserve denied paths while widening permissions. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -120,6 +122,17 @@
 - Confidence: 0.80
 - Validation evidence: Linux-sandbox landlock filter and core request_permissions filter passed.
 - Rollback note: Revert this sync commit if linux sandbox policy behavior regresses.
+
+### Commit `46b8d127cf372378945b53f79c82cd0341fe870e`
+
+- Upstream intent: Keep denied-path constraints when computing widened sandbox permissions.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider paths unchanged.
+- Risk factors: Core sandbox permission behavior adjustment.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: codex-core request_permissions filtered tests passed.
+- Rollback note: Revert this sync commit if permission widening introduces unexpected access changes.
 
 ## Batch Validation
 
