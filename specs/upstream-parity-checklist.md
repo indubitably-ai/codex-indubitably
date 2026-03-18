@@ -69,6 +69,8 @@
 
 | 26 | `3f1280ce1c3ba33c7be769f3b44c4fb610aef3e7` | cherry-pick | ported | 3 | 0.90 | cargo test -p codex-app-server test_fuzzy_file_search_session_stops_sending_updates_after_stop --quiet && cargo test -p codex-app-server auth --quiet && cargo test -p codex-app-server account_read_returns_auth_status --quiet | App-server timeout-pressure reduction in auth/account/fuzzy-search tests only. |
 
+| 27 | `615ed0e437afd9bfe0af4a8a8c9a2254227060e1` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-app-server turn_start_shell_zsh_fork --quiet | Stabilizes zsh-fork interrupt/decline tests by synchronizing on explicit completion events. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -345,6 +347,17 @@
 - Confidence: 0.90
 - Validation evidence: Targeted app-server fuzzy-search/auth/account filters passed.
 - Rollback note: Revert this sync commit if original test fixture pressure assumptions are needed.
+### Commit `615ed0e437afd9bfe0af4a8a8c9a2254227060e1`
+
+- Upstream intent: Stabilize zsh-fork app-server tests by holding command execution until interrupt and broadening valid terminal outcomes.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only async ordering and timing assumptions in app-server integration tests.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: Targeted codex-app-server zsh-fork filter passed (4 tests).
+- Rollback note: Revert this sync commit if zsh-fork interrupt/decline integration coverage regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
