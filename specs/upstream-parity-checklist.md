@@ -89,6 +89,8 @@
 
 | 35 | `c1f3ef16ec57ccf64c32411b3a2927bc57d80465` | cherry-pick+surgical | ported | 6 | 0.80 | CARGO_INCREMENTAL=0 cargo test -p codex-app-server plugin_list --quiet && CARGO_INCREMENTAL=0 cargo check -p codex-tui --quiet | Starts curated plugin repo sync during TUI startup in parity with app-server startup behavior. |
 
+| 36 | `b15cfe93291185bd4b5df8f3a572d50fc236e706` | cherry-pick | ported | 8 | 0.78 | CARGO_INCREMENTAL=0 cargo test -p codex-backend-client --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-cloud-requirements unauthorized --quiet | Adds explicit backend RequestError status handling and 401-aware cloud-requirements auth recovery flow with new coverage. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -463,6 +465,17 @@
 - Confidence: 0.80
 - Validation evidence: App-server plugin_list filter passed and codex-tui crate compiled cleanly with incremental disabled.
 - Rollback note: Revert this sync commit if startup-time curated plugin sync causes regressions or unwanted side effects.
+
+### Commit `b15cfe93291185bd4b5df8f3a572d50fc236e706`
+
+- Upstream intent: Handle cloud requirements 401 responses via auth-refresh recovery path and surface clear user-facing auth failure messaging.
+- Local overlays touched: No protected-path overlap; touched backend-client and cloud-requirements auth/error handling code.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime overlays unchanged; cloud requirements still fail-closed on unrecoverable auth mismatch.
+- Risk factors: Large production behavior change in backend-client error surface and cloud requirements retry/auth recovery logic.
+- Strategy selected: cherry-pick
+- Confidence: 0.78
+- Validation evidence: Backend-client full tests and cloud-requirements unauthorized-focused tests passed with incremental disabled.
+- Rollback note: Revert this sync commit if cloud requirements auth recovery introduces incorrect messaging or retry behavior.
 
 ## Batch Validation
 
