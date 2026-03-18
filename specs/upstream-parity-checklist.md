@@ -117,6 +117,8 @@
 
 | 48 | `d309c102efdb2840605ddac1d911ecb3a9945459` | cherry-pick+surgical | ported | 6 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core --lib web_search_config_is_forwarded_to_tool_spec --quiet | Refactors web_search tool spec serialization to dedicated Responses API payload structs in codex-core. |
 
+| 49 | `66e71cce1139ac7045c59f630a40b8b354fac1ce` | cherry-pick+surgical | ported | 8 | 0.80 | just bazel-lock-update && just bazel-lock-check && CARGO_INCREMENTAL=0 cargo test -p codex-app-server websocket_transport_serves_health_endpoints_on_same_listener --quiet | Adds /readyz and /healthz on websocket listener via axum upgrade path plus websocket health endpoint coverage. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -634,6 +636,17 @@
 - Confidence: 0.84
 - Validation evidence: After cleaning build artifacts for disk headroom, codex-core web_search tool-spec forwarding test passed.
 - Rollback note: Revert this sync commit if web_search payload serialization regresses against Responses API expectations.
+
+### Commit `66e71cce1139ac7045c59f630a40b8b354fac1ce`
+
+- Upstream intent: Serve health probe endpoints on ws listener and migrate websocket acceptor to axum upgrade handling.
+- Local overlays touched: Protected app-server transport path touched; docs and websocket integration tests updated; Cargo dependencies refreshed.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection overlays unchanged.
+- Risk factors: Network transport refactor plus dependency/lock changes in app-server stack and listener behavior.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.80
+- Validation evidence: Bazel lock update/check passed; websocket health endpoint integration test passed.
+- Rollback note: Revert this sync commit if websocket listener routing or health endpoint behavior regresses.
 
 ## Batch Validation
 
