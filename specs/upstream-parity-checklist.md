@@ -2,16 +2,16 @@
 
 ## Run Metadata
 
-- Date:
-- Fork branch:
-- Upstream ref:
-- Start ahead/behind:
+- Date: 2026-03-17
+- Fork branch: main
+- Upstream ref: upstream/main
+- Start ahead/behind: ahead 40 / behind 273
 - End ahead/behind:
 
 ## Protected Surfaces
 
-- Protected paths file:
-- Notes:
+- Protected paths file: .upstream-sync-protected-paths
+- Notes: Batch 1 of phased sync (10 commits/run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
