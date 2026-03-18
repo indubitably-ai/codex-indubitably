@@ -23,6 +23,8 @@
 
 | 4 | `e8d7ede83cf09c99134866f19e5378c546d53191` | cherry-pick | ported | 2 | 0.90 | cargo test -p codex-tui context_window --quiet | TUI token-count timing display fix. |
 
+| 5 | `bf5c2f48a5730f8076a65a1a5f637398ec92ae22` | cherry-pick | ported | 4 | 0.84 | cargo test -p codex-core request_permissions --quiet | Seatbelt split filesystem policy handling update. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -68,6 +70,17 @@
 - Confidence: 0.90
 - Validation evidence: codex-tui context_window filtered tests passed.
 - Rollback note: Revert this sync commit if TUI header metrics regress.
+
+### Commit `bf5c2f48a5730f8076a65a1a5f637398ec92ae22`
+
+- Upstream intent: Honor split filesystem sandbox policies in seatbelt and related core paths.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock provider/runtime paths unchanged.
+- Risk factors: Sandbox policy semantics changed in core runtime paths.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: codex-core request_permissions filtered tests passed.
+- Rollback note: Revert this sync commit if seatbelt policy behavior regresses in local macOS flows.
 
 ## Batch Validation
 
