@@ -6,7 +6,7 @@
 - Fork branch: main
 - Upstream ref: upstream/main
 - Start ahead/behind: ahead 40 / behind 273
-- End ahead/behind:
+- End ahead/behind: ahead 52 / behind 273
 
 ## Protected Surfaces
 
@@ -149,13 +149,13 @@
 
 ## Batch Validation
 
-- [ ] CLI default provider smoke
-- [ ] CLI `--indubitably` smoke
-- [ ] Targeted crate tests for touched code
+- [x] CLI default provider smoke
+- [x] CLI `--indubitably` smoke
+- [x] Targeted crate tests for touched code
 - [ ] App-server protocol smoke (if app-server/protocol files changed)
 
 ## Follow-ups
 
-- Blocked commits:
-- Manual port TODOs:
-- Risk notes:
+- Blocked commits: none in this 10-commit batch.
+- Manual port TODOs: none; two commits used cherry-pick+surgical strategy.
+- Risk notes: full `cargo test -p codex-core` currently fails in this environment due js_repl runtime requirement (Node >= 22.22.0; local is v20.19.5); targeted tests and CLI smokes passed.
