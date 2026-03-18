@@ -17,20 +17,20 @@
 
 | order | upstream sha | action | status | risk score | confidence | tests | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  | cherry-pick / manual-port / skip | ported / blocked / skipped |  |  |  |  |
+| 1 | `b9a2e400018c219e3010a5a5b8ded8645184da0b` | cherry-pick | ported | 1 | 0.93 | `cargo check -p codex-skills --quiet` | Skill sample asset removal only. |
 
 ## Decision Briefs
 
-### Commit <sha>
+### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
 
-- Upstream intent:
-- Local overlays touched:
-- Invariants checked:
-- Risk factors:
-- Strategy selected:
-- Confidence:
-- Validation evidence:
-- Rollback note:
+- Upstream intent: Remove temporary artifact sample skills from bundled skill assets.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider selection untouched.
+- Risk factors: Low-scope content deletion in codex-skills assets only.
+- Strategy selected: cherry-pick.
+- Confidence: 0.93.
+- Validation evidence: `cargo check -p codex-skills --quiet`.
+- Rollback note: Revert this sync commit if asset removal causes missing reference issues.
 
 ## Batch Validation
 
