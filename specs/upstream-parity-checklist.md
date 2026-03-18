@@ -129,6 +129,20 @@
 
 | 53 | `1165a16e6ffad719e8f852900fd7ff438ec88fae` | cherry-pick+surgical | ported | 7 | 0.85 | CARGO_INCREMENTAL=0 cargo test -p codex-core permissions_profiles_allow --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core normalize_absolute_path_for_platform_simplifies_windows_verbatim_paths --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-protocol unknown_special_paths_are_ignored_by_legacy_bridge --quiet | Makes permissions profile parsing forward-compatible by preserving unknown special paths as warn-and-ignore and treating missing filesystem entries as restricted with startup warnings. |
 
+| 54 | `a5af11211a3f000c48b67bf1083e3ee0578c1431` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-tui --lib mention_popup_type_prefixes --quiet; cargo test -p codex-tui --lib plugin_mention_popup --quiet | TUI mention popup labeling + snapshots updated; targeted tests passed after cargo clean for disk recovery. |
+
+| 55 | `aa04ea6bd705d06543c02ebdf1d26b9730b39684` | cherry-pick+surgical | ported | 6 | 0.82 | cargo test -p codex-core rejects_escalated_permissions_when_policy_not_on_request --quiet; cargo test -p codex-core request_permissions_returns_empty_grant_when_reject_policy_blocks_requests --quiet; cargo test -p codex-core guardian_allows_shell_additional_permissions_requests_past_policy_validation --quiet | One codex_tests.rs conflict (scope type path) resolved; trait-based text output extraction adopted. |
+
+| 56 | `a3cd9f16f5b3dfefb928af3fa512b9dac6af9ac7` | cherry-pick | ported | 3 | 0.93 | cargo test -p codex-tui --lib mention_popup_type_prefixes --quiet; cargo test -p codex-tui --lib plugin_mention_popup --quiet | TUI sort order change keeps plugin suggestions before other mention types; snapshot updated. |
+
+| 57 | `da616136ccff31142b159e97da67705bf0ab7555` | cherry-pick | ported | 7 | 0.74 | cargo test -p codex-core --test all code_mode_can_return_exec_command_output --quiet; cargo test -p codex-core --test all code_mode_can_apply_patch_via_nested_tool --quiet | Large feature add (code_mode tool + JS bridge/runner); broader code_mode-filtered run hit linker ENOSPC after targeted tests passed. |
+
+| 58 | `244b2d53f40938ffba96acf0ca7a559473b842f1` | cherry-pick+surgical | ported | 9 | 0.66 | cargo test -p codex-hooks --quiet; cargo test -p codex-app-server-protocol --quiet; cargo test -p codex-tui --lib hook_events_render_snapshot --quiet; just bazel-lock-update; just bazel-lock-check | High-surface hooks engine import touched protected app-server-protocol/app-server files; protocol schema_fixtures still fail due pre-existing baseline drift. |
+
+| 59 | `63597d1b2d11c94dd09e384ac4518176db65020c` | cherry-pick | ported | 4 | 0.89 | cargo test -p codex-tui --lib status_line_model_with_reasoning_fast_footer --quiet; cargo test -p codex-tui --lib clear_ui_header_shows_fast_status_only_for_gpt54 --quiet | TUI model-status fast badge now gated to GPT-5.4; chatwidget/app snapshots added and passing. |
+
+| 60 | `d71e0426940b75f7dea0c149f2129f0b86c17f20` | cherry-pick | ported | 6 | 0.83 | cargo test -p codex-core rejects_escalated_permissions_when_policy_not_on_request --quiet; cargo test -p codex-core guardian_allows_shell_additional_permissions_requests_past_policy_validation --quiet; cargo test -p codex-core --test all view_image_tool_placeholder_for_non_image_files --quiet; cargo test -p codex-app-server --test all dynamic_tool_call_round_trip_sends_text_content_items_to_model --quiet | Tool-output unification applied across handlers/context/registry; core+app-server targeted tests passed after one disk-clean recovery. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -702,6 +716,83 @@
 - Validation evidence: Targeted core permissions-profile and protocol legacy-bridge compatibility tests passed.
 - Rollback note: Revert this sync commit if permissions profile loading or legacy bridge handling regresses.
 
+### Commit `a5af11211a3f000c48b67bf1083e3ee0578c1431`
+
+- Upstream intent: Always disambiguate $-mention suggestions by prefixing category labels (skill, app, plugin) in the popup.
+- Local overlays touched: Touches only TUI chat composer/skill popup rendering and snapshots; no auth/runtime/provider overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: User-visible UI text ordering change in mention popup plus snapshot updates.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: Two targeted codex-tui mention popup tests passed after clearing build artifacts for disk headroom.
+- Rollback note: Revert this sync commit if mention popup category labeling causes UX regression or snapshot mismatch.
+
+### Commit `aa04ea6bd705d06543c02ebdf1d26b9730b39684`
+
+- Upstream intent: Refactor tool output handling into trait-based implementations so handlers emit strongly-typed renderable outputs.
+- Local overlays touched: Touches core tool context/handlers and codex core tests only; no Indubitably auth or Bedrock runtime/provider paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-cutting refactor across many core tool handlers with runtime output typing and test extraction changes.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.82
+- Validation evidence: Three targeted codex-core tests covering request_permissions and guardian output parsing passed after resolving scope-path conflict.
+- Rollback note: Revert this sync commit if tool output serialization or handler output extraction regresses.
+
+### Commit `a3cd9f16f5b3dfefb928af3fa512b9dac6af9ac7`
+
+- Upstream intent: Sort plugin mentions before other categories in the $-mention menu to improve discoverability.
+- Local overlays touched: Touches only TUI mention popup ordering and snapshot output; no auth/runtime/provider overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: UI ordering-only change with snapshot delta in mention popup.
+- Strategy selected: cherry-pick
+- Confidence: 0.93
+- Validation evidence: Targeted codex-tui mention popup tests passed after rebuilding with fresh target artifacts.
+- Rollback note: Revert this sync commit if mention ordering causes UX regressions or snapshot instability.
+
+### Commit `da616136ccff31142b159e97da67705bf0ab7555`
+
+- Upstream intent: Introduce experimental code_mode with nested tool execution bridge and spec wiring for controlled code execution flows.
+- Local overlays touched: Touches core feature flags, tool registry/spec/context, runtime handlers, schema, and new integration tests; no Bedrock or Indubitably auth overlay paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Large multi-file additive feature including JS bridge/runtime execution path and tool registry/spec integration.
+- Strategy selected: cherry-pick
+- Confidence: 0.74
+- Validation evidence: Two new code_mode integration tests passed; additional broad code_mode-filtered cargo test failed due disk exhaustion during unrelated test-target linking.
+- Rollback note: Revert this sync commit if code_mode tool registration or nested tool execution semantics regress.
+
+### Commit `244b2d53f40938ffba96acf0ca7a559473b842f1`
+
+- Upstream intent: Introduce initial hooks engine plumbing with protocol events, app-server notifications, hook registry/dispatcher, and TUI rendering support.
+- Local overlays touched: Touches protected app-server-protocol/app-server surfaces plus core/hooks/protocol/tui/exec; no Indubitably auth or Bedrock runtime/provider-specific paths modified.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged on reviewed touched files.
+- Risk factors: Very large cross-crate feature import with new schemas/events, runtime dispatch pipeline, dependency lock updates, and UI event rendering.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.66
+- Validation evidence: codex-hooks tests passed; codex-tui hook snapshot test passed; bazel lock update/check passed; codex-app-server-protocol unit tests passed but schema_fixtures still fail from existing fixture drift requiring write-app-server-schema.
+- Rollback note: Revert this sync commit if hook lifecycle events or app-server notification wiring regresses thread/turn behavior.
+
+### Commit `63597d1b2d11c94dd09e384ac4518176db65020c`
+
+- Upstream intent: Restrict fast-status UI indicator to GPT-5.4 models instead of broader model families.
+- Local overlays touched: Touches only TUI app/chatwidget status rendering and snapshots; no auth/runtime/provider overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: User-visible status-line logic and snapshot updates in TUI only.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: Two targeted codex-tui tests covering fast-status header/footer snapshots passed.
+- Rollback note: Revert this sync commit if fast-status model gating regresses or snapshot output becomes unstable.
+
+### Commit `d71e0426940b75f7dea0c149f2129f0b86c17f20`
+
+- Upstream intent: Unify handler output contract to a single tool output type and remove mixed content-item/text output ambiguity.
+- Local overlays touched: Touches core handler/context/registry flows and related core/app-server tests; no Indubitably auth or Bedrock runtime/provider paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-handler output-path refactor affecting tool serialization and downstream request payload expectations.
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: Targeted core permissions/guardian/view_image tests and app-server dynamic-tools round-trip test all passed.
+- Rollback note: Revert this sync commit if tool output serialization or dynamic tool round-trip behavior regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -717,4 +808,5 @@
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
 - Batch 5 summary: processed 10 (orders 41-50), blocked 0, skipped 0, branch now ahead 101 / behind 304 vs upstream/main.
+- Batch 6 summary: processed 10 (orders 51-60), blocked 0, skipped 0, branch now ahead 113 / behind 306 vs upstream/main.
 - Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability. Two known environment-specific issues were observed: protocol `schema_fixtures` parity tests report existing fixture drift in current branch state, and one apply_patch/request_permissions integration test aborts with sandbox signal 6 in this runner.
