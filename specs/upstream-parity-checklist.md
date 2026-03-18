@@ -25,6 +25,8 @@
 
 | 5 | `bf5c2f48a5730f8076a65a1a5f637398ec92ae22` | cherry-pick | ported | 4 | 0.84 | cargo test -p codex-core request_permissions --quiet | Seatbelt split filesystem policy handling update. |
 
+| 6 | `590cfa6176f2001d9289a062f7ada987f78bddd0` | cherry-pick | ported | 4 | 0.83 | cargo test -p codex-core mention_syntax --quiet && cargo test -p codex-tui mention --quiet | Plaintext mentions now use @plugin semantics. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -81,6 +83,17 @@
 - Confidence: 0.84
 - Validation evidence: codex-core request_permissions filtered tests passed.
 - Rollback note: Revert this sync commit if seatbelt policy behavior regresses in local macOS flows.
+
+### Commit `590cfa6176f2001d9289a062f7ada987f78bddd0`
+
+- Upstream intent: Switch plaintext plugin mention syntax from $plugin to @plugin across core and tui mention handling.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock runtime/provider paths modified.
+- Risk factors: Cross-crate mention parsing/rendering behavior change.
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: Core mention_syntax filter and TUI mention filter tests passed.
+- Rollback note: Revert this sync commit if mention parsing/routing behavior regresses.
 
 ## Batch Validation
 
