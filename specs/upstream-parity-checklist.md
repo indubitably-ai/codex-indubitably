@@ -29,6 +29,8 @@
 
 | 7 | `a4a9536fd7477a4c323999c01afb4743766bf2ac` | cherry-pick+surgical | ported | 5 | 0.82 | cargo test -p codex-core mcp_tool_call --quiet && cargo build -p codex-rmcp-client --bin test_stdio_server --quiet && cargo test -p codex-tui elicitation --quiet | Always-allow MCP elicitation option; required rmcp test binary build for tui tests. |
 
+| 8 | `07a30da3fb31b2c1f70c1ef92e0b11355039c0ab` | cherry-pick | ported | 5 | 0.80 | cargo test -p codex-linux-sandbox landlock --quiet && cargo test -p codex-core request_permissions --quiet | Split sandbox policy plumbing for linux helper and protocol. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -107,6 +109,17 @@
 - Confidence: 0.82
 - Validation evidence: Core mcp_tool_call and TUI elicitation filters passed after building rmcp test stdio server binary.
 - Rollback note: Revert this sync commit if MCP approval behavior or elicitation UI regresses.
+
+### Commit `07a30da3fb31b2c1f70c1ef92e0b11355039c0ab`
+
+- Upstream intent: Plumb split filesystem sandbox policies through linux helper and protocol/core integration points.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider paths unchanged.
+- Risk factors: Protocol + sandbox runtime behavior change across crates.
+- Strategy selected: cherry-pick
+- Confidence: 0.80
+- Validation evidence: Linux-sandbox landlock filter and core request_permissions filter passed.
+- Rollback note: Revert this sync commit if linux sandbox policy behavior regresses.
 
 ## Batch Validation
 
