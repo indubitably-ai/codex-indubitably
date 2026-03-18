@@ -79,6 +79,8 @@
 
 | 30 | `6b68d1ef661263b0fa6bf9b1e1badffebfd64ee9` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-app-server plan_mode_ --quiet | Plan-item app-server tests now use multi-thread runtime and explicit /responses request-count waits. |
 
+| 31 | `0dc242a67229c99ac1de63dbdd5adc1d17481575` | cherry-pick+surgical | ported | 7 | 0.82 | cargo test -p codex-app-server initialize_opt_out_notification_methods_filters_notifications --quiet && cargo test -p codex-app-server turn_start_notify_payload_includes_initialize_client_name --quiet | Websocket initialize ordering fixed by sending connection-scoped notifications before outbound-ready flip. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -398,6 +400,17 @@
 - Confidence: 0.92
 - Validation evidence: Targeted codex-app-server plan_mode_ filter passed (2 tests).
 - Rollback note: Revert this sync commit if plan-item test harness should return to prior wiremock teardown semantics.
+
+### Commit `0dc242a67229c99ac1de63dbdd5adc1d17481575`
+
+- Upstream intent: Fix websocket initialize ordering race by targeting initialize notifications to the specific connection before general outbound readiness.
+- Local overlays touched: Protected app-server surfaces touched (codex-rs/app-server/src/lib.rs, codex-rs/app-server/src/message_processor.rs); no Indubitably/Bedrock-specific logic changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged; only websocket initialize sequencing adjusted.
+- Risk factors: Production logic change in initialize path across protected app-server files.
+- Strategy selected: cherry-pick+surgical (protected-path review, accepted upstream implementation).
+- Confidence: 0.82
+- Validation evidence: Focused app-server initialize-notification tests passed.
+- Rollback note: Revert this sync commit if websocket initialize notification ordering or readiness gating regresses.
 
 ## Batch Validation
 
