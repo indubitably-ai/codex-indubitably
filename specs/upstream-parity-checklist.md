@@ -61,6 +61,8 @@
 
 | 22 | `05332b0e96197573a618b6df9adc41752cc87de9` | cherry-pick | ported | 2 | 0.95 | cargo check -p codex-app-server-client --quiet | Adds missing Bazel target file for previously introduced app-server-client crate. |
 
+| 23 | `06f82c123c6ed295f0ef19b5cbf49cf78bbc092e` | cherry-pick | ported | 4 | 0.88 | cargo test -p codex-tui permissions_prompt_snapshot --quiet && cargo test -p codex-tui handle_request_permissions_opens_approval_modal --quiet | TUI render/queue handling for request_permissions approvals with new snapshot coverage. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -297,6 +299,16 @@
 - Confidence: 0.95
 - Validation evidence: codex-app-server-client cargo check passed.
 - Rollback note: Revert this sync commit if Bazel rule ownership must be managed differently.
+### Commit `06f82c123c6ed295f0ef19b5cbf49cf78bbc092e`
+
+- Upstream intent: Render request_permissions approval calls in TUI overlays and interactive replay paths.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No auth/provider/runtime overlay behavior changed.
+- Risk factors: User-visible approval overlay and replay queue behavior update in TUI only.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: Focused codex-tui snapshot and modal-behavior tests for permissions approvals passed.
+- Rollback note: Revert this sync commit if permissions approval rendering or replay handling regresses in TUI.
 ## Batch Validation
 
 - [x] CLI default provider smoke
