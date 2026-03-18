@@ -33,6 +33,8 @@
 
 | 9 | `46b8d127cf372378945b53f79c82cd0341fe870e` | cherry-pick | ported | 3 | 0.88 | cargo test -p codex-core request_permissions --quiet | Preserve denied paths while widening permissions. |
 
+| 10 | `3b5fe5ca35d914645a818d454a3931f6748b7e77` | cherry-pick | ported | 5 | 0.81 | cargo test -p codex-protocol --quiet && cargo test -p codex-core request_permissions --quiet | Protocol + core update keeps root carveouts sandboxed. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -133,6 +135,17 @@
 - Confidence: 0.88
 - Validation evidence: codex-core request_permissions filtered tests passed.
 - Rollback note: Revert this sync commit if permission widening introduces unexpected access changes.
+
+### Commit `3b5fe5ca35d914645a818d454a3931f6748b7e77`
+
+- Upstream intent: Ensure root carveouts remain sandboxed in protocol/core permission modeling.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider paths unchanged.
+- Risk factors: Protocol permission semantics touched alongside core sandboxing.
+- Strategy selected: cherry-pick
+- Confidence: 0.81
+- Validation evidence: codex-protocol suite and core request_permissions filter passed.
+- Rollback note: Revert this sync commit if permission carveout behavior regresses.
 
 ## Batch Validation
 
