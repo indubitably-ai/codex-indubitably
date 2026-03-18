@@ -59,6 +59,8 @@
 
 | 21 | `e6b93841c585f8b56b2c9b38cb07708f278ea227` | cherry-pick+surgical | ported | 9 | 0.74 | cargo test -p codex-core request_permissions --quiet && cargo test -p codex-app-server request_permissions --quiet && cargo test -p codex-app-server-protocol permissions_request --quiet && cargo test -p codex-tui chatwidget --quiet && cargo test -p codex-exec --quiet | Large protected-surface request_permissions tool integration across core/protocol/app-server/exec/tui. |
 
+| 22 | `05332b0e96197573a618b6df9adc41752cc87de9` | cherry-pick | ported | 2 | 0.95 | cargo check -p codex-app-server-client --quiet | Adds missing Bazel target file for previously introduced app-server-client crate. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -285,6 +287,16 @@
 - Confidence: 0.74
 - Validation evidence: Core/app-server/protocol request-permissions filters plus codex-tui chatwidget and full codex-exec suite passed after freeing disk space.
 - Rollback note: Revert this sync commit if permission-approval flow, tool execution semantics, or app-server approval transport regress.
+### Commit `05332b0e96197573a618b6df9adc41752cc87de9`
+
+- Upstream intent: Restore Bazel build metadata for codex-app-server-client by adding BUILD.bazel.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No auth/provider/runtime logic touched.
+- Risk factors: Build metadata only; no runtime code path changes.
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: codex-app-server-client cargo check passed.
+- Rollback note: Revert this sync commit if Bazel rule ownership must be managed differently.
 ## Batch Validation
 
 - [x] CLI default provider smoke
