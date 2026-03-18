@@ -111,6 +111,8 @@
 
 | 45 | `42f20a6845939437b68848df111ccd719c64012d` | cherry-pick+surgical | ported | 5 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core for_prompt_rewrites_image_generation_calls --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui image_generation_call_adds_history_cell --quiet | Image-generation history rewrite now includes id/prompt/save-path context and matching TUI history rendering snapshot updates. |
 
+| 46 | `831ee51c86e715e3e546f8c3342f8c5aa94d736f` | cherry-pick+surgical | ported | 8 | 0.77 | CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol generated_ts_optional_nullable_fields_only_in_params --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol generate_ts_with_experimental_api_retains_experimental_entries --quiet | Protocol schema fixture generation refactor + nextest serialization; full schema fixture parity test currently reveals pre-existing fixture drift in branch. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -595,6 +597,17 @@
 - Confidence: 0.84
 - Validation evidence: Targeted codex-core and codex-tui tests for image-generation history behavior passed.
 - Rollback note: Revert this sync commit if image-generation history context or TUI snapshots regress.
+
+### Commit `831ee51c86e715e3e546f8c3342f8c5aa94d736f`
+
+- Upstream intent: Stabilize schema fixture generation by using in-memory TS tree generation, normalized comparisons, and split JSON/TS fixture tests.
+- Local overlays touched: Protected app-server-protocol source files and nextest config touched; no Indubitably auth or Bedrock runtime/provider code changed.
+- Invariants checked: Indubitably auth path and Bedrock provider/model-routing overlays unchanged.
+- Risk factors: Large protected-surface refactor in export/schema-fixture pipeline plus test harness behavior updates.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.77
+- Validation evidence: Focused protocol export tests passed; running schema_fixtures integration test reports existing fixture drift (SkillInvocation/TurnSkillContext schema entries) in current branch state.
+- Rollback note: Revert this sync commit if schema fixture generation or experimental filtering behavior regresses.
 
 ## Batch Validation
 
