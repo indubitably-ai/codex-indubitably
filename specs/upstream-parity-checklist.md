@@ -93,6 +93,8 @@
 
 | 37 | `203a70a1915d9e2f308f110f90b9790bb53c09f2` | cherry-pick | ported | 2 | 0.92 | CARGO_INCREMENTAL=0 cargo test -p codex-mcp-server shell_command_approval_triggers_elicitation --quiet | MCP shell approval test now uses native touch/New-Item commands and exact argv-derived expected shell command. |
 
+| 38 | `ad57505ef5ca82a3ba5e182d01b27b572042079f` | cherry-pick | ported | 6 | 0.81 | CARGO_INCREMENTAL=0 cargo test -p codex-core --test all interrupt_long_running_tool_emits_turn_aborted --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core --test all user_shell_cmd_can_be_interrupted --quiet | Turn abort cleanup now drains active tasks before clearing pending approvals to avoid pre-abort approval rejection races. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -489,6 +491,17 @@
 - Confidence: 0.92
 - Validation evidence: Targeted codex-mcp-server shell approval elicitation test passed after disk-space cleanup.
 - Rollback note: Revert this sync commit if MCP shell approval test should retain Python-based command fixtures.
+
+### Commit `ad57505ef5ca82a3ba5e182d01b27b572042079f`
+
+- Upstream intent: Stabilize interrupted-task cleanup by reordering abort flow so task cancellation is observed before pending approvals are cleared.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Production task-abort sequencing change in core task session management.
+- Strategy selected: cherry-pick
+- Confidence: 0.81
+- Validation evidence: Targeted codex-core abort/interruption tests passed using explicit --test all filters.
+- Rollback note: Revert this sync commit if interruption cleanup ordering causes regressions in task/approval lifecycle.
 
 ## Batch Validation
 
