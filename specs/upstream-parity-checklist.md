@@ -113,6 +113,8 @@
 
 | 46 | `831ee51c86e715e3e546f8c3342f8c5aa94d736f` | cherry-pick+surgical | ported | 8 | 0.77 | CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol generated_ts_optional_nullable_fields_only_in_params --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol generate_ts_with_experimental_api_retains_experimental_entries --quiet | Protocol schema fixture generation refactor + nextest serialization; full schema fixture parity test currently reveals pre-existing fixture drift in branch. |
 
+| 47 | `d241dc598cb0bbadeefd5eab92c056a36b420624` | cherry-pick+surgical | ported | 9 | 0.79 | CARGO_INCREMENTAL=0 cargo test -p codex-core request_permissions_session_grants_carry_across_turns --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol permissions_request_approval_response_defaults_scope_to_turn --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui --lib permissions_session_shortcut_submits_session_scope --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server request_permissions_response_preserves_session_scope --quiet | Adds turn/session scope for request_permissions grants with protocol/app-server/core/tui plumbing and new coverage. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -608,6 +610,17 @@
 - Confidence: 0.77
 - Validation evidence: Focused protocol export tests passed; running schema_fixtures integration test reports existing fixture drift (SkillInvocation/TurnSkillContext schema entries) in current branch state.
 - Rollback note: Revert this sync commit if schema fixture generation or experimental filtering behavior regresses.
+
+### Commit `d241dc598cb0bbadeefd5eab92c056a36b420624`
+
+- Upstream intent: Persist request_permissions grants across turns when client approves session scope while preserving turn-scoped default behavior.
+- Local overlays touched: Protected app-server-protocol/app-server paths touched; core/protocol/tui request_permissions flow updated.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection overlays unchanged while permission scope behavior expanded.
+- Risk factors: Wide multi-crate behavior change to permission grant lifecycle and user approval UX semantics.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: Targeted core, app-server-protocol, app-server, and tui tests for request_permissions scope behavior passed.
+- Rollback note: Revert this sync commit if request_permissions approvals no longer honor turn/session scope semantics.
 
 ## Batch Validation
 
