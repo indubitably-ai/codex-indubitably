@@ -67,6 +67,8 @@
 
 | 25 | `f23fcd6ced0035f2aa4e34d4f12da4f04c8a7fa4` | cherry-pick | ported | 6 | 0.83 | cargo test -p codex-core guardian --quiet && cargo test -p codex-protocol --quiet && cargo test -p codex-tui --lib experimental_popup_includes_guardian_approval --quiet | Guardian review copy/plumbing refinements across core+protocol with matching tui snapshot updates. |
 
+| 26 | `3f1280ce1c3ba33c7be769f3b44c4fb610aef3e7` | cherry-pick | ported | 3 | 0.90 | cargo test -p codex-app-server test_fuzzy_file_search_session_stops_sending_updates_after_stop --quiet && cargo test -p codex-app-server auth --quiet && cargo test -p codex-app-server account_read_returns_auth_status --quiet | App-server timeout-pressure reduction in auth/account/fuzzy-search tests only. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -333,6 +335,16 @@
 - Confidence: 0.83
 - Validation evidence: Core guardian and full protocol tests passed; targeted tui guardian popup test passed after freeing disk pressure from local build artifacts.
 - Rollback note: Revert this sync commit if guardian approval messaging or review retry-context behavior regresses.
+### Commit `3f1280ce1c3ba33c7be769f3b44c4fb610aef3e7`
+
+- Upstream intent: Reduce app-server test flakiness by removing incidental shell-snapshot setup and heavy fixture volume from unrelated checks.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No runtime auth/provider/sandbox behavior changes; test harness only.
+- Risk factors: Test-config and fixture volume adjustments in app-server suite.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: Targeted app-server fuzzy-search/auth/account filters passed.
+- Rollback note: Revert this sync commit if original test fixture pressure assumptions are needed.
 ## Batch Validation
 
 - [x] CLI default provider smoke
