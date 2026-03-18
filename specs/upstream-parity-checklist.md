@@ -81,6 +81,8 @@
 
 | 31 | `0dc242a67229c99ac1de63dbdd5adc1d17481575` | cherry-pick+surgical | ported | 7 | 0.82 | cargo test -p codex-app-server initialize_opt_out_notification_methods_filters_notifications --quiet && cargo test -p codex-app-server turn_start_notify_payload_includes_initialize_client_name --quiet | Websocket initialize ordering fixed by sending connection-scoped notifications before outbound-ready flip. |
 
+| 32 | `10bf6008f4d76c56db86cafb2a45c1fc88024aaf` | cherry-pick | ported | 3 | 0.88 | cargo test -p codex-app-server thread_resume_replays_pending_command_execution_request_approval --quiet && cargo test -p codex-app-server thread_resume_replays_pending_file_change_request_approval --quiet | Thread-resume replay tests now poll deterministic /responses request counts with unchecked mock sequencing. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -411,6 +413,17 @@
 - Confidence: 0.82
 - Validation evidence: Focused app-server initialize-notification tests passed.
 - Rollback note: Revert this sync commit if websocket initialize notification ordering or readiness gating regresses.
+
+### Commit `10bf6008f4d76c56db86cafb2a45c1fc88024aaf`
+
+- Upstream intent: Stabilize thread-resume replay tests by waiting for settled outbound /responses counts and removing strict sequencing assumptions.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only synchronization updates in app-server integration tests.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: Both targeted thread-resume replay filters passed; first filter needed one rerun after an initialize timeout.
+- Rollback note: Revert this sync commit if thread-resume replay tests need stricter sequencing behavior.
 
 ## Batch Validation
 
