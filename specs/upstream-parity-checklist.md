@@ -51,6 +51,8 @@
 
 | 18 | `340f9c9ecb0b02a89e88c6dc068809007185f645` | cherry-pick+surgical | ported | 8 | 0.79 | cargo test -p codex-core skill_approval --quiet && cargo test -p codex-app-server command_execution_request --quiet && cargo test -p codex-tui chatwidget --quiet && cargo test -p codex-app-server-protocol command_execution_request_approval --quiet | Protected protocol/app-server surfaces plus core+tui approval plumbing updated for skill metadata. |
 
+| 19 | `f41b1638c98deddd0d8f89d821999d30f73de599` | cherry-pick | ported | 2 | 0.91 | cargo test -p codex-core record_responses_sets_span_fields_for_response_events --quiet | Core OTEL test fixture completion sequencing fix only. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -247,6 +249,16 @@
 - Confidence: 0.79
 - Validation evidence: Focused core/app-server/protocol/tui approval-related test filters passed; tui filter showed only legacy snapshot-format notices.
 - Rollback note: Revert this sync commit if approval request payload compatibility or tui approval rendering regresses.
+### Commit `f41b1638c98deddd0d8f89d821999d30f73de599`
+
+- Upstream intent: Stabilize OTEL response-span test by including complete follow-up SSE sequence.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider overlays untouched.
+- Risk factors: Test-only fixture/event-sequence update in core otel suite.
+- Strategy selected: cherry-pick
+- Confidence: 0.91
+- Validation evidence: Targeted codex-core otel test passed.
+- Rollback note: Revert this sync commit if OTEL event-span test behavior regresses.
 ## Batch Validation
 
 - [x] CLI default provider smoke
