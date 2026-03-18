@@ -1740,6 +1740,7 @@ mod tests {
             RejectConfig {
                 sandbox_approval: false,
                 rules: false,
+                skill_approval: false,
                 request_permissions: false,
                 mcp_elicitations: false,
             }
@@ -1753,6 +1754,7 @@ mod tests {
             RejectConfig {
                 sandbox_approval: false,
                 rules: false,
+                skill_approval: false,
                 request_permissions: false,
                 mcp_elicitations: true,
             }
