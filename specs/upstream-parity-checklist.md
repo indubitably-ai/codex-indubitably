@@ -119,6 +119,8 @@
 
 | 49 | `66e71cce1139ac7045c59f630a40b8b354fac1ce` | cherry-pick+surgical | ported | 8 | 0.80 | just bazel-lock-update && just bazel-lock-check && CARGO_INCREMENTAL=0 cargo test -p codex-app-server websocket_transport_serves_health_endpoints_on_same_listener --quiet | Adds /readyz and /healthz on websocket listener via axum upgrade path plus websocket health endpoint coverage. |
 
+| 50 | `c1defcc98cf9c6b9001e86d8d13e5b5ec9488510` | cherry-pick+surgical | ported | 7 | 0.78 | CARGO_INCREMENTAL=0 cargo test -p codex-core approval_keys_include_move_destination --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core guardian_review_request_includes_full_patch_without_duplicate_changes --quiet | apply_patch now derives effective sandbox/additional permissions from granted request_permissions context before exec delegation. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -647,6 +649,17 @@
 - Confidence: 0.80
 - Validation evidence: Bazel lock update/check passed; websocket health endpoint integration test passed.
 - Rollback note: Revert this sync commit if websocket listener routing or health endpoint behavior regresses.
+
+### Commit `c1defcc98cf9c6b9001e86d8d13e5b5ec9488510`
+
+- Upstream intent: Ensure apply_patch respects granted additional permissions from request_permissions flows and can preapprove when permissions are already granted.
+- Local overlays touched: Touches codex-core apply_patch handler/runtime and request_permissions tool suite only; no Indubitably auth or Bedrock runtime/provider files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/model-routing overlays unchanged.
+- Risk factors: Core permission enforcement behavior change on apply_patch execution path with approval semantics impact.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.78
+- Validation evidence: Relevant core apply_patch unit tests passed; new request_permissions_tool integration case hit environment-specific sandbox Signal(6) in this runner.
+- Rollback note: Revert this sync commit if apply_patch permission propagation or approval handling regresses.
 
 ## Batch Validation
 
