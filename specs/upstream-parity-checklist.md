@@ -143,6 +143,46 @@
 
 | 60 | `d71e0426940b75f7dea0c149f2129f0b86c17f20` | cherry-pick | ported | 6 | 0.83 | cargo test -p codex-core rejects_escalated_permissions_when_policy_not_on_request --quiet; cargo test -p codex-core guardian_allows_shell_additional_permissions_requests_past_policy_validation --quiet; cargo test -p codex-core --test all view_image_tool_placeholder_for_non_image_files --quiet; cargo test -p codex-app-server --test all dynamic_tool_call_round_trip_sends_text_content_items_to_model --quiet | Tool-output unification applied across handlers/context/registry; core+app-server targeted tests passed after one disk-clean recovery. |
 
+| 61 | `772259b01f6f3c088ac8b04414206d8cb52e0251` | cherry-pick+surgical | ported | 5 | 0.87 | cargo test -p codex-protocol reject_config_defaults_missing_request_permissions_to_false --quiet; cargo test -p codex-app-server-protocol ask_for_approval_reject_defaults_missing_request_permissions_to_false --quiet | Default for reject_config.request_permissions now explicit false across protocol/v2 schema surfaces. |
+
+| 62 | `710682598d20c8a51d41b99a4d709b3a7b827115` | cherry-pick | ported | 4 | 0.88 | cargo test -p codex-core --test all code_mode_can_ --quiet | Code-mode runner now imports tools module directly; bridge/runner plumbing updated with integration tests adjusted. |
+
+| 63 | `0c33af77461615f32d4c6b94060f5a39e0f5194f` | cherry-pick+surgical | ported | 7 | 0.79 | cargo test -p codex-core parses_bundled_skills_config --quiet; cargo test -p codex-core skills_for_config_excludes_bundled_skills_when_disabled_in_config --quiet | Adds skills.bundled.enabled handling across config/thread-manager/skills loading with protected app-server touchpoints. |
+
+| 64 | `a9ae43621b6d583d8d0ff9beeee53484a7a1f38b` | cherry-pick | ported | 4 | 0.9 | cargo test -p codex-core exec_command_tool_output_formats_truncated_response --quiet; cargo test -p codex-core exec_command_args_resolve_relative_additional_permissions_against_workdir --quiet | Unified-exec truncation logic moved into ExecCommandToolOutput; handler/process-manager call paths simplified. |
+
+| 65 | `566e4cee4bd067aeae95591430cffb71e8ede228` | cherry-pick+surgical | ported | 8 | 0.74 | cargo test -p codex-core --test all includes_apps_guidance_as_developer_message_for_chatgpt_auth --quiet; cargo test -p codex-core --test all search_tool_flag_adds_tool_for_api_key_auth --quiet; cargo test -p codex-app-server --test all list_apps_returns_empty_with_api_key_auth --quiet; cargo test -p codex-tui --lib apps_popup_stays_loading_until_final_snapshot_updates --quiet | Apps enablement now auth-aware (ChatGPT vs API-key) across core/app-server/tui; required repeated clean/reruns due disk pressure. |
+
+| 66 | `79307b7933d9607a7f0033dbbf8446b2027279b5` | skip | skipped | 0 | 0.95 | N/A (no effective diff after apply attempt) | Upstream commit produced zero staged changes in current branch state; nothing to port. |
+
+| 67 | `c6343e0649676579f174b6cd0da617d42ab1c58f` | cherry-pick+surgical | ported | 8 | 0.72 | cargo test -p codex-app-server --test all thread_resume_rejoins_running_thread_even_with_override_mismatch --quiet; cargo test -p codex-core unified_exec_pause_blocks_yield_timeout --quiet | Added compatibility fix in unified_exec test (`response.output` -> `response.truncated_output()`) to align with prior output-type refactor. |
+
+| 68 | `2e24be21346c5e2d415ab0ae10cd6dac854014d5` | cherry-pick+surgical | ported | 8 | 0.78 | cargo test -p codex-core --test all inbound_handoff_request_uses_active_transcript --quiet; cargo test -p codex-app-server-protocol realtime --quiet | Realtime handoff now uses active transcript entries; protocol/app-server schema+handling updated with transcript delta/event types. |
+
+| 69 | `aa6a57dfa2001ee2a6e6882b3f94406fc2e47179` | cherry-pick | ported | 1 | 0.96 | cargo test -p codex-core --test all retries_on_early_close --quiet | Test-only stabilization for stream retry behavior with no production code changes. |
+
+| 70 | `6b7253b123a65038fe215a5252002054ad93744f` | skip | skipped | 0 | 0.95 | N/A (assertion fix already present from prior surgical adaptation) | No staged delta after apply; assertion change already incorporated locally. |
+
+| 71 | `b39ae9501f10c7396857335bcb4c8630c8de28a6` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-app-server --test all websocket_transport_routes_per_connection_handshake_and_responses --quiet | Test-only websocket binding stabilization across app-server v2 suite files. |
+
+| 72 | `f3f47cf455c2bf83465c2a2c14048f11d35c4d9d` | cherry-pick+surgical | ported | 4 | 0.9 | cargo test -p codex-app-server --test all turn_start_notify_payload_includes_initialize_client_name --quiet; cargo test -p codex-app-server --test all thread_unsubscribe_unloads_thread_and_emits_thread_closed_notification --quiet | Introduces app-server notify capture helper binary and stabilizes initialize/thread_unsubscribe notify assertions. |
+
+| 73 | `7144f84c6948b0ccf18801a298ee2968c14d32bd` | cherry-pick | ported | 1 | 0.95 | cargo test -p codex-core --test all view_image_tool_placeholder_for_non_image_files --quiet | Small test-only fix to avoid release-mode integration compile failure in view_image suite. |
+
+| 74 | `026cfde023e3fae85d12e414b78b9059437e303e` | cherry-pick | ported | 3 | 0.91 | cargo test -p codex-core test_detect_shell_type --quiet; cargo test -p codex-core derive_exec_args --quiet | Shell lookup now hardens tmux/Linux path handling in core shell detection helpers. |
+
+| 75 | `f9cba5cb168c3e3bf325d30ef73d47c87ed895e1` | cherry-pick+surgical | ported | 5 | 0.82 | cargo test -p codex-core --test all prefers_apikey_when_config_prefers_apikey_even_with_chatgpt_tokens --quiet; cargo test -p codex-app-server --test all turn_start_notify_payload_includes_initialize_client_name --quiet (build blocked by ENOSPC) | Feedback tags now include ChatGPT user ID metadata where available; app-server smoke rerun blocked by disk pressure. |
+
+| 76 | `00ea8aa7eeebb8b921573a40f4306ef3e18cf084` | cherry-pick | ported | 6 | 0.84 | cargo test -p codex-core --test all code_mode_can_ --quiet; cargo test -p codex-core exec_command_tool_output_formats_truncated_response --quiet | Introduces typed exec_command result flow through code_mode/tool routing and context serialization boundaries. |
+
+| 77 | `52a7f4b68b13f4e0b4eea90a0671890bd09e7ed7` | cherry-pick | ported | 1 | 0.97 | cargo test -p codex-utils-pty pipe_process_can_expose_split_stdout_and_stderr --quiet | Windows-oriented PTY split-output test stabilization only; no runtime code changes. |
+
+| 78 | `c4d35084f56313d657ad7b6f16f8aee45f5d242c` | cherry-pick | ported | 5 | 0.87 | cargo test -p codex-protocol serializes_image_outputs_as_array --quiet; cargo test -p codex-core prefers_structured_content_when_present --quiet; cargo test -p codex-core success_flag_reflects_is_error_true --quiet | Unified MCP output type reused across core/protocol handlers |
+
+| 79 | `4ac60428508c2a4af21c66d37d23593244f1f593` | cherry-pick+surgical | ported | 6 | 0.84 | cargo test -p codex-app-server --test all thread_resume_and_read_interrupt_incomplete_rollout_turn_when_thread_is_idle --quiet; cargo test -p codex-app-server --test all thread_resume_rejoins_running_thread_even_with_override_mismatch --quiet | Interrupt stale in-progress turns on idle thread resume/read |
+
+| 80 | `3b1c78a5c5fcb81a732de64afffc352403dd8964` | cherry-pick | ported | 2 | 0.97 | python3 -m py_compile codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py | Adds forward-testing guidance to sample skill and init output |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -793,6 +833,226 @@
 - Validation evidence: Targeted core permissions/guardian/view_image tests and app-server dynamic-tools round-trip test all passed.
 - Rollback note: Revert this sync commit if tool output serialization or dynamic tool round-trip behavior regresses.
 
+### Commit `772259b01f6f3c088ac8b04414206d8cb52e0251`
+
+- Upstream intent: Set RejectConfig.request_permissions default to false and align protocol/app-server-protocol schema defaults.
+- Local overlays touched: Touches protected app-server-protocol v2 surface and core protocol/config schema; no Bedrock/Indubitably auth overlay paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Protocol default semantic change reflected in generated schemas and app-server protocol conversion logic.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.87
+- Validation evidence: Targeted protocol and app-server-protocol defaulting tests passed (after one disk-clean rebuild).
+- Rollback note: Revert this sync commit if reject-policy defaulting for request_permissions regresses in config or protocol bridges.
+
+### Commit `710682598d20c8a51d41b99a4d709b3a7b827115`
+
+- Upstream intent: Export and use the tools module inside code_mode runner to simplify nested tool invocation wiring.
+- Local overlays touched: Touches core code_mode JS bridge/runner and code_mode suite tests only; no auth/provider overlays touched.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Code_mode runtime/bridge path changes across Rust+JS boundary.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: code_mode integration filters passed in codex-core suite.
+- Rollback note: Revert this sync commit if code_mode nested tool execution or bridge messaging regresses.
+
+### Commit `0c33af77461615f32d4c6b94060f5a39e0f5194f`
+
+- Upstream intent: Allow disabling bundled system skills via config/session stack while preserving explicit user skill controls.
+- Local overlays touched: Touches protected config and app-server surfaces plus core skills loading/caching paths; no Bedrock/Indubitably auth overlay paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Config semantic change plus skills cache/installation behavior updates across startup and per-thread skill resolution.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: Targeted core config and skills manager regression tests passed.
+- Rollback note: Revert this sync commit if bundled-skill enablement semantics regress or startup skill cache behavior changes unexpectedly.
+
+### Commit `a9ae43621b6d583d8d0ff9beeee53484a7a1f38b`
+
+- Upstream intent: Centralize exec_command output truncation in ExecCommandToolOutput and remove duplicate truncation handling across unified-exec layers.
+- Local overlays touched: Touches core unified_exec and tool context/handler only; no auth/provider overlays touched.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Behavioral movement of truncation responsibility across core unified-exec output flow.
+- Strategy selected: cherry-pick
+- Confidence: 0.9
+- Validation evidence: Two targeted codex-core unified-exec truncation/arg-resolution tests passed.
+- Rollback note: Revert this sync commit if exec output truncation formatting or unified-exec output payload behavior regresses.
+
+### Commit `566e4cee4bd067aeae95591430cffb71e8ede228`
+
+- Upstream intent: Fix apps feature/tool enablement gating so apps guidance and behavior align with auth mode and thread-level state.
+- Local overlays touched: Touches protected app-server runtime path plus core/chatgpt/tui apps surfaces; no Bedrock/Indubitably-specific overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-cutting auth/feature gating change spanning core instruction shaping, app-server list APIs, and TUI apps popup state handling.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.74
+- Validation evidence: Targeted core apps/search filters, app-server app_list API-key filter, and tui apps popup loading snapshot test all passed.
+- Rollback note: Revert this sync commit if apps availability gating regresses between ChatGPT and API-key authentication modes.
+
+### Commit `79307b7933d9607a7f0033dbbf8446b2027279b5`
+
+- Upstream intent: Delay pending cleanup timing until task abort path.
+- Local overlays touched: No local files changed in this branch state.
+- Invariants checked: All local overlays unchanged (no-op).
+- Risk factors: None; empty/no-op application against current tree.
+- Strategy selected: skip
+- Confidence: 0.95
+- Validation evidence: apply produced no file delta; working tree remained clean.
+- Rollback note: No rollback required for skipped no-op commit.
+
+### Commit `c6343e0649676579f174b6cd0da617d42ab1c58f`
+
+- Upstream intent: Track out-of-band elicitation count per thread to pause stopwatch/yield-time accounting while external elicitations are active.
+- Local overlays touched: Touches protected app-server-protocol/app-server surfaces plus core thread and unified-exec paths; no Bedrock/Indubitably overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-layer state coordination change between app-server resume flow, protocol methods, and core thread pause semantics.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.72
+- Validation evidence: Targeted app-server thread-resume and core unified-exec pause tests passed after adapting staged test code to new ExecCommandToolOutput API.
+- Rollback note: Revert this sync commit if elicitation pause/resume state handling regresses timeout behavior or thread-resume consistency.
+
+### Commit `2e24be21346c5e2d415ab0ae10cd6dac854014d5`
+
+- Upstream intent: Replace handoff-context sourcing with realtime transcript data to improve inbound handoff continuity and context fidelity.
+- Local overlays touched: Touches protected app-server runtime surface plus protocol/app-server-protocol/core realtime stacks; no Bedrock/Indubitably-specific overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-crate realtime protocol/event shape migration affecting app-server websocket methods, core handoff context, and wire schemas.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.78
+- Validation evidence: Targeted core realtime handoff test and app-server-protocol realtime filters passed.
+- Rollback note: Revert this sync commit if realtime handoff context construction or transcript event wiring regresses.
+
+### Commit `aa6a57dfa2001ee2a6e6882b3f94406fc2e47179`
+
+- Upstream intent: Stabilize early-close SSE retry test behavior and assertions.
+- Local overlays touched: Touches only core test suite file.
+- Invariants checked: Runtime overlays unchanged.
+- Risk factors: Low risk; test harness-only adjustments.
+- Strategy selected: cherry-pick
+- Confidence: 0.96
+- Validation evidence: Updated retries_on_early_close test passed.
+- Rollback note: Revert this sync commit if SSE retry test stability unexpectedly regresses.
+
+### Commit `6b7253b123a65038fe215a5252002054ad93744f`
+
+- Upstream intent: Adjust unified exec test assertion to current output API.
+- Local overlays touched: No files changed in current branch state.
+- Invariants checked: All local overlays unchanged (no-op).
+- Risk factors: None; no-op commit in current sequence.
+- Strategy selected: skip
+- Confidence: 0.95
+- Validation evidence: apply resulted in zero-file delta with clean tree.
+- Rollback note: No rollback required for skipped no-op commit.
+
+### Commit `b39ae9501f10c7396857335bcb4c8630c8de28a6`
+
+- Upstream intent: Stabilize websocket test server binding behavior to reduce flaky app-server websocket tests.
+- Local overlays touched: Touches only app-server test suite files.
+- Invariants checked: Runtime overlays unchanged.
+- Risk factors: Low risk; integration test harness adjustments only.
+- Strategy selected: cherry-pick
+- Confidence: 0.94
+- Validation evidence: Targeted websocket transport handshake test passed after disk-recovery rerun.
+- Rollback note: Revert this sync commit if websocket suite stability unexpectedly worsens.
+
+### Commit `f3f47cf455c2bf83465c2a2c14048f11d35c4d9d`
+
+- Upstream intent: Stabilize app-server initialize notification tests by using a dedicated notify-capture binary and unsubscribe coverage updates.
+- Local overlays touched: Touches protected app-server runtime/bin plus app-server v2 tests; no Bedrock/Indubitably overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Adds auxiliary app-server binary and updates notification test harness behavior for initialize/unsubscribe flows.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.9
+- Validation evidence: Two targeted app-server initialize/thread_unsubscribe filters passed.
+- Rollback note: Revert this sync commit if notify initialize/unsubscribe test harness behavior regresses.
+
+### Commit `7144f84c6948b0ccf18801a298ee2968c14d32bd`
+
+- Upstream intent: Repair release-mode integration test compilation by adjusting view_image test code.
+- Local overlays touched: Touches only core view_image test suite file.
+- Invariants checked: Runtime overlays unchanged.
+- Risk factors: Low risk; test compilation fix only.
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: Targeted view_image placeholder test passed after disk-recovery rerun.
+- Rollback note: Revert this sync commit if view_image suite compilation behavior regresses.
+
+### Commit `026cfde023e3fae85d12e414b78b9059437e303e`
+
+- Upstream intent: Prevent Linux tmux-related crashes in user-shell discovery logic.
+- Local overlays touched: Touches core shell helper implementation only.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Platform-specific shell path resolution changes for tmux/Linux environments.
+- Strategy selected: cherry-pick
+- Confidence: 0.91
+- Validation evidence: Targeted core shell detection/exec-args tests passed.
+- Rollback note: Revert this sync commit if shell detection regresses on Linux/tmux environments.
+
+### Commit `f9cba5cb168c3e3bf325d30ef73d47c87ed895e1`
+
+- Upstream intent: Attach ChatGPT user identifier to feedback-related telemetry/tagging paths.
+- Local overlays touched: Touches protected app-server message processor plus core auth and tui chatwidget paths; no Bedrock/Indubitably-specific overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-surface metadata enrichment across auth/session and feedback tagging pathways.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.82
+- Validation evidence: Core auth-mode regression filter passed; app-server smoke compile attempt failed from disk exhaustion in this runner.
+- Rollback note: Revert this sync commit if feedback tagging metadata propagation regresses or user-id tagging causes side effects.
+
+### Commit `00ea8aa7eeebb8b921573a40f4306ef3e18cf084`
+
+- Upstream intent: Expose strongly-typed exec_command results so downstream tool handlers and code_mode can consume structured data safely.
+- Local overlays touched: Touches core tool routing/context/spec/code_mode surfaces only; no Bedrock/Indubitably overlay files changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-cutting core tool output API shift affecting code_mode bridge and router serialization contracts.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: Targeted code_mode integration filters and exec_command output formatting test passed.
+- Rollback note: Revert this sync commit if typed exec_command result plumbing regresses tool output handling.
+
+### Commit `52a7f4b68b13f4e0b4eea90a0671890bd09e7ed7`
+
+- Upstream intent: Stabilize split stdout/stderr PTY test expectations on Windows.
+- Local overlays touched: Touches only utils/pty test file.
+- Invariants checked: Runtime overlays unchanged.
+- Risk factors: Low risk; test-only adjustments.
+- Strategy selected: cherry-pick
+- Confidence: 0.97
+- Validation evidence: Targeted codex-utils-pty split stdout/stderr test passed.
+- Rollback note: Revert this sync commit if PTY split-output test stability regresses.
+
+### Commit `c4d35084f56313d657ad7b6f16f8aee45f5d242c`
+
+- Upstream intent: Reuse McpToolOutput across handler and protocol conversion paths to remove duplicated wrapper logic.
+- Local overlays touched: Touches core/protocol tool-output plumbing only; no protected app-server auth/runtime overlays modified.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-cutting serialization/output conversion behavior used by MCP tools and code_mode.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: Targeted codex-protocol and codex-core MCP conversion tests passed.
+- Rollback note: Revert this sync commit if MCP output serialization or code_mode tool output compatibility regresses.
+
+### Commit `4ac60428508c2a4af21c66d37d23593244f1f593`
+
+- Upstream intent: Mark replayed incomplete turns interrupted when resumed thread is idle to avoid stuck non-interactable threads.
+- Local overlays touched: Touches protected app-server message processor plus thread_resume integration tests; no Bedrock/Indubitably-specific overlays changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Thread status/state transition changes across resume/read and listener response paths.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: Two targeted app-server thread-resume filters passed after ENOSPC recovery via cargo clean.
+- Rollback note: Revert this sync commit if thread resume/read status transitions regress or stale turns are misclassified.
+
+### Commit `3b1c78a5c5fcb81a732de64afffc352403dd8964`
+
+- Upstream intent: Expand sample skill-creator guidance with forward-testing instructions and update init script next-step output.
+- Local overlays touched: Touches only sample skill assets in codex-rs/skills; no runtime overlays touched.
+- Invariants checked: Runtime/auth/provider invariants unchanged.
+- Risk factors: Docs/sample-script guidance only; no production runtime code paths.
+- Strategy selected: cherry-pick
+- Confidence: 0.97
+- Validation evidence: Python syntax check for updated init_skill.py passed.
+- Rollback note: Revert this sync commit if sample skill guidance changes need to be deferred.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -809,4 +1069,6 @@
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
 - Batch 5 summary: processed 10 (orders 41-50), blocked 0, skipped 0, branch now ahead 101 / behind 304 vs upstream/main.
 - Batch 6 summary: processed 10 (orders 51-60), blocked 0, skipped 0, branch now ahead 113 / behind 306 vs upstream/main.
+- Batch 7 summary: processed 18 (orders 61-80), blocked 0, skipped 2 (orders 66 and 70 no-op), branch now ahead 132 / behind 307 vs upstream/main.
 - Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability. Two known environment-specific issues were observed: protocol `schema_fixtures` parity tests report existing fixture drift in current branch state, and one apply_patch/request_permissions integration test aborts with sandbox signal 6 in this runner.
+- Additional batch-7 gate notes: `cargo test -p codex-core --test all code_mode_can_ --quiet` failed in this environment (`expected value at line 1 column 1` / missing file in nested apply_patch path), while the per-commit core filters for MCP and unified-exec paths passed; `cargo test -p codex-app-server-protocol realtime --quiet` failed due ENOSPC during linking.
