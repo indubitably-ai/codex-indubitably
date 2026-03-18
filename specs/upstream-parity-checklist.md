@@ -127,6 +127,8 @@
 
 | 52 | `b0cbc25a48b11e311f3b1b7ce9998bb54731ea41` | cherry-pick+surgical | ported | 9 | 0.81 | CARGO_INCREMENTAL=0 cargo test -p codex-protocol legacy_workspace_write_nested_readable_root_stays_writable --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core seatbelt_legacy_workspace_write_nested_readable_root_stays_writable --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core session_configuration_apply_rederives_legacy_file_system_policy_on_cwd_update --quiet | Preserves legacy workspace-write semantics with cwd-aware legacy bridge while keeping split-policy carveout behavior for explicit modern policies. |
 
+| 53 | `1165a16e6ffad719e8f852900fd7ff438ec88fae` | cherry-pick+surgical | ported | 7 | 0.85 | CARGO_INCREMENTAL=0 cargo test -p codex-core permissions_profiles_allow --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core normalize_absolute_path_for_platform_simplifies_windows_verbatim_paths --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-protocol unknown_special_paths_are_ignored_by_legacy_bridge --quiet | Makes permissions profile parsing forward-compatible by preserving unknown special paths as warn-and-ignore and treating missing filesystem entries as restricted with startup warnings. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -688,6 +690,17 @@
 - Confidence: 0.81
 - Validation evidence: Targeted protocol and core legacy-workspace-write regression tests passed.
 - Rollback note: Revert this sync commit if legacy workspace-write read/write semantics regress across adapters.
+
+### Commit `1165a16e6ffad719e8f852900fd7ff438ec88fae`
+
+- Upstream intent: Keep new permissions profile formats forward-compatible with older runtimes while failing closed instead of aborting config load.
+- Local overlays touched: Touches protected core config parsing path and protocol permissions bridge; no Bedrock/Indubitably auth overlay logic changed.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Core config parsing behavior change with warning semantics and cross-platform path normalization edge cases.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.85
+- Validation evidence: Targeted core permissions-profile and protocol legacy-bridge compatibility tests passed.
+- Rollback note: Revert this sync commit if permissions profile loading or legacy bridge handling regresses.
 
 ## Batch Validation
 
