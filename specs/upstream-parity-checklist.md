@@ -63,6 +63,8 @@
 
 | 23 | `06f82c123c6ed295f0ef19b5cbf49cf78bbc092e` | cherry-pick | ported | 4 | 0.88 | cargo test -p codex-tui permissions_prompt_snapshot --quiet && cargo test -p codex-tui handle_request_permissions_opens_approval_modal --quiet | TUI render/queue handling for request_permissions approvals with new snapshot coverage. |
 
+| 24 | `2bc3e52a91bb88a0e067a95f8f8559f8711d30e6` | cherry-pick | ported | 2 | 0.93 | cargo test -p codex-app-server list_apps_waits_for_accessible_data_before_emitting_directory_updates --quiet | App-server v2 app-list ordering test stabilization only. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -309,6 +311,16 @@
 - Confidence: 0.88
 - Validation evidence: Focused codex-tui snapshot and modal-behavior tests for permissions approvals passed.
 - Rollback note: Revert this sync commit if permissions approval rendering or replay handling regresses in TUI.
+### Commit `2bc3e52a91bb88a0e067a95f8f8559f8711d30e6`
+
+- Upstream intent: Stabilize app list update ordering test by accepting valid interim accessible-only updates before merged final payload.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No auth/provider/runtime behavior paths modified.
+- Risk factors: Test-only control-flow change in app-server integration test.
+- Strategy selected: cherry-pick
+- Confidence: 0.93
+- Validation evidence: Targeted codex-app-server app-list ordering test passed.
+- Rollback note: Revert this sync commit if app-list ordering test should retain prior strict sequencing assumption.
 ## Batch Validation
 
 - [x] CLI default provider smoke
