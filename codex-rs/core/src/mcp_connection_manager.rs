@@ -1378,7 +1378,6 @@ async fn start_server_task(
         .as_ref()
         .and_then(|exp| exp.get(MCP_SANDBOX_STATE_CAPABILITY))
         .is_some();
-
     let managed = ManagedClient {
         client: Arc::clone(&client),
         tools,
