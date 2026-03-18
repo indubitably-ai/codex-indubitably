@@ -115,6 +115,8 @@
 
 | 47 | `d241dc598cb0bbadeefd5eab92c056a36b420624` | cherry-pick+surgical | ported | 9 | 0.79 | CARGO_INCREMENTAL=0 cargo test -p codex-core request_permissions_session_grants_carry_across_turns --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol permissions_request_approval_response_defaults_scope_to_turn --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui --lib permissions_session_shortcut_submits_session_scope --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server request_permissions_response_preserves_session_scope --quiet | Adds turn/session scope for request_permissions grants with protocol/app-server/core/tui plumbing and new coverage. |
 
+| 48 | `d309c102efdb2840605ddac1d911ecb3a9945459` | cherry-pick+surgical | ported | 6 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core --lib web_search_config_is_forwarded_to_tool_spec --quiet | Refactors web_search tool spec serialization to dedicated Responses API payload structs in codex-core. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -621,6 +623,17 @@
 - Confidence: 0.79
 - Validation evidence: Targeted core, app-server-protocol, app-server, and tui tests for request_permissions scope behavior passed.
 - Rollback note: Revert this sync commit if request_permissions approvals no longer honor turn/session scope semantics.
+
+### Commit `d309c102efdb2840605ddac1d911ecb3a9945459`
+
+- Upstream intent: Replace custom web_search serializers with dedicated Responses API filter/user-location structs to reduce config/wire-format drift.
+- Local overlays touched: Touches codex-core tool-spec/client-common only; no Indubitably auth or Bedrock runtime/provider paths changed.
+- Invariants checked: Indubitably auth and Bedrock provider/model-selection overlays unchanged.
+- Risk factors: Core tool payload shape refactor at client boundary with serialization behavior changes.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: After cleaning build artifacts for disk headroom, codex-core web_search tool-spec forwarding test passed.
+- Rollback note: Revert this sync commit if web_search payload serialization regresses against Responses API expectations.
 
 ## Batch Validation
 
