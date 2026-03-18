@@ -5,13 +5,15 @@
 - Date: 2026-03-17
 - Fork branch: main
 - Upstream ref: upstream/main
-- Start ahead/behind: ahead 40 / behind 273
-- End ahead/behind: ahead 52 / behind 273
+- Batch 1 start ahead/behind: ahead 40 / behind 273
+- Batch 1 end ahead/behind: ahead 52 / behind 273
+- Batch 2 start ahead/behind: ahead 57 / behind 292
+- Batch 2 end ahead/behind: ahead 63 / behind 292
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 of phased sync (10 commits/run), direct-to-main push cadence.
+- Notes: Batch 1 and Batch 2 of phased sync (10 commits/run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -276,10 +278,11 @@
 - [x] CLI default provider smoke
 - [x] CLI `--indubitably` smoke
 - [x] Targeted crate tests for touched code
-- [ ] App-server protocol smoke (if app-server/protocol files changed)
+- [x] App-server protocol smoke (if app-server/protocol files changed)
 
 ## Follow-ups
 
 - Blocked commits: none in this 10-commit batch.
-- Manual port TODOs: none; two commits used cherry-pick+surgical strategy.
-- Risk notes: full `cargo test -p codex-core` currently fails in this environment due js_repl runtime requirement (Node >= 22.22.0; local is v20.19.5); targeted tests and CLI smokes passed.
+- Manual port TODOs: none; three commits in this batch used cherry-pick+surgical strategy (orders 16-18).
+- Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
+- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` are not currently used as batch gates here due environment/runtime drift pressure; targeted crate filters and app-server protocol smoke passed.
