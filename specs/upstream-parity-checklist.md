@@ -10,7 +10,7 @@
 - Batch 2 start ahead/behind: ahead 57 / behind 292
 - Batch 2 end ahead/behind: ahead 63 / behind 292
 - Batch 3 start ahead/behind: ahead 64 / behind 293
-- Batch 3 end ahead/behind: ahead 78 / behind 293
+- Batch 3 end ahead/behind: ahead 79 / behind 293
 
 ## Protected Surfaces
 
@@ -411,5 +411,5 @@
 - Blocked commits: none in this 10-commit batch.
 - Manual port TODOs: none; three commits in this batch used cherry-pick+surgical strategy (orders 16-18).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
-- Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 78 / behind 293 vs upstream/main.
+- Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Disk pressure (os error 28) required `cargo clean` recovery during app-server validation.
