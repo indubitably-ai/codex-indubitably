@@ -41,6 +41,8 @@
 
 | 13 | `a30edb6c17201358273b76a4fd81d2b6ce3c2c54` | cherry-pick | ported | 3 | 0.87 | cargo test -p codex-utils-pty terminate --quiet | Windows PTY terminate handling correction. |
 
+| 14 | `7ba1fccfc1083354e058772b83b9bbb191e99f42` | cherry-pick | ported | 5 | 0.82 | cargo test -p codex-core guardian --quiet && cargo test -p codex-app-server thread_resume --quiet | Guardian coverage/Bazel test stabilization updates. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -185,6 +187,17 @@
 - Confidence: 0.87
 - Validation evidence: codex-utils-pty terminate-filtered tests passed.
 - Rollback note: Revert this sync commit if Windows PTY termination semantics regress.
+
+### Commit `7ba1fccfc1083354e058772b83b9bbb191e99f42`
+
+- Upstream intent: Restore guardian test coverage and Bazel unit-test stability wiring across core/app-server templates.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Auth/provider/runtime overlay paths unchanged.
+- Risk factors: Cross-cutting test infra and guardian behavior updates across core/app-server/Bazel scaffolding.
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: Core guardian and app-server thread_resume filtered suites passed.
+- Rollback note: Revert this sync commit if guardian coverage or Bazel test launcher behavior regresses.
 
 ## Batch Validation
 
