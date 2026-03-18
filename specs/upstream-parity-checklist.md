@@ -101,6 +101,8 @@
 
 | 40 | `fefd01b9e011380a2f081d8337736602e7e87ee0` | cherry-pick | ported | 3 | 0.90 | CARGO_INCREMENTAL=0 cargo test -p codex-core --test all resume_includes_initial_messages_from_rollout_events --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core --test all resume_includes_initial_messages_from_reasoning_events --quiet | Resume tests now poll until initial_messages reach final persisted shape before asserting. |
 
+| 41 | `0334ddeccbef07995561de5b39334dd94ef9e33a` | cherry-pick | ported | 2 | 0.94 | CARGO_INCREMENTAL=0 cargo test -p codex-core unicode_output --quiet | Core shell_command CI test update only. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -530,6 +532,17 @@
 - Confidence: 0.90
 - Validation evidence: Both targeted core resume initial-message tests passed via explicit --test all filters.
 - Rollback note: Revert this sync commit if resume suite should keep single-shot post-turn assertions.
+
+### Commit `0334ddeccbef07995561de5b39334dd94ef9e33a`
+
+- Upstream intent: Speed up and stabilize shell_command unicode_output test by using a child process on Windows.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth path and Bedrock provider/runtime selection unchanged.
+- Risk factors: Test-only adjustment in codex-core suite with low runtime impact.
+- Strategy selected: cherry-pick
+- Confidence: 0.94
+- Validation evidence: CARGO_INCREMENTAL=0 cargo test -p codex-core unicode_output --quiet (8 passed, filtered).
+- Rollback note: Revert this sync commit if shell_command unicode coverage regresses.
 
 ## Batch Validation
 
