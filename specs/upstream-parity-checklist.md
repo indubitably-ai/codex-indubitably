@@ -73,6 +73,8 @@
 
 | 28 | `6052558a017b89cc62820b388f2cdd3ad5a3feda` | cherry-pick | ported | 2 | 0.95 | cargo test -p codex-rmcp-client drop_kills_wrapper_process_group --quiet | RMCP pid-file cleanup test now waits for non-empty pid content before assertions. |
 
+| 29 | `5d9db0f9959a5ee2eec75e6bbd2f6b3a543802d2` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-utils-pty pty_python_repl_emits_output_and_exits --quiet | PTY Python REPL test now waits for a startup marker emitted at process launch. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -370,6 +372,17 @@
 - Confidence: 0.95
 - Validation evidence: Targeted rmcp-client drop_kills_wrapper_process_group test passed.
 - Rollback note: Revert this sync commit if pid-file cleanup test assumptions need to return to strict immediate parsing.
+
+### Commit `5d9db0f9959a5ee2eec75e6bbd2f6b3a543802d2`
+
+- Upstream intent: Stabilize PTY Python REPL readiness by switching from live probe commands to startup marker synchronization.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only synchronization update in utils/pty.
+- Strategy selected: cherry-pick
+- Confidence: 0.94
+- Validation evidence: Targeted codex-utils-pty python REPL test passed.
+- Rollback note: Revert this sync commit if PTY readiness detection needs to revert to probe-based behavior.
 
 ## Batch Validation
 
