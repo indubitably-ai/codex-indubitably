@@ -15,11 +15,17 @@
 - Batch 4 end ahead/behind: ahead 90 / behind 301
 - Batch 5 start ahead/behind: ahead 91 / behind 304
 - Batch 5 end ahead/behind: ahead 101 / behind 304
+- Batch 6 start ahead/behind: ahead 102 / behind 306
+- Batch 6 end ahead/behind: ahead 113 / behind 306
+- Batch 7 start ahead/behind: ahead 114 / behind 307
+- Batch 7 end ahead/behind: ahead 132 / behind 307
+- Batch 8 start ahead/behind: ahead 133 / behind 310
+- Batch 8 end ahead/behind: ahead 153 / behind 310
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 5 of phased sync (10 commits/run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 8 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -182,6 +188,46 @@
 | 79 | `4ac60428508c2a4af21c66d37d23593244f1f593` | cherry-pick+surgical | ported | 6 | 0.84 | cargo test -p codex-app-server --test all thread_resume_and_read_interrupt_incomplete_rollout_turn_when_thread_is_idle --quiet; cargo test -p codex-app-server --test all thread_resume_rejoins_running_thread_even_with_override_mismatch --quiet | Interrupt stale in-progress turns on idle thread resume/read |
 
 | 80 | `3b1c78a5c5fcb81a732de64afffc352403dd8964` | cherry-pick | ported | 2 | 0.97 | python3 -m py_compile codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py | Adds forward-testing guidance to sample skill and init output |
+
+| 81 | `b7f8e9195` | cherry-pick | ported | 4 | 0.92 | cargo test -p codex-skills fingerprint_traverses_nested_entries --quiet | Adds OpenAI docs sample skill material in codex-skills assets. |
+
+| 82 | `f2d66fadd` | cherry-pick | ported | 8 | 0.82 | cargo test -p codex-core monitor_action_posts_expected_arc_request --quiet | Adds ARC monitor approval action path and core monitor integration. |
+
+| 83 | `d751e68f4` | cherry-pick+surgical | ported | 9 | 0.83 | cargo test -p codex-app-server --test all plugin_list_force_remote_sync_reconciles_curated_plugin_state --quiet | Forces remote plugin status sync on plugin/list (protected app-server path). |
+
+| 84 | `3d4628c9c` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-cloud-requirements fetch_cloud_requirements_surfaces_auth_recovery_message --quiet | Adds granular cloud-requirements loading metrics. |
+
+| 85 | `91ca20c7c` | cherry-pick | ported | 4 | 0.90 | cargo test -p codex-core --test all spawn_agent_requested_model_and_reasoning_override_inherited_settings_without_role --quiet | Adds spawn_agent model/reasoning override handling. |
+
+| 86 | `722e8f08e` | cherry-pick | ported | 6 | 0.85 | cargo test -p codex-core --lib handle_output_item_done_records_image_save_message_after_successful_save --quiet | Routes image-generation saves through `/tmp` and updates output handling. |
+
+| 87 | `d5694529c` | cherry-pick+surgical | ported | 7 | 0.84 | cargo test -p codex-app-server-protocol derive_supports_nested_experimental_fields --quiet; cargo test -p codex-app-server --test all thread_start_reject_approval_policy_requires_experimental_api_capability --quiet | Extends nested experimental gating for `AskForApproval::Reject`. |
+
+| 88 | `ee8f84153` | cherry-pick | ported | 8 | 0.78 | cargo test -p codex-protocol serializes_image_outputs_as_array --quiet | Adds MCP output schema + code_mode result plumbing; integration filters are environment-limited here. |
+
+| 89 | `3d41ff0b7` | cherry-pick | ported | 6 | 0.78 | cargo test -p codex-core --lib formatted_truncate_text_content_items_with_policy_merges_text_and_appends_images --quiet | Adds model-controlled truncation policy for code_mode outputs. |
+
+| 90 | `a67660da2` | cherry-pick+surgical | ported | 5 | 0.88 | cargo test -p codex-core --lib apply_role_ignores_agent_metadata_fields_in_user_role_file --quiet | Loads agent metadata from role files with protected config-path overlap. |
+
+| 91 | `b1dddcb76` | cherry-pick | ported | 1 | 0.98 | N/A (workflow-only update) | CI workflow timeout and runner tweaks only. |
+
+| 92 | `ce1d9abf1` | cherry-pick | ported | 1 | 0.96 | cargo test -p codex-core --lib close_agent --quiet | Clarifies close_agent tool description text. |
+
+| 93 | `07c22d20f` | cherry-pick | ported | 5 | 0.74 | cargo test -p codex-core --test all code_mode --quiet (fails in runner: unsupported custom tool call: code_mode) | Adds code_mode output_text/output_image helper support. |
+
+| 94 | `8ac27b2a1` | cherry-pick+surgical | ported | 7 | 0.86 | cargo test -p codex-app-server --test all thread_fork_ephemeral_remains_pathless_and_omits_listing --quiet | Adds ephemeral thread-fork support on protected app-server/protocol paths. |
+
+| 95 | `889b4796f` | cherry-pick+surgical | ported | 10 | 0.80 | cargo test -p codex-core --lib contacts_read_only_emit_contacts_read_clauses --quiet | Adds extra macOS sandbox permissions with broad protected-surface overlap. |
+
+| 96 | `2621ba17e` | cherry-pick | ported | 5 | 0.89 | cargo test -p codex-core --test all remote_compact_replaces_history_for_followups --quiet | Passes full request params into compaction flow. |
+
+| 97 | `83b22bb61` | cherry-pick | ported | 7 | 0.79 | cargo test -p codex-core --test all code_mode --quiet (runner-limited); cargo test -p codex-core --lib close_agent --quiet | Adds session-scoped store/load support for code_mode values. |
+
+| 98 | `c1a424691` | cherry-pick+surgical | ported | 9 | 0.77 | cargo test -p codex-core --lib execve_prompt_rejection_uses_skill_approval_for_skill_scripts --quiet; cargo test -p codex-app-server-protocol derive_supports_nested_experimental_fields --quiet | Splits skill-approval reject policy and updates core/protocol/app-server wiring. |
+
+| 99 | `9b5078d3e` | cherry-pick | ported | 1 | 0.97 | cargo test -p codex-utils-pty pipe_process_round_trips_stdin --quiet | Stabilizes stdin round-trip behavior in pipe-process test. |
+
+| 100 | `e77b2fd92` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-core --lib guardian_review_request_layout --quiet | Updates guardian prompt text and snapshot layout expectations. |
 
 ## Decision Briefs
 
@@ -1053,6 +1099,226 @@
 - Validation evidence: Python syntax check for updated init_skill.py passed.
 - Rollback note: Revert this sync commit if sample skill guidance changes need to be deferred.
 
+### Commit `b7f8e9195`
+
+- Upstream intent: Add an OpenAI docs sample skill to bundled skill examples.
+- Local overlays touched: codex-skills sample assets only; no protected runtime paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Low-risk content/sample update.
+- Strategy selected: cherry-pick.
+- Confidence: 0.92.
+- Validation evidence: `cargo test -p codex-skills fingerprint_traverses_nested_entries --quiet`.
+- Rollback note: Revert if sample skill content causes packaging or docs regressions.
+
+### Commit `f2d66fadd`
+
+- Upstream intent: Add ARC monitor approval action support in core tool flow.
+- Local overlays touched: core monitoring/action surfaces only; no protected paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Approval action routing touches monitor behavior and tool-call payload paths.
+- Strategy selected: cherry-pick.
+- Confidence: 0.82.
+- Validation evidence: `cargo test -p codex-core monitor_action_posts_expected_arc_request --quiet`.
+- Rollback note: Revert if ARC monitor actions regress MCP approval handling.
+
+### Commit `d751e68f4`
+
+- Upstream intent: Force remote curated plugin status sync during `plugin/list`.
+- Local overlays touched: Protected app-server runtime/message processor paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Cross-thread/plugin state sync behavior across local and remote status reconciliation.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.83.
+- Validation evidence: `cargo test -p codex-app-server --test all plugin_list_force_remote_sync_reconciles_curated_plugin_state --quiet`.
+- Rollback note: Revert if plugin status reconciliation causes stale or oscillating states.
+
+### Commit `3d4628c9c`
+
+- Upstream intent: Emit more granular cloud-requirements load metrics.
+- Local overlays touched: Cloud-requirements crate only; no protected paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Metric emission path changes; low behavioral risk.
+- Strategy selected: cherry-pick.
+- Confidence: 0.94.
+- Validation evidence: `cargo test -p codex-cloud-requirements fetch_cloud_requirements_surfaces_auth_recovery_message --quiet`.
+- Rollback note: Revert if cloud requirements metric cardinality or load-path behavior regresses.
+
+### Commit `91ca20c7c`
+
+- Upstream intent: Add model/reasoning overrides for `spawn_agent`.
+- Local overlays touched: core multi-agent tooling only; no protected paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Agent config inheritance and override precedence logic.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90.
+- Validation evidence: `cargo test -p codex-core --test all spawn_agent_requested_model_and_reasoning_override_inherited_settings_without_role --quiet`.
+- Rollback note: Revert if spawned agent model/reasoning settings drift from requested overrides.
+
+### Commit `722e8f08e`
+
+- Upstream intent: Normalize image-generation save path handling through `/tmp`.
+- Local overlays touched: core image-generation output and save-path handling.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: File save-path behavior and output messaging for generated images.
+- Strategy selected: cherry-pick.
+- Confidence: 0.85.
+- Validation evidence: `cargo test -p codex-core --lib handle_output_item_done_records_image_save_message_after_successful_save --quiet`.
+- Rollback note: Revert if image-save behavior regresses path correctness or user-facing messages.
+
+### Commit `d5694529c`
+
+- Upstream intent: Propagate nested experimental gating to `AskForApproval::Reject`.
+- Local overlays touched: Protected app-server-protocol + app-server approval capability paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Experimental capability enforcement across wire/protocol/server.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.84.
+- Validation evidence: `cargo test -p codex-app-server-protocol derive_supports_nested_experimental_fields --quiet`; `cargo test -p codex-app-server --test all thread_start_reject_approval_policy_requires_experimental_api_capability --quiet`.
+- Rollback note: Revert if approval reject-policy experimental gating diverges across protocol/server.
+
+### Commit `ee8f84153`
+
+- Upstream intent: Add MCP output schema and expose MCP tool results to `code_mode`.
+- Local overlays touched: core/protocol code_mode and MCP output conversion paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Structured output type handling across MCP->code_mode boundaries.
+- Strategy selected: cherry-pick.
+- Confidence: 0.78.
+- Validation evidence: `cargo test -p codex-protocol serializes_image_outputs_as_array --quiet`; integration coverage is limited in this runner because `test_stdio_server` binary resolution is unavailable.
+- Rollback note: Revert if MCP output schemas or code_mode tool result rendering regress.
+
+### Commit `3d41ff0b7`
+
+- Upstream intent: Add model-controlled truncation policy for `code_mode` results.
+- Local overlays touched: core code_mode output truncation logic.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Output truncation shape and token-budget policy interactions.
+- Strategy selected: cherry-pick.
+- Confidence: 0.78.
+- Validation evidence: `cargo test -p codex-core --lib formatted_truncate_text_content_items_with_policy_merges_text_and_appends_images --quiet`; broader code_mode integration filters remain environment-limited in this runner.
+- Rollback note: Revert if truncation formatting or budget application regresses.
+
+### Commit `a67660da2`
+
+- Upstream intent: Load agent metadata fields from role files.
+- Local overlays touched: Protected core config/role loading paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Role parsing and metadata inheritance semantics.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.88.
+- Validation evidence: `cargo test -p codex-core --lib apply_role_ignores_agent_metadata_fields_in_user_role_file --quiet`.
+- Rollback note: Revert if role metadata parsing impacts user role behavior unexpectedly.
+
+### Commit `b1dddcb76`
+
+- Upstream intent: Increase SDK workflow timeout and update workflow runner config.
+- Local overlays touched: CI workflow files only.
+- Invariants checked: Runtime overlays untouched.
+- Risk factors: CI-only operational tuning.
+- Strategy selected: cherry-pick.
+- Confidence: 0.98.
+- Validation evidence: N/A (workflow-only change).
+- Rollback note: Revert if workflow timeout/run behavior should remain pre-change.
+
+### Commit `ce1d9abf1`
+
+- Upstream intent: Clarify `close_agent` tool description text.
+- Local overlays touched: core tool spec text only.
+- Invariants checked: Runtime overlay logic unchanged.
+- Risk factors: Documentation/spec text update; low runtime risk.
+- Strategy selected: cherry-pick.
+- Confidence: 0.96.
+- Validation evidence: `cargo test -p codex-core --lib close_agent --quiet`.
+- Rollback note: Revert if wording conflicts with local UX/tool-doc policy.
+
+### Commit `07c22d20f`
+
+- Upstream intent: Add `output_text`/`output_image` helper support path updates for `code_mode`.
+- Local overlays touched: core code_mode helper handling and tests.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Output helper semantics and content-shape serialization for code_mode.
+- Strategy selected: cherry-pick.
+- Confidence: 0.74.
+- Validation evidence: targeted code_mode integration filter run failed in this runner (`unsupported custom tool call: code_mode`); treated as environment limitation.
+- Rollback note: Revert if output helper behavior regresses once full integration environment is available.
+
+### Commit `8ac27b2a1`
+
+- Upstream intent: Add ephemeral flag support for thread fork APIs.
+- Local overlays touched: Protected app-server and app-server-protocol thread fork/resume/start surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Thread lifecycle and persistence semantics for ephemeral forks.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.86.
+- Validation evidence: `cargo test -p codex-app-server --test all thread_fork_ephemeral_remains_pathless_and_omits_listing --quiet`.
+- Rollback note: Revert if ephemeral thread fork state leaks into persisted listings.
+
+### Commit `889b4796f`
+
+- Upstream intent: Add additional macOS sandbox permissions (LaunchServices/Contacts/Reminders related).
+- Local overlays touched: Broad protected/core/tui/protocol/app-server surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Large cross-cutting sandbox-permission policy changes.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.80.
+- Validation evidence: `cargo test -p codex-core --lib contacts_read_only_emit_contacts_read_clauses --quiet`.
+- Rollback note: Revert if macOS sandbox permission clauses or escalation behavior regresses.
+
+### Commit `2621ba17e`
+
+- Upstream intent: Pass full request params through compaction path.
+- Local overlays touched: core compaction request handling.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Request history/compaction payload shape and replacement semantics.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89.
+- Validation evidence: `cargo test -p codex-core --test all remote_compact_replaces_history_for_followups --quiet`.
+- Rollback note: Revert if compaction payload forwarding regresses follow-up turns.
+
+### Commit `83b22bb61`
+
+- Upstream intent: Add store/load persistence support for `code_mode` across turns.
+- Local overlays touched: core code_mode runtime + session services.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: New session-scoped mutable state for code_mode values and serialization boundaries.
+- Strategy selected: cherry-pick.
+- Confidence: 0.79.
+- Validation evidence: `cargo test -p codex-core --test all code_mode --quiet` failed in this runner due missing `test_stdio_server` and unsupported code_mode custom-tool path; `cargo test -p codex-core --lib close_agent --quiet` passed as compile/sanity gate.
+- Rollback note: Revert if persisted code_mode values leak across sessions or mismatch expected turn scope.
+
+### Commit `c1a424691`
+
+- Upstream intent: Split skill-approval reject policy into a separate flag and propagate across protocol/server/core.
+- Local overlays touched: Protected app-server-protocol + app-server + core approval/sandboxing paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Cross-layer approval policy behavior change with schema and runtime updates.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.77.
+- Validation evidence: `cargo test -p codex-core --lib execve_prompt_rejection_uses_skill_approval_for_skill_scripts --quiet` and `cargo test -p codex-app-server-protocol derive_supports_nested_experimental_fields --quiet` passed; full `codex-app-server-protocol` fixture parity test in this branch reports pre-existing schema fixture drift.
+- Rollback note: Revert if reject-policy routing or approval-scope semantics regress.
+
+### Commit `9b5078d3e`
+
+- Upstream intent: Stabilize pipe-process stdin round-trip test behavior.
+- Local overlays touched: utils/pty test file only.
+- Invariants checked: Runtime overlays unchanged.
+- Risk factors: Test-only behavior and platform newline handling.
+- Strategy selected: cherry-pick.
+- Confidence: 0.97.
+- Validation evidence: `cargo test -p codex-utils-pty pipe_process_round_trips_stdin --quiet`.
+- Rollback note: Revert if round-trip PTY test stability regresses.
+
+### Commit `e77b2fd92`
+
+- Upstream intent: Refine guardian prompt wording and review request layout snapshot.
+- Local overlays touched: core guardian prompt source + snapshot fixtures.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model selection unchanged.
+- Risk factors: Prompt text and snapshot expectation changes for guardian review.
+- Strategy selected: cherry-pick.
+- Confidence: 0.92.
+- Validation evidence: `cargo test -p codex-core --lib guardian_review_request_layout --quiet`.
+- Rollback note: Revert if guardian prompt guidance or snapshot expectations regress.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -1062,13 +1328,14 @@
 
 ## Follow-ups
 
-- Blocked commits: none in this 10-commit batch.
-- Manual port TODOs: none; protected-path review strategy used where required (orders 31 and 35 in this batch).
+- Blocked commits: none in this 20-commit batch.
+- Manual port TODOs: none; protected-path review strategy used where required (orders 83, 87, 90, 94, 95, 98 in this batch).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
 - Batch 5 summary: processed 10 (orders 41-50), blocked 0, skipped 0, branch now ahead 101 / behind 304 vs upstream/main.
 - Batch 6 summary: processed 10 (orders 51-60), blocked 0, skipped 0, branch now ahead 113 / behind 306 vs upstream/main.
 - Batch 7 summary: processed 18 (orders 61-80), blocked 0, skipped 2 (orders 66 and 70 no-op), branch now ahead 132 / behind 307 vs upstream/main.
-- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability. Two known environment-specific issues were observed: protocol `schema_fixtures` parity tests report existing fixture drift in current branch state, and one apply_patch/request_permissions integration test aborts with sandbox signal 6 in this runner.
-- Additional batch-7 gate notes: `cargo test -p codex-core --test all code_mode_can_ --quiet` failed in this environment (`expected value at line 1 column 1` / missing file in nested apply_patch path), while the per-commit core filters for MCP and unified-exec paths passed; `cargo test -p codex-app-server-protocol realtime --quiet` failed due ENOSPC during linking.
+- Batch 8 summary: processed 20 (orders 81-100), blocked 0, skipped 0, branch now ahead 153 / behind 310 vs upstream/main.
+- Risk notes: full `cargo test -p codex-core`, full `cargo test -p codex-app-server`, and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted filters passed for each processed commit except environment-limited code_mode integration coverage.
+- Additional batch-8 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery. `cargo test -p codex-core --test all code_mode --quiet` fails in this runner due missing `test_stdio_server` binary + unsupported custom `code_mode` call path. `cargo test -p codex-app-server-protocol --quiet` reports existing schema-fixture drift in this branch state (`just write-app-server-schema` needed) and app-server heavy integration compile attempts hit ENOSPC.
