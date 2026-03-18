@@ -125,6 +125,8 @@
 
 | 51 | `6da84efed8f615085212e7aa6207afa43b3733a9` | cherry-pick+surgical | ported | 9 | 0.76 | CARGO_INCREMENTAL=0 cargo test -p codex-protocol reject_config_request_permissions_flag_is_field_driven --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol ask_for_approval_reject_round_trips_request_permissions_flag --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core request_permissions_returns_empty_grant_when_reject_policy_blocks_requests --quiet | Adds RejectConfig.request_permissions end-to-end; required surgical scope-field adaptation in core request_permissions responses for local branch compatibility. |
 
+| 52 | `b0cbc25a48b11e311f3b1b7ce9998bb54731ea41` | cherry-pick+surgical | ported | 9 | 0.81 | CARGO_INCREMENTAL=0 cargo test -p codex-protocol legacy_workspace_write_nested_readable_root_stays_writable --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core seatbelt_legacy_workspace_write_nested_readable_root_stays_writable --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core session_configuration_apply_rederives_legacy_file_system_policy_on_cwd_update --quiet | Preserves legacy workspace-write semantics with cwd-aware legacy bridge while keeping split-policy carveout behavior for explicit modern policies. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -675,6 +677,17 @@
 - Confidence: 0.76
 - Validation evidence: Targeted protocol, app-server-protocol, and core request_permissions reject-policy tests passed after scope compatibility fix.
 - Rollback note: Revert this sync commit if reject-policy request_permissions behavior or approval-policy serialization regresses.
+
+### Commit `b0cbc25a48b11e311f3b1b7ce9998bb54731ea41`
+
+- Upstream intent: Prevent redundant legacy readable roots under writable workspace roots from becoming unintended read-only carveouts.
+- Local overlays touched: Protected app-server/config surfaces touched plus core/protocol sandbox conversion paths; Bedrock/Indubitably auth overlays unchanged.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime/model-selection behavior unchanged.
+- Risk factors: Cross-crate sandbox policy derivation semantics changed across protocol/core/app-server/linux/mac adapters.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.81
+- Validation evidence: Targeted protocol and core legacy-workspace-write regression tests passed.
+- Rollback note: Revert this sync commit if legacy workspace-write read/write semantics regress across adapters.
 
 ## Batch Validation
 
