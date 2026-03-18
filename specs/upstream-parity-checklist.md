@@ -21,6 +21,8 @@
 | 2 | `1c888709b5d718b2452f4bf59ef20f65ff4b5331` | cherry-pick | ported | 2 | 0.91 | `cargo test -p codex-core guardian --quiet` | Removes obsolete guardian snapshot test. |
 | 3 | `92f7541624810406d5c3d1c424147bcfa458efce` | cherry-pick+surgical | ported | 5 | 0.86 | `cargo test -p codex-core guardian --quiet && cargo test -p codex-tui guardian --quiet` | Guardian CI follow-up + local exhaustive-match compatibility fixes. |
 
+| 4 | `e8d7ede83cf09c99134866f19e5378c546d53191` | cherry-pick | ported | 2 | 0.90 | cargo test -p codex-tui context_window --quiet | TUI token-count timing display fix. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -55,6 +57,17 @@
 - Confidence: 0.86.
 - Validation evidence: `cargo test -p codex-core guardian --quiet` and `cargo test -p codex-tui guardian --quiet` passed.
 - Rollback note: Revert this sync commit if guardian test behavior regresses or event handling compatibility should be isolated.
+
+### Commit `e8d7ede83cf09c99134866f19e5378c546d53191`
+
+- Upstream intent: Correct context window display before initial TokenCount events in TUI.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No auth/provider/runtime overlay paths modified.
+- Risk factors: UI timing logic update with targeted tests available.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: codex-tui context_window filtered tests passed.
+- Rollback note: Revert this sync commit if TUI header metrics regress.
 
 ## Batch Validation
 
