@@ -35,6 +35,8 @@
 
 | 10 | `3b5fe5ca35d914645a818d454a3931f6748b7e77` | cherry-pick | ported | 5 | 0.81 | cargo test -p codex-protocol --quiet && cargo test -p codex-core request_permissions --quiet | Protocol + core update keeps root carveouts sandboxed. |
 
+| 11 | `dc19e789624d46163f6882efca18c84ea4d17b81` | cherry-pick+surgical | ported | 5 | 0.81 | cargo test -p codex-app-server initialize --quiet && cargo test -p codex-core abort --quiet | Abort follow-up stabilization across app-server/core. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -146,6 +148,17 @@
 - Confidence: 0.81
 - Validation evidence: codex-protocol suite and core request_permissions filter passed.
 - Rollback note: Revert this sync commit if permission carveout behavior regresses.
+
+### Commit `dc19e789624d46163f6882efca18c84ea4d17b81`
+
+- Upstream intent: Stabilize abort-task follow-up handling between core and app-server initialization flow.
+- Local overlays touched: Touches protected app-server path; no auth/provider overlay logic changed.
+- Invariants checked: Indubitably auth path and Bedrock provider/runtime behavior remain unchanged.
+- Risk factors: Cross-crate behavior at task-abort boundary plus protected app-server path touch.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.81
+- Validation evidence: App-server initialize and core abort filtered tests passed.
+- Rollback note: Revert this sync commit if abort follow-up flow regresses in app-server notifications.
 
 ## Batch Validation
 
