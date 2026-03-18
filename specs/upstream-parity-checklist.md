@@ -107,6 +107,8 @@
 
 | 43 | `da991bdf3a1925e3fbd11325293f0cd683300131` | cherry-pick+surgical | ported | 5 | 0.83 | CARGO_INCREMENTAL=0 cargo test -p codex-otel session_metric_tags --quiet | Centralizes OTEL metric-name constants and shared metadata tag builders used by core/otel callsites. |
 
+| 44 | `44ecc527cb7697454ad9241e90b2ebd472beccfb` | cherry-pick | ported | 3 | 0.90 | CARGO_INCREMENTAL=0 cargo test -p codex-core streamable_http --quiet | Stabilizes RMCP streamable HTTP readiness and bind retry behavior in test-only paths. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -569,6 +571,17 @@
 - Confidence: 0.83
 - Validation evidence: codex-otel session_metric_tags tests passed; broader codex-core compile check was skipped after repeated local disk exhaustion during this batch.
 - Rollback note: Revert this sync commit if telemetry metrics/tags regress or metric naming compatibility issues appear.
+
+### Commit `44ecc527cb7697454ad9241e90b2ebd472beccfb`
+
+- Upstream intent: Remove flaky RMCP streamable HTTP races by waiting for metadata/tool readiness and retrying bind collisions.
+- Local overlays touched: None; test-only changes in codex-core test suite and rmcp test helper binary.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime paths unchanged.
+- Risk factors: Cross-test harness timing and readiness logic updated across two test components.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: CARGO_INCREMENTAL=0 cargo test -p codex-core streamable_http --quiet passed.
+- Rollback note: Revert this sync commit if RMCP readiness tests regress or startup wait logic introduces hangs.
 
 ## Batch Validation
 
