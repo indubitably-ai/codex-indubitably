@@ -103,6 +103,8 @@
 
 | 41 | `0334ddeccbef07995561de5b39334dd94ef9e33a` | cherry-pick | ported | 2 | 0.94 | CARGO_INCREMENTAL=0 cargo test -p codex-core unicode_output --quiet | Core shell_command CI test update only. |
 
+| 42 | `6ad448b6585f5a8d504bb9ff990da218bcc336ef` | cherry-pick+surgical | ported | 8 | 0.79 | CARGO_INCREMENTAL=0 cargo test -p codex-core uninstall_plugin_removes_cache_and_config_entry --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server plugin_uninstall --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol plugin_uninstall --quiet | Adds plugin/uninstall RPC across protocol, app-server, and core with tests and schema/docs updates. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -543,6 +545,17 @@
 - Confidence: 0.94
 - Validation evidence: CARGO_INCREMENTAL=0 cargo test -p codex-core unicode_output --quiet (8 passed, filtered).
 - Rollback note: Revert this sync commit if shell_command unicode coverage regresses.
+
+### Commit `6ad448b6585f5a8d504bb9ff990da218bcc336ef`
+
+- Upstream intent: Introduce plugin/uninstall endpoint to remove plugin cache files and clear user config entries.
+- Local overlays touched: Protected app-server and app-server-protocol files touched; no Indubitably auth or Bedrock runtime/provider logic changed.
+- Invariants checked: Indubitably auth path intact; Bedrock provider/runtime and model-selection overlays unchanged.
+- Risk factors: Cross-crate API and runtime behavior change in protected protocol/app-server surfaces plus core plugin manager logic.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: After freeing disk via cargo clean, targeted codex-core/codex-app-server/codex-app-server-protocol tests passed.
+- Rollback note: Revert this sync commit if plugin uninstall removes incorrect paths or regresses plugin config persistence.
 
 ## Batch Validation
 
