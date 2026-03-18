@@ -83,6 +83,8 @@
 
 | 32 | `10bf6008f4d76c56db86cafb2a45c1fc88024aaf` | cherry-pick | ported | 3 | 0.88 | cargo test -p codex-app-server thread_resume_replays_pending_command_execution_request_approval --quiet && cargo test -p codex-app-server thread_resume_replays_pending_file_change_request_approval --quiet | Thread-resume replay tests now poll deterministic /responses request counts with unchecked mock sequencing. |
 
+| 33 | `4a0e6dc9163eccf8141a5478711ccdf1630f787c` | cherry-pick | ported | 3 | 0.85 | cargo test -p codex-core --lib snapshot_shell_does_not_inherit_stdin --quiet | Shell snapshot stdin test now records read status and runs with a wider timeout for deterministic EOF assertions. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -424,6 +426,17 @@
 - Confidence: 0.88
 - Validation evidence: Both targeted thread-resume replay filters passed; first filter needed one rerun after an initialize timeout.
 - Rollback note: Revert this sync commit if thread-resume replay tests need stricter sequencing behavior.
+
+### Commit `4a0e6dc9163eccf8141a5478711ccdf1630f787c`
+
+- Upstream intent: Stabilize shell-snapshot stdin behavior by asserting startup read EOF via persisted status instead of timing-sensitive assumptions.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only adjustment in codex-core shell snapshot unit test.
+- Strategy selected: cherry-pick
+- Confidence: 0.85
+- Validation evidence: Targeted codex-core --lib snapshot shell stdin test passed after recovering disk pressure from full-harness linking.
+- Rollback note: Revert this sync commit if shell snapshot stdin test semantics need to revert.
 
 ## Batch Validation
 
