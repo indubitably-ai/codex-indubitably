@@ -45,6 +45,8 @@
 
 | 15 | `1f150eda8b695b479cc45dc5243c7938ffc78b52` | cherry-pick | ported | 2 | 0.92 | cargo test -p codex-core shell_serialization --quiet | Core shell serialization test flake hardening only. |
 
+| 16 | `a684a36091d70e1d8720fb99aafecd2a41ea7207` | cherry-pick+surgical | ported | 6 | 0.74 | cargo test -p codex-app-server batch_write_reloads_user_config_when_requested --quiet && cargo test -p codex-app-server config_batch_write_applies_multiple_edits --quiet | Protected app-server/protocol config hot-reload path touched. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -211,6 +213,16 @@
 - Confidence: 0.92
 - Validation evidence: codex-core shell_serialization-filtered test command passed (80 tests).
 - Rollback note: Revert this sync commit if shell serialization coverage weakens or flakes reappear due to timing assumptions.
+### Commit `a684a36091d70e1d8720fb99aafecd2a41ea7207`
+
+- Upstream intent: Allow config/batchWrite to optionally hot-reload user config into loaded threads after a successful write.
+- Local overlays touched: Protected app-server/protocol paths touched; no Indubitably auth or Bedrock provider/runtime code changed.
+- Invariants checked: Preserved existing config write semantics when reload flag is false; reload only occurs on successful write when requested.
+- Risk factors: Behavioral change in app-server config RPC plus protocol surface extension and schema fixture updates.
+- Strategy selected: cherry-pick+surgical (reviewed protected-path overlap; accepted upstream implementation as-is).
+- Confidence: 0.74
+- Validation evidence: App-server unit/integration filters for batch write + reload passed. Full codex-app-server-protocol suite currently fails on preexisting schema fixture drift expecting newer skill metadata fixture files.
+- Rollback note: Revert this sync commit if config batch write reload introduces unexpected thread state churn.
 ## Batch Validation
 
 - [x] CLI default provider smoke
