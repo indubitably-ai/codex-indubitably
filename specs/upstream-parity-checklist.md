@@ -85,6 +85,8 @@
 
 | 33 | `4a0e6dc9163eccf8141a5478711ccdf1630f787c` | cherry-pick | ported | 3 | 0.85 | cargo test -p codex-core --lib snapshot_shell_does_not_inherit_stdin --quiet | Shell snapshot stdin test now records read status and runs with a wider timeout for deterministic EOF assertions. |
 
+| 34 | `75e608343cfea3f667d5d0001b035af51b009cc7` | cherry-pick | ported | 4 | 0.84 | cargo test -p codex-core startup_context --quiet | Realtime startup-context tests now match outbound websocket requests by payload instead of fixed connection/request indices. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -437,6 +439,17 @@
 - Confidence: 0.85
 - Validation evidence: Targeted codex-core --lib snapshot shell stdin test passed after recovering disk pressure from full-harness linking.
 - Rollback note: Revert this sync commit if shell snapshot stdin test semantics need to revert.
+
+### Commit `75e608343cfea3f667d5d0001b035af51b009cc7`
+
+- Upstream intent: Stabilize realtime startup-context tests by synchronizing on the first request containing session.instructions and serializing env-mutating fallback coverage.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Large test-only refactor in codex-core realtime_conversation integration coverage.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: Targeted codex-core startup_context filter passed after full clean to recover disk headroom.
+- Rollback note: Revert this sync commit if realtime startup-context test harness needs prior fixed-index assertions.
 
 ## Batch Validation
 
