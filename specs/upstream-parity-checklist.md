@@ -105,6 +105,8 @@
 
 | 42 | `6ad448b6585f5a8d504bb9ff990da218bcc336ef` | cherry-pick+surgical | ported | 8 | 0.79 | CARGO_INCREMENTAL=0 cargo test -p codex-core uninstall_plugin_removes_cache_and_config_entry --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server plugin_uninstall --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-app-server-protocol plugin_uninstall --quiet | Adds plugin/uninstall RPC across protocol, app-server, and core with tests and schema/docs updates. |
 
+| 43 | `da991bdf3a1925e3fbd11325293f0cd683300131` | cherry-pick+surgical | ported | 5 | 0.83 | CARGO_INCREMENTAL=0 cargo test -p codex-otel session_metric_tags --quiet | Centralizes OTEL metric-name constants and shared metadata tag builders used by core/otel callsites. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -556,6 +558,17 @@
 - Confidence: 0.79
 - Validation evidence: After freeing disk via cargo clean, targeted codex-core/codex-app-server/codex-app-server-protocol tests passed.
 - Rollback note: Revert this sync commit if plugin uninstall removes incorrect paths or regresses plugin config persistence.
+
+### Commit `da991bdf3a1925e3fbd11325293f0cd683300131`
+
+- Upstream intent: Move shared metric names and metadata tag construction into codex-otel and update core callsites to use canonical constants.
+- Local overlays touched: Touches codex-rs/core/src and codex-rs/otel; no Indubitably auth or Bedrock provider/runtime files changed.
+- Invariants checked: Indubitably auth behavior and Bedrock model/provider routing remain unchanged.
+- Risk factors: Cross-crate telemetry refactor in core and otel with new public metric constants/tags module.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.83
+- Validation evidence: codex-otel session_metric_tags tests passed; broader codex-core compile check was skipped after repeated local disk exhaustion during this batch.
+- Rollback note: Revert this sync commit if telemetry metrics/tags regress or metric naming compatibility issues appear.
 
 ## Batch Validation
 
