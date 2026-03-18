@@ -18,6 +18,7 @@
 | order | upstream sha | action | status | risk score | confidence | tests | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `b9a2e400018c219e3010a5a5b8ded8645184da0b` | cherry-pick | ported | 1 | 0.93 | `cargo check -p codex-skills --quiet` | Skill sample asset removal only. |
+| 2 | `1c888709b5d718b2452f4bf59ef20f65ff4b5331` | cherry-pick | ported | 2 | 0.91 | `cargo test -p codex-core guardian --quiet` | Removes obsolete guardian snapshot test. |
 
 ## Decision Briefs
 
@@ -31,6 +32,17 @@
 - Confidence: 0.93.
 - Validation evidence: `cargo check -p codex-skills --quiet`.
 - Rollback note: Revert this sync commit if asset removal causes missing reference issues.
+
+### Commit `1c888709b5d718b2452f4bf59ef20f65ff4b5331`
+
+- Upstream intent: Remove stale guardian snapshot assertions that no longer reflect current output.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unchanged.
+- Risk factors: Core test cleanup with low runtime behavior impact.
+- Strategy selected: cherry-pick.
+- Confidence: 0.91.
+- Validation evidence: `cargo test -p codex-core guardian --quiet` (20 passed).
+- Rollback note: Revert this sync commit if guardian output assertions are needed for local regressions.
 
 ## Batch Validation
 
