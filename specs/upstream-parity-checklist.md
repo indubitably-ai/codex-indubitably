@@ -97,6 +97,8 @@
 
 | 39 | `e03e9b63eac0a7f374fb4387fbd0b4c49371a461` | cherry-pick | ported | 5 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core --lib guardian_allows_shell_additional_permissions_requests_past_policy_validation --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui --lib experimental_popup_includes_guardian_approval --quiet | Guardian coverage stabilized by aligning sandbox policy setup and replacing brittle popup snapshots with targeted assertions. |
 
+| 40 | `fefd01b9e011380a2f081d8337736602e7e87ee0` | cherry-pick | ported | 3 | 0.90 | CARGO_INCREMENTAL=0 cargo test -p codex-core --test all resume_includes_initial_messages_from_rollout_events --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core --test all resume_includes_initial_messages_from_reasoning_events --quiet | Resume tests now poll until initial_messages reach final persisted shape before asserting. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -515,6 +517,17 @@
 - Confidence: 0.84
 - Validation evidence: Focused core guardian and tui guardian popup tests passed after full clean to restore disk headroom.
 - Rollback note: Revert this sync commit if guardian approval coverage should retain prior snapshot-based assertions.
+
+### Commit `fefd01b9e011380a2f081d8337736602e7e87ee0`
+
+- Upstream intent: Stabilize resumed rollout message tests by waiting for persisted initial message sequences instead of asserting on transient timing.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only polling helper and assertion timing changes in core resume suite.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: Both targeted core resume initial-message tests passed via explicit --test all filters.
+- Rollback note: Revert this sync commit if resume suite should keep single-shot post-turn assertions.
 
 ## Batch Validation
 
