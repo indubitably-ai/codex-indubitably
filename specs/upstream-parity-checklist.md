@@ -43,6 +43,8 @@
 
 | 14 | `7ba1fccfc1083354e058772b83b9bbb191e99f42` | cherry-pick | ported | 5 | 0.82 | cargo test -p codex-core guardian --quiet && cargo test -p codex-app-server thread_resume --quiet | Guardian coverage/Bazel test stabilization updates. |
 
+| 15 | `1f150eda8b695b479cc45dc5243c7938ffc78b52` | cherry-pick | ported | 2 | 0.92 | cargo test -p codex-core shell_serialization --quiet | Core shell serialization test flake hardening only. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -199,6 +201,16 @@
 - Validation evidence: Core guardian and app-server thread_resume filtered suites passed.
 - Rollback note: Revert this sync commit if guardian coverage or Bazel test launcher behavior regresses.
 
+### Commit `1f150eda8b695b479cc45dc5243c7938ffc78b52`
+
+- Upstream intent: Stabilize shell serialization tests by reducing fixture latency and forcing non-login shell execution in fixtures.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider overlays untouched.
+- Risk factors: Test-only timing/fixture argument changes in core test suite.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: codex-core shell_serialization-filtered test command passed (80 tests).
+- Rollback note: Revert this sync commit if shell serialization coverage weakens or flakes reappear due to timing assumptions.
 ## Batch Validation
 
 - [x] CLI default provider smoke
