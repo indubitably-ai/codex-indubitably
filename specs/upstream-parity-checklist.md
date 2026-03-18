@@ -39,6 +39,8 @@
 
 | 12 | `dcc4d7b634e0c732e5dab9ab04b6f3b67bfa55f1` | cherry-pick | ported | 4 | 0.79 | cargo test -p codex-linux-sandbox landlock --quiet | Bwrap split filesystem policy honoring in linux-sandbox. |
 
+| 13 | `a30edb6c17201358273b76a4fd81d2b6ce3c2c54` | cherry-pick | ported | 3 | 0.87 | cargo test -p codex-utils-pty terminate --quiet | Windows PTY terminate handling correction. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -172,6 +174,17 @@
 - Confidence: 0.79
 - Validation evidence: codex-linux-sandbox landlock-filtered test command completed successfully.
 - Rollback note: Revert this sync commit if Linux bwrap policy behavior regresses.
+
+### Commit `a30edb6c17201358273b76a4fd81d2b6ce3c2c54`
+
+- Upstream intent: Fix inverted Windows PTY TerminateProcess handling logic in utils/pty.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Auth/provider/runtime overlay behavior unchanged.
+- Risk factors: Platform-specific process-control behavior update.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: codex-utils-pty terminate-filtered tests passed.
+- Rollback note: Revert this sync commit if Windows PTY termination semantics regress.
 
 ## Batch Validation
 
