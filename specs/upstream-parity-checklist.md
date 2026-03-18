@@ -71,6 +71,8 @@
 
 | 27 | `615ed0e437afd9bfe0af4a8a8c9a2254227060e1` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-app-server turn_start_shell_zsh_fork --quiet | Stabilizes zsh-fork interrupt/decline tests by synchronizing on explicit completion events. |
 
+| 28 | `6052558a017b89cc62820b388f2cdd3ad5a3feda` | cherry-pick | ported | 2 | 0.95 | cargo test -p codex-rmcp-client drop_kills_wrapper_process_group --quiet | RMCP pid-file cleanup test now waits for non-empty pid content before assertions. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -357,6 +359,17 @@
 - Confidence: 0.92
 - Validation evidence: Targeted codex-app-server zsh-fork filter passed (4 tests).
 - Rollback note: Revert this sync commit if zsh-fork interrupt/decline integration coverage regresses.
+
+### Commit `6052558a017b89cc62820b388f2cdd3ad5a3feda`
+
+- Upstream intent: Stabilize RMCP pid-file cleanup by treating empty pid files as not-ready and continuing polling.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only timing fix in rmcp-client cleanup path.
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: Targeted rmcp-client drop_kills_wrapper_process_group test passed.
+- Rollback note: Revert this sync commit if pid-file cleanup test assumptions need to return to strict immediate parsing.
 
 ## Batch Validation
 
