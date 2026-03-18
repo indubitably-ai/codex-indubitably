@@ -91,6 +91,8 @@
 
 | 36 | `b15cfe93291185bd4b5df8f3a572d50fc236e706` | cherry-pick | ported | 8 | 0.78 | CARGO_INCREMENTAL=0 cargo test -p codex-backend-client --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-cloud-requirements unauthorized --quiet | Adds explicit backend RequestError status handling and 401-aware cloud-requirements auth recovery flow with new coverage. |
 
+| 37 | `203a70a1915d9e2f308f110f90b9790bb53c09f2` | cherry-pick | ported | 2 | 0.92 | CARGO_INCREMENTAL=0 cargo test -p codex-mcp-server shell_command_approval_triggers_elicitation --quiet | MCP shell approval test now uses native touch/New-Item commands and exact argv-derived expected shell command. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -476,6 +478,17 @@
 - Confidence: 0.78
 - Validation evidence: Backend-client full tests and cloud-requirements unauthorized-focused tests passed with incremental disabled.
 - Rollback note: Revert this sync commit if cloud requirements auth recovery introduces incorrect messaging or retry behavior.
+
+### Commit `203a70a1915d9e2f308f110f90b9790bb53c09f2`
+
+- Upstream intent: Stabilize MCP shell approval elicitation test by removing Python startup/quoting variance and asserting on exact forwarded command.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only update in mcp-server suite.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: Targeted codex-mcp-server shell approval elicitation test passed after disk-space cleanup.
+- Rollback note: Revert this sync commit if MCP shell approval test should retain Python-based command fixtures.
 
 ## Batch Validation
 
