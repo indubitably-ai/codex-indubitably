@@ -53,6 +53,8 @@
 
 | 19 | `f41b1638c98deddd0d8f89d821999d30f73de599` | cherry-pick | ported | 2 | 0.91 | cargo test -p codex-core record_responses_sets_span_fields_for_response_events --quiet | Core OTEL test fixture completion sequencing fix only. |
 
+| 20 | `4ad3b59de322dc75c2b257b2eec365309b195ab7` | cherry-pick | ported | 4 | 0.87 | cargo test -p codex-tui pending_input_preview --quiet && cargo test -p codex-tui interrupted_turn_pending_steers --quiet | TUI pending-steer/queued-follow-up UX and interrupt semantics update with snapshot refresh. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -259,6 +261,16 @@
 - Confidence: 0.91
 - Validation evidence: Targeted codex-core otel test passed.
 - Rollback note: Revert this sync commit if OTEL event-span test behavior regresses.
+### Commit `4ad3b59de322dc75c2b257b2eec365309b195ab7`
+
+- Upstream intent: Clarify pending steer follow-up messaging and make Esc interrupt + immediate steer resubmit behavior explicit.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth/provider/runtime overlay paths touched.
+- Risk factors: User-visible TUI text/layout and interrupt-flow behavior updates with extensive snapshot changes.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: Focused codex-tui pending_input_preview and interrupted_turn_pending_steers filters passed.
+- Rollback note: Revert this sync commit if pending steer queue/interrupt UX regresses or snapshots prove unstable.
 ## Batch Validation
 
 - [x] CLI default provider smoke
