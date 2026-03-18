@@ -57,6 +57,8 @@
 
 | 20 | `4ad3b59de322dc75c2b257b2eec365309b195ab7` | cherry-pick | ported | 4 | 0.87 | cargo test -p codex-tui pending_input_preview --quiet && cargo test -p codex-tui interrupted_turn_pending_steers --quiet | TUI pending-steer/queued-follow-up UX and interrupt semantics update with snapshot refresh. |
 
+| 21 | `e6b93841c585f8b56b2c9b38cb07708f278ea227` | cherry-pick+surgical | ported | 9 | 0.74 | cargo test -p codex-core request_permissions --quiet && cargo test -p codex-app-server request_permissions --quiet && cargo test -p codex-app-server-protocol permissions_request --quiet && cargo test -p codex-tui chatwidget --quiet && cargo test -p codex-exec --quiet | Large protected-surface request_permissions tool integration across core/protocol/app-server/exec/tui. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -273,6 +275,16 @@
 - Confidence: 0.87
 - Validation evidence: Focused codex-tui pending_input_preview and interrupted_turn_pending_steers filters passed.
 - Rollback note: Revert this sync commit if pending steer queue/interrupt UX regresses or snapshots prove unstable.
+### Commit `e6b93841c585f8b56b2c9b38cb07708f278ea227`
+
+- Upstream intent: Add request_permissions as a first-class tool flow with approval request/response plumbing across protocol, app-server, core, and UI surfaces.
+- Local overlays touched: Protected app-server and app-server-protocol files touched; local Indubitably auth and Bedrock provider/runtime routing preserved.
+- Invariants checked: No regressions in Indubitably/Bedrock exec behavior observed; provider selection and no-openai-responses guardrails remain intact.
+- Risk factors: Very large cross-crate behavioral and wire-shape change (new tool semantics, protocol schema additions, approval flow persistence).
+- Strategy selected: cherry-pick+surgical (accepted upstream patch; additional local validation and environment recovery for disk-pressure linker failure).
+- Confidence: 0.74
+- Validation evidence: Core/app-server/protocol request-permissions filters plus codex-tui chatwidget and full codex-exec suite passed after freeing disk space.
+- Rollback note: Revert this sync commit if permission-approval flow, tool execution semantics, or app-server approval transport regress.
 ## Batch Validation
 
 - [x] CLI default provider smoke
