@@ -87,6 +87,8 @@
 
 | 34 | `75e608343cfea3f667d5d0001b035af51b009cc7` | cherry-pick | ported | 4 | 0.84 | cargo test -p codex-core startup_context --quiet | Realtime startup-context tests now match outbound websocket requests by payload instead of fixed connection/request indices. |
 
+| 35 | `c1f3ef16ec57ccf64c32411b3a2927bc57d80465` | cherry-pick+surgical | ported | 6 | 0.80 | CARGO_INCREMENTAL=0 cargo test -p codex-app-server plugin_list --quiet && CARGO_INCREMENTAL=0 cargo check -p codex-tui --quiet | Starts curated plugin repo sync during TUI startup in parity with app-server startup behavior. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -450,6 +452,17 @@
 - Confidence: 0.84
 - Validation evidence: Targeted codex-core startup_context filter passed after full clean to recover disk headroom.
 - Rollback note: Revert this sync commit if realtime startup-context test harness needs prior fixed-index assertions.
+
+### Commit `c1f3ef16ec57ccf64c32411b3a2927bc57d80465`
+
+- Upstream intent: Ensure curated plugin metadata sync is kicked off for both app-server and TUI initialization paths.
+- Local overlays touched: Protected app-server message processor touched plus tui app startup path.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged; plugin sync initialization only.
+- Risk factors: Production startup behavior change spanning app-server and tui initialization lifecycle.
+- Strategy selected: cherry-pick+surgical (protected-path review, accepted upstream patch).
+- Confidence: 0.80
+- Validation evidence: App-server plugin_list filter passed and codex-tui crate compiled cleanly with incremental disabled.
+- Rollback note: Revert this sync commit if startup-time curated plugin sync causes regressions or unwanted side effects.
 
 ## Batch Validation
 
