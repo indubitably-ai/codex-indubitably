@@ -95,6 +95,8 @@
 
 | 38 | `ad57505ef5ca82a3ba5e182d01b27b572042079f` | cherry-pick | ported | 6 | 0.81 | CARGO_INCREMENTAL=0 cargo test -p codex-core --test all interrupt_long_running_tool_emits_turn_aborted --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-core --test all user_shell_cmd_can_be_interrupted --quiet | Turn abort cleanup now drains active tasks before clearing pending approvals to avoid pre-abort approval rejection races. |
 
+| 39 | `e03e9b63eac0a7f374fb4387fbd0b4c49371a461` | cherry-pick | ported | 5 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core --lib guardian_allows_shell_additional_permissions_requests_past_policy_validation --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui --lib experimental_popup_includes_guardian_approval --quiet | Guardian coverage stabilized by aligning sandbox policy setup and replacing brittle popup snapshots with targeted assertions. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -502,6 +504,17 @@
 - Confidence: 0.81
 - Validation evidence: Targeted codex-core abort/interruption tests passed using explicit --test all filters.
 - Rollback note: Revert this sync commit if interruption cleanup ordering causes regressions in task/approval lifecycle.
+
+### Commit `e03e9b63eac0a7f374fb4387fbd0b4c49371a461`
+
+- Upstream intent: Stabilize guardian approval coverage across core and tui by tightening policy setup and reducing snapshot churn.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Cross-crate test and helper visibility adjustments in guardian-related coverage paths.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: Focused core guardian and tui guardian popup tests passed after full clean to restore disk headroom.
+- Rollback note: Revert this sync commit if guardian approval coverage should retain prior snapshot-based assertions.
 
 ## Batch Validation
 
