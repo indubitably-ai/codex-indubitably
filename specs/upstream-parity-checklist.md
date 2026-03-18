@@ -65,6 +65,8 @@
 
 | 24 | `2bc3e52a91bb88a0e067a95f8f8559f8711d30e6` | cherry-pick | ported | 2 | 0.93 | cargo test -p codex-app-server list_apps_waits_for_accessible_data_before_emitting_directory_updates --quiet | App-server v2 app-list ordering test stabilization only. |
 
+| 25 | `f23fcd6ced0035f2aa4e34d4f12da4f04c8a7fa4` | cherry-pick | ported | 6 | 0.83 | cargo test -p codex-core guardian --quiet && cargo test -p codex-protocol --quiet && cargo test -p codex-tui --lib experimental_popup_includes_guardian_approval --quiet | Guardian review copy/plumbing refinements across core+protocol with matching tui snapshot updates. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -321,6 +323,16 @@
 - Confidence: 0.93
 - Validation evidence: Targeted codex-app-server app-list ordering test passed.
 - Rollback note: Revert this sync commit if app-list ordering test should retain prior strict sequencing assumption.
+### Commit `f23fcd6ced0035f2aa4e34d4f12da4f04c8a7fa4`
+
+- Upstream intent: Refine guardian wording and review-context plumbing while removing model-visible guardian-specific prompt append paths.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock provider/runtime routing untouched.
+- Risk factors: Cross-module behavior/copy updates in guardian review flow plus protocol model adjustments.
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: Core guardian and full protocol tests passed; targeted tui guardian popup test passed after freeing disk pressure from local build artifacts.
+- Rollback note: Revert this sync commit if guardian approval messaging or review retry-context behavior regresses.
 ## Batch Validation
 
 - [x] CLI default provider smoke
