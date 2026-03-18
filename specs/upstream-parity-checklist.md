@@ -109,6 +109,8 @@
 
 | 44 | `44ecc527cb7697454ad9241e90b2ebd472beccfb` | cherry-pick | ported | 3 | 0.90 | CARGO_INCREMENTAL=0 cargo test -p codex-core streamable_http --quiet | Stabilizes RMCP streamable HTTP readiness and bind retry behavior in test-only paths. |
 
+| 45 | `42f20a6845939437b68848df111ccd719c64012d` | cherry-pick+surgical | ported | 5 | 0.84 | CARGO_INCREMENTAL=0 cargo test -p codex-core for_prompt_rewrites_image_generation_calls --quiet && CARGO_INCREMENTAL=0 cargo test -p codex-tui image_generation_call_adds_history_cell --quiet | Image-generation history rewrite now includes id/prompt/save-path context and matching TUI history rendering snapshot updates. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -582,6 +584,17 @@
 - Confidence: 0.90
 - Validation evidence: CARGO_INCREMENTAL=0 cargo test -p codex-core streamable_http --quiet passed.
 - Rollback note: Revert this sync commit if RMCP readiness tests regress or startup wait logic introduces hangs.
+
+### Commit `42f20a6845939437b68848df111ccd719c64012d`
+
+- Upstream intent: Pass image generation save and prompt metadata into prompt-history normalization and TUI history cells for richer context.
+- Local overlays touched: Touches codex-core context_manager and codex-tui history rendering; no Indubitably auth or Bedrock provider/runtime files changed.
+- Invariants checked: Indubitably auth and Bedrock model/provider routing behavior unchanged.
+- Risk factors: Cross-crate user-visible history formatting change with snapshot impact and context-manager rewrite behavior updates.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: Targeted codex-core and codex-tui tests for image-generation history behavior passed.
+- Rollback note: Revert this sync commit if image-generation history context or TUI snapshots regress.
 
 ## Batch Validation
 
