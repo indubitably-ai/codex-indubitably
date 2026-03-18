@@ -37,6 +37,8 @@
 
 | 11 | `dc19e789624d46163f6882efca18c84ea4d17b81` | cherry-pick+surgical | ported | 5 | 0.81 | cargo test -p codex-app-server initialize --quiet && cargo test -p codex-core abort --quiet | Abort follow-up stabilization across app-server/core. |
 
+| 12 | `dcc4d7b634e0c732e5dab9ab04b6f3b67bfa55f1` | cherry-pick | ported | 4 | 0.79 | cargo test -p codex-linux-sandbox landlock --quiet | Bwrap split filesystem policy honoring in linux-sandbox. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -159,6 +161,17 @@
 - Confidence: 0.81
 - Validation evidence: App-server initialize and core abort filtered tests passed.
 - Rollback note: Revert this sync commit if abort follow-up flow regresses in app-server notifications.
+
+### Commit `dcc4d7b634e0c732e5dab9ab04b6f3b67bfa55f1`
+
+- Upstream intent: Honor split filesystem policies in bwrap path for linux sandbox execution.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unaffected.
+- Risk factors: Linux sandbox behavior path changed across runtime + tests.
+- Strategy selected: cherry-pick
+- Confidence: 0.79
+- Validation evidence: codex-linux-sandbox landlock-filtered test command completed successfully.
+- Rollback note: Revert this sync commit if Linux bwrap policy behavior regresses.
 
 ## Batch Validation
 
