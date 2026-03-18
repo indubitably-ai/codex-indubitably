@@ -11,11 +11,13 @@
 - Batch 2 end ahead/behind: ahead 63 / behind 292
 - Batch 3 start ahead/behind: ahead 64 / behind 293
 - Batch 3 end ahead/behind: ahead 79 / behind 293
+- Batch 4 start ahead/behind: ahead 80 / behind 301
+- Batch 4 end ahead/behind: ahead 90 / behind 301
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 3 of phased sync (10 commits/run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 4 of phased sync (10 commits/run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -539,7 +541,8 @@
 ## Follow-ups
 
 - Blocked commits: none in this 10-commit batch.
-- Manual port TODOs: none; three commits in this batch used cherry-pick+surgical strategy (orders 16-18).
+- Manual port TODOs: none; protected-path review strategy used where required (orders 31 and 35 in this batch).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
-- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Disk pressure (os error 28) required `cargo clean` recovery during app-server validation.
+- Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
+- Risk notes: full `cargo test -p codex-core` and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted crate filters passed for all processed commits. Persistent disk pressure (os error 28) required repeated `cargo clean` recovery and use of `CARGO_INCREMENTAL=0` for stability.
