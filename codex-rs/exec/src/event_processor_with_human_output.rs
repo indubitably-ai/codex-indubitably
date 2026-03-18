@@ -876,6 +876,8 @@ impl EventProcessor for EventProcessorWithHumanOutput {
             | EventMsg::ReasoningContentDelta(_)
             | EventMsg::ReasoningRawContentDelta(_)
             | EventMsg::SkillsUpdateAvailable
+            | EventMsg::TurnSkillContext(_)
+            | EventMsg::SkillInvocation(_)
             | EventMsg::UndoCompleted(_)
             | EventMsg::UndoStarted(_)
             | EventMsg::ThreadRolledBack(_)

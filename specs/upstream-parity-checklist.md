@@ -19,6 +19,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `b9a2e400018c219e3010a5a5b8ded8645184da0b` | cherry-pick | ported | 1 | 0.93 | `cargo check -p codex-skills --quiet` | Skill sample asset removal only. |
 | 2 | `1c888709b5d718b2452f4bf59ef20f65ff4b5331` | cherry-pick | ported | 2 | 0.91 | `cargo test -p codex-core guardian --quiet` | Removes obsolete guardian snapshot test. |
+| 3 | `92f7541624810406d5c3d1c424147bcfa458efce` | cherry-pick+surgical | ported | 5 | 0.86 | `cargo test -p codex-core guardian --quiet && cargo test -p codex-tui guardian --quiet` | Guardian CI follow-up + local exhaustive-match compatibility fixes. |
 
 ## Decision Briefs
 
@@ -43,6 +44,17 @@
 - Confidence: 0.91.
 - Validation evidence: `cargo test -p codex-core guardian --quiet` (20 passed).
 - Rollback note: Revert this sync commit if guardian output assertions are needed for local regressions.
+
+### Commit `92f7541624810406d5c3d1c424147bcfa458efce`
+
+- Upstream intent: Fix guardian-related CI instability across core and TUI tests.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unchanged.
+- Risk factors: Cross-crate test updates and required local exhaustive event-match compatibility adjustments.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.86.
+- Validation evidence: `cargo test -p codex-core guardian --quiet` and `cargo test -p codex-tui guardian --quiet` passed.
+- Rollback note: Revert this sync commit if guardian test behavior regresses or event handling compatibility should be isolated.
 
 ## Batch Validation
 
