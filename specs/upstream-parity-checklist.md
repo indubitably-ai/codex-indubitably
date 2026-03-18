@@ -75,6 +75,8 @@
 
 | 29 | `5d9db0f9959a5ee2eec75e6bbd2f6b3a543802d2` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-utils-pty pty_python_repl_emits_output_and_exits --quiet | PTY Python REPL test now waits for a startup marker emitted at process launch. |
 
+| 30 | `6b68d1ef661263b0fa6bf9b1e1badffebfd64ee9` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-app-server plan_mode_ --quiet | Plan-item app-server tests now use multi-thread runtime and explicit /responses request-count waits. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -383,6 +385,17 @@
 - Confidence: 0.94
 - Validation evidence: Targeted codex-utils-pty python REPL test passed.
 - Rollback note: Revert this sync commit if PTY readiness detection needs to revert to probe-based behavior.
+
+### Commit `6b68d1ef661263b0fa6bf9b1e1badffebfd64ee9`
+
+- Upstream intent: Stabilize plan-item app-server tests by using multi-thread runtime and deterministic wiremock request-count synchronization.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: No Indubitably auth or Bedrock provider/runtime behavior changed.
+- Risk factors: Test-only runtime scheduling/synchronization update in app-server tests.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: Targeted codex-app-server plan_mode_ filter passed (2 tests).
+- Rollback note: Revert this sync commit if plan-item test harness should return to prior wiremock teardown semantics.
 
 ## Batch Validation
 
