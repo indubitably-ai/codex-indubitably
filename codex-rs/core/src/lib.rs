@@ -9,6 +9,7 @@ mod analytics_client;
 pub mod api_bridge;
 mod apply_patch;
 mod apps;
+mod arc_monitor;
 pub mod auth;
 pub mod bedrock;
 pub mod canonical_trace;
