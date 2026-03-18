@@ -49,6 +49,8 @@
 
 | 17 | `da3689f0ef7422c3857e1156d4b78d3482cc26d6` | cherry-pick+surgical | ported | 8 | 0.76 | cargo test -p codex-app-server-client --quiet && cargo test -p codex-exec --quiet && cargo test -p codex-app-server in_process --quiet && just bazel-lock-check | Conflict in exec/lib.rs resolved; retained local indubitably provider overlay tests with in-process adaptation. |
 
+| 18 | `340f9c9ecb0b02a89e88c6dc068809007185f645` | cherry-pick+surgical | ported | 8 | 0.79 | cargo test -p codex-core skill_approval --quiet && cargo test -p codex-app-server command_execution_request --quiet && cargo test -p codex-tui chatwidget --quiet && cargo test -p codex-app-server-protocol command_execution_request_approval --quiet | Protected protocol/app-server surfaces plus core+tui approval plumbing updated for skill metadata. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -235,6 +237,16 @@
 - Confidence: 0.76
 - Validation evidence: codex-app-server-client, codex-exec, and app-server in_process test filters passed; Bazel lock update/check executed for dependency changes.
 - Rollback note: Revert this sync commit if in-process exec/app-server event flow regresses or bedrock auth path behavior deviates.
+### Commit `340f9c9ecb0b02a89e88c6dc068809007185f645`
+
+- Upstream intent: Expose experimental skill metadata on exec command approval requests end-to-end (core/protocol/app-server/tui).
+- Local overlays touched: Protected app-server and app-server-protocol paths touched; no Indubitably auth or Bedrock runtime/provider selection logic changed.
+- Invariants checked: Retained local provider/auth overlays while threading approval metadata through protocol and UI surfaces.
+- Risk factors: Cross-crate wire-shape changes with experimental gating and regenerated schema artifacts.
+- Strategy selected: cherry-pick+surgical (accepted upstream patch; verified protected-surface behavior with focused tests).
+- Confidence: 0.79
+- Validation evidence: Focused core/app-server/protocol/tui approval-related test filters passed; tui filter showed only legacy snapshot-format notices.
+- Rollback note: Revert this sync commit if approval request payload compatibility or tui approval rendering regresses.
 ## Batch Validation
 
 - [x] CLI default provider smoke
