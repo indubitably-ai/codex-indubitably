@@ -137,7 +137,9 @@ fn convert_item(item: &ResponseItem) -> Option<BedrockMessage> {
             let content = payload_to_text(output);
             Some(tool_result_message(call_id, content.as_str()))
         }
-        ResponseItem::CustomToolCallOutput { call_id, output } => {
+        ResponseItem::CustomToolCallOutput {
+            call_id, output, ..
+        } => {
             let content = payload_to_text(output);
             Some(tool_result_message(call_id, content.as_str()))
         }

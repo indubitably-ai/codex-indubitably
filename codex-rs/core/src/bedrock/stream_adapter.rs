@@ -264,6 +264,7 @@ impl AdapterState {
             ToolKind::Freeform | ToolKind::WebSearch | ToolKind::Unknown => {
                 Some(ResponseItem::CustomToolCallOutput {
                     call_id: tool_use_id.to_string(),
+                    name: None,
                     output: FunctionCallOutputPayload::from_text(flattened),
                 })
             }
