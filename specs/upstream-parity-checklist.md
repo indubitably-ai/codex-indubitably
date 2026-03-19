@@ -38,7 +38,7 @@
 - Batch 16 start ahead/behind: ahead 304 / behind 329
 - Batch 16 end ahead/behind: ahead 324 / behind 331
 - Batch 17 start ahead/behind: ahead 325 / behind 334
-- Batch 17 end ahead/behind: ahead 346 / behind 334
+- Batch 17 end ahead/behind: ahead 347 / behind 334
 
 ## Protected Surfaces
 
