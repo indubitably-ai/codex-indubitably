@@ -23,6 +23,8 @@
 - Batch 8 end ahead/behind: ahead 153 / behind 310
 - Batch 9 start ahead/behind: ahead 154 / behind 318
 - Batch 9 end ahead/behind: ahead 174 / behind 318
+- Batch 10 start ahead/behind: ahead 175 / behind 321
+- Batch 10 end ahead/behind: ahead 195 / behind 321
 
 ## Protected Surfaces
 
@@ -270,6 +272,46 @@
 | 119 | `52a3bde6c` | cherry-pick | ported | 2 | 0.93 | cargo test -p codex-core --lib network_proxy --quiet | Adds network proxy active-state turn metric emission |
 
 | 120 | `c32c445f1` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-core --test all subagent_notifications --quiet | Clarifies locked role settings in spawn prompt and notification flow |
+
+| 121 | `f5bb338fd` | cherry-pick | ported | 6 | 0.86 | cargo test -p codex-core --test all snapshot_request_shape_remote_manual_compact_without_previous_user_messages --quiet | Context insertion timing changed in remote compact path. |
+
+| 122 | `5259e5e23` | cherry-pick | ported | 3 | 0.90 | cargo test -p codex-network-proxy http_proxy_listener_accepts_plain_http1_connect_requests --quiet | HTTP proxy listener protocol mode adjustment. |
+
+| 123 | `5a89660ae` | cherry-pick+surgical | ported | 5 | 0.82 | CODEX_JS_REPL_NODE_PATH=/Users/gp/.nvm/versions/node/v24.9.0/bin/node cargo test -p codex-core --test all js_repl_exposes_codex_path_helpers --quiet | Protected docs path overlap and node runtime gating in local environment. |
+
+| 124 | `f54830979` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-tui agent_shortcut_matches --quiet | TUI keybinding guardrails only. |
+
+| 125 | `8791f0ab9` | cherry-pick+surgical | ported | 6 | 0.84 | cargo test -p codex-core --lib image_detail_original_feature_enables_explicit_original_without_force --quiet && cargo test -p codex-core --test all view_image_tool_attaches_local_image --quiet | Protected docs overlap with image-detail behavior change. |
+
+| 126 | `f50e88db8` | cherry-pick | ported | 2 | 0.96 | python3 scripts/check_blob_size.py --help | CI policy/workflow addition only. |
+
+| 127 | `72631755e` | cherry-pick+surgical | ported | 8 | 0.81 | cargo test -p codex-app-server-protocol --lib --quiet && cargo test -p codex-app-server --test all initialize --quiet | Protected app-server/app-server-protocol surfaces with notification contract changes. |
+
+| 128 | `77b0c7526` | cherry-pick+surgical | ported | 9 | 0.78 | cargo test -p codex-core --test all search_tool --quiet && cargo test -p codex-app-server --test all mcp_server_elicitation --quiet | One manual conflict resolution and Bedrock overlay adaptations required. |
+
+| 129 | `f276325cd` | cherry-pick | ported | 4 | 0.91 | cargo test -p codex-protocol --quiet | Permissions precedence refactor with schema update. |
+
+| 130 | `c1ea3f95d` | cherry-pick+surgical | ported | 3 | 0.93 | cargo test -p codex-app-server-protocol --lib --quiet | Protected protocol source touched but change is v1 cleanup. |
+
+| 131 | `c2d5458d6` | cherry-pick+surgical | ported | 7 | 0.84 | cargo test -p codex-core --lib unix_escalation --quiet && cargo test -p codex-core --test all approvals --quiet | Protected config test path touched; approval policy behavior changed. |
+
+| 132 | `bf5e997b3` | cherry-pick+surgical | ported | 8 | 0.83 | cargo test -p codex-app-server --test all turn_start --quiet && cargo test -p codex-tui multi_agent --quiet | Protected app-server/protocol sources plus event-shape fanout. |
+
+| 133 | `5bc82c5b9` | cherry-pick+surgical | ported | 9 | 0.79 | cargo test -p codex-app-server tracing_tests --quiet && cargo test -p codex-core --test all fork_thread --quiet && just bazel-lock-update && just bazel-lock-check | Protected app-server runtime and dependency lock updates. |
+
+| 134 | `917c2df20` | cherry-pick+surgical | ported | 7 | 0.85 | cargo test -p codex-app-server --test all plugin_install --quiet && cargo test -p codex-app-server --test all plugin_list --quiet && cargo test -p codex-core --lib plugin --quiet | Protected protocol/app-server plugin policy defaults changed. |
+
+| 135 | `ba5b94287` | cherry-pick | ported | 9 | 0.77 | cargo test -p codex-core --test all tool_suggest --quiet && cargo test -p codex-tui --lib app_link_view --quiet && just bazel-lock-update && just bazel-lock-check | Large tool_suggest feature with dependency graph updates and one ENOSPC recovery. |
+
+| 136 | `367a8a221` | cherry-pick | ported | 2 | 0.95 | cargo test -p codex-core --test all spawn_agent_description --quiet | Prompt copy clarification only. |
+
+| 137 | `f6c6128fc` | cherry-pick | ported | 9 | 0.76 | cargo test -p codex-core --test all code_mode --no-run --quiet | Code-mode integration tests in this runner remain environment-limited. |
+
+| 138 | `b5f927b97` | cherry-pick | ported | 6 | 0.87 | cargo test -p codex-core --lib plugin --quiet && cargo test -p codex-app-server --test all plugin_list --quiet | Plugin curated repo refactor across core/store/marketplace. |
+
+| 139 | `04892b4ce` | cherry-pick+surgical | ported | 9 | 0.79 | cargo test -p codex-core --test all approvals --quiet && cargo test -p codex-core --lib unix_escalation --quiet && cargo test -p codex-cli --lib --quiet | Protected app-server/cli surfaces plus manual import fix in core/connectors. |
+
+| 140 | `e99e8e4a6` | cherry-pick | ported | 6 | 0.90 | cargo test -p codex-core --test all approvals --quiet && cargo test -p codex-linux-sandbox --quiet | Follow-up cleanup for previous Linux sandbox default change. |
 
 ## Decision Briefs
 
@@ -1581,6 +1623,226 @@
 - Validation evidence: cargo test -p codex-core --test all subagent_notifications --quiet
 - Rollback note: Revert if role-setting prompt clarifications regress subagent notification behavior.
 
+### Commit `f5bb338fd`
+
+- Upstream intent: Defer initial context insertion until first turn is submitted.
+- Local overlays touched: Core remote compaction/request-shaping surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Turn initialization and request-shape ordering for first-turn compaction.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: core snapshot_request_shape_remote_manual_compact_without_previous_user_messages passed.
+- Rollback note: Revert if first-turn request context ordering regresses remote compact behavior.
+
+### Commit `5259e5e23`
+
+- Upstream intent: Serve managed HTTP proxy listener as HTTP/1.
+- Local overlays touched: codex-network-proxy listener/protocol handling only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Proxy CONNECT handling and listener protocol negotiation.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: targeted network-proxy HTTP/1 CONNECT test passed; full crate run had one unrelated baseline audit-event failure.
+- Rollback note: Revert if managed proxy stops accepting plain HTTP/1 CONNECT requests.
+
+### Commit `5a89660ae`
+
+- Upstream intent: Add codex.cwd and codex.homeDir helpers to js_repl.
+- Local overlays touched: Core js_repl runtime + tests with protected docs/js_repl.md update.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Helper exposure plus environment propagation to kernel runtime.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.82
+- Validation evidence: js_repl_exposes_codex_path_helpers passed with Node v24 path override; default Node v20 in runner is below upstream minimum.
+- Rollback note: Revert if js_repl path helper exposure or dependency-env propagation regresses.
+
+### Commit `f54830979`
+
+- Upstream intent: Keep agent-switch word-motion fallback keys out of draft editing.
+- Local overlays touched: TUI app/multi-agent key handling only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Shortcut precedence between text editing and agent switching.
+- Strategy selected: cherry-pick
+- Confidence: 0.94
+- Validation evidence: codex-tui agent_shortcut_matches filter passed.
+- Rollback note: Revert if alt-word-motion editing keys are intercepted during draft composition.
+
+### Commit `8791f0ab9`
+
+- Upstream intent: Allow models to opt into original image detail for view_image/js_repl output.
+- Local overlays touched: Core feature flags/view_image/js_repl plus docs/js_repl.md.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Image detail normalization and tool output behavior across model capabilities.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: original-image-detail unit and view_image integration filters passed.
+- Rollback note: Revert if original-image-detail gating causes unexpected image payload sizing behavior.
+
+### Commit `f50e88db8`
+
+- Upstream intent: Add CI check for oversized binary blobs.
+- Local overlays touched: GitHub workflow plus Python helper script.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: CI enforcement path and script invocation interface.
+- Strategy selected: cherry-pick
+- Confidence: 0.96
+- Validation evidence: script help/argument contract validated locally.
+- Rollback note: Revert if blob-size policy introduces false positives or blocks intended artifacts.
+
+### Commit `72631755e`
+
+- Upstream intent: Stop emitting codex/event notifications from app-server initialization capability path.
+- Local overlays touched: Protected app-server-protocol common/v1 + app-server transport/processor surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Protocol capability compatibility and initialization notification routing.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.81
+- Validation evidence: protocol lib tests and app-server initialize filter passed; full protocol suite hits existing schema-fixture drift in this branch.
+- Rollback note: Revert if initialize capability negotiation or notification filtering regresses clients.
+
+### Commit `77b0c7526`
+
+- Upstream intent: Migrate search_tool to BYO Responses API tool_search flow.
+- Local overlays touched: Protocol/core/app-server search-tool plumbing with Bedrock overlay compatibility updates.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Large cross-crate tool-shape migration and output item compatibility.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.78
+- Validation evidence: search_tool and app-server mcp_server_elicitation filters passed after resolving mcp_connection_manager conflict and adding Bedrock tool_search compatibility arms.
+- Rollback note: Revert if tool_search call/output routing regresses across core/protocol/app-server.
+
+### Commit `f276325cd`
+
+- Upstream intent: Centralize filesystem permission precedence logic.
+- Local overlays touched: Protocol permissions plus core config schema artifact.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Permission precedence behavior across legacy/split filesystem settings.
+- Strategy selected: cherry-pick
+- Confidence: 0.91
+- Validation evidence: codex-protocol crate tests passed.
+- Rollback note: Revert if filesystem permission precedence behavior changes unexpectedly.
+
+### Commit `c1ea3f95d`
+
+- Upstream intent: Delete unused app-server v1 RPC methods.
+- Local overlays touched: Protected app-server-protocol v1/lib surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: v1 API dead-surface removal and compile compatibility.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.93
+- Validation evidence: codex-app-server-protocol lib tests passed.
+- Rollback note: Revert if any legacy v1 client still depends on removed methods.
+
+### Commit `c2d5458d6`
+
+- Upstream intent: Align core approvals with split sandbox policy semantics.
+- Local overlays touched: Core safety/orchestrator/sandboxing/unified-exec surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Approval gating behavior under split filesystem sandbox policies.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: unix_escalation and approvals filters passed.
+- Rollback note: Revert if approval decisions diverge from expected split-policy semantics.
+
+### Commit `bf5e997b3`
+
+- Upstream intent: Include spawn-agent model metadata in app-server item streams.
+- Local overlays touched: Protected app-server-protocol thread_history/v2 + app-server event handling + tui rendering.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Cross-surface metadata propagation and schema compatibility.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.83
+- Validation evidence: app-server turn_start and tui multi_agent filters passed.
+- Rollback note: Revert if spawned-agent metadata is missing or malformed in item notifications.
+
+### Commit `5bc82c5b9`
+
+- Upstream intent: Propagate traces across task boundaries and core operations.
+- Local overlays touched: Protected app-server sources plus core thread/codex flow and lockfiles.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Trace propagation correctness and runtime instrumentation lifecycle.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: app-server tracing tests and core fork_thread filter passed; bazel lock update/check completed.
+- Rollback note: Revert if trace parentage or task/core operation correlation regresses.
+
+### Commit `917c2df20`
+
+- Upstream intent: Default plugin install/auth policies to AVAILABLE and ON_INSTALL.
+- Local overlays touched: Protected app-server-protocol v2 + app-server plugin flows + core plugin manager.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Default policy behavior across plugin list/install wire and runtime surfaces.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.85
+- Validation evidence: app-server plugin_install/plugin_list filters and core plugin lib tests passed.
+- Rollback note: Revert if default plugin policy semantics diverge from upstream expectations.
+
+### Commit `ba5b94287`
+
+- Upstream intent: Add tool_suggest tool and connector discovery plumbing.
+- Local overlays touched: Core/connectors/chatgpt/tui tool suggestion surfaces plus dependency lockfiles.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: New discoverable-tool flow, connector metadata wiring, and UI suggestion rendering.
+- Strategy selected: cherry-pick
+- Confidence: 0.77
+- Validation evidence: tool_suggest filter compiled (no matching runtime tests), tui app_link_view lib tests passed after cargo clean, and bazel lock update/check passed.
+- Rollback note: Revert if tool_suggest dispatch or connector suggestion UI behavior regresses.
+
+### Commit `367a8a221`
+
+- Upstream intent: Clarify spawn agent authorization guidance.
+- Local overlays touched: Core tool spec text plus spawn_agent_description suite.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Authorization prompt wording consistency.
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: spawn_agent_description filter passed.
+- Rollback note: Revert if spawn agent authorization guidance becomes ambiguous.
+
+### Commit `f6c6128fc`
+
+- Upstream intent: Support resumable waiting for long-running code_mode sessions via exec_wait.
+- Local overlays touched: Core code_mode service/runtime/spec and expanded code_mode suite.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Session lifecycle, yield/wait semantics, and code_mode process management.
+- Strategy selected: cherry-pick
+- Confidence: 0.76
+- Validation evidence: full code_mode filter run failed in this environment (missing test_stdio_server and existing custom-tool output harness constraints); compile gate via --no-run passed.
+- Rollback note: Revert if exec_wait session lifecycle or resumed output handling regresses.
+
+### Commit `b5f927b97`
+
+- Upstream intent: Refactor openai-curated plugin repository handling.
+- Local overlays touched: Core plugin curated_repo/manager/marketplace/store plus app-server plugin_list test coverage.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Curated plugin source reconciliation and listing behavior.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: core plugin lib and app-server plugin_list filters passed.
+- Rollback note: Revert if curated plugin availability/state reconciliation regresses.
+
+### Commit `04892b4ce`
+
+- Upstream intent: Make bubblewrap the default Linux sandbox policy.
+- Local overlays touched: Protected app-server source and cli entrypoints plus broad core sandbox paths.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Default sandbox-policy flip with Linux runtime behavior and approval gating.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: approvals/unix_escalation/core filters passed; codex-cli lib tests passed; merge required manual restore of missing Feature import in core/connectors.rs.
+- Rollback note: Revert if default sandbox selection or escalation behavior regresses on Linux paths.
+
+### Commit `e99e8e4a6`
+
+- Upstream intent: Apply Linux sandbox review nits after default bubblewrap migration.
+- Local overlays touched: Core sandbox tag/registry/turn metadata and linux-sandbox runner surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Post-refactor correctness and cleanup for linux sandbox routing.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: core approvals filter passed and linux-sandbox crate test gate completed without failures.
+- Rollback note: Revert if post-migration Linux sandbox metadata/runner behavior regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -1591,7 +1853,7 @@
 ## Follow-ups
 
 - Blocked commits: none in this 20-commit batch.
-- Manual port TODOs: none; protected-path review strategy used where required (orders 107, 114, 115, 116 in this batch).
+- Manual port TODOs: none; protected-path review strategy used where required (batch 9: orders 107, 114, 115, 116; batch 10: orders 123, 127, 128, 130, 131, 132, 133, 134, 139).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -1600,5 +1862,7 @@
 - Batch 7 summary: processed 18 (orders 61-80), blocked 0, skipped 2 (orders 66 and 70 no-op), branch now ahead 132 / behind 307 vs upstream/main.
 - Batch 8 summary: processed 20 (orders 81-100), blocked 0, skipped 0, branch now ahead 153 / behind 310 vs upstream/main.
 - Batch 9 summary: processed 20 (orders 101-120), blocked 0, skipped 0, branch now ahead 174 / behind 318 vs upstream/main.
+- Batch 10 summary: processed 20 (orders 121-140), blocked 0, skipped 0, branch now ahead 195 / behind 321 vs upstream/main.
 - Risk notes: full `cargo test -p codex-core`, full `cargo test -p codex-app-server`, and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted per-commit filters passed for all processed commits.
 - Additional batch-9 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery; low-footprint test settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used to stabilize compilation. Known environment constraints from earlier batches remain: code_mode integration filters requiring `test_stdio_server` resolution and full app-server-protocol schema-fixture parity checks are not fully representative in this runner.
+- Additional batch-10 gate notes: repeated low-space recovery (`cargo clean -p codex-tui`) was required once; full `codex-app-server-protocol` schema fixture checks still show branch baseline drift, and full `code_mode` integration filters remain environment-limited (`test_stdio_server` resolution and custom-tool harness behavior), so commit-level compile/targeted tests were used where necessary.
