@@ -13,6 +13,7 @@ mod arc_monitor;
 pub mod auth;
 pub mod bedrock;
 pub mod canonical_trace;
+mod auth_env_telemetry;
 mod client;
 mod client_common;
 pub mod codex;
