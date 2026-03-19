@@ -2,7 +2,7 @@
 
 ## Run Metadata
 
-- Date: 2026-03-18
+- Date: 2026-03-19
 - Fork branch: main
 - Upstream ref: upstream/main
 - Batch 1 start ahead/behind: ahead 40 / behind 273
@@ -25,11 +25,13 @@
 - Batch 9 end ahead/behind: ahead 174 / behind 318
 - Batch 10 start ahead/behind: ahead 175 / behind 321
 - Batch 10 end ahead/behind: ahead 195 / behind 321
+- Batch 11 start ahead/behind: ahead 196 / behind 323
+- Batch 11 end ahead/behind: ahead 217 / behind 323
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 9 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 11 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -312,6 +314,46 @@
 | 139 | `04892b4ce` | cherry-pick+surgical | ported | 9 | 0.79 | cargo test -p codex-core --test all approvals --quiet && cargo test -p codex-core --lib unix_escalation --quiet && cargo test -p codex-cli --lib --quiet | Protected app-server/cli surfaces plus manual import fix in core/connectors. |
 
 | 140 | `e99e8e4a6` | cherry-pick | ported | 6 | 0.90 | cargo test -p codex-core --test all approvals --quiet && cargo test -p codex-linux-sandbox --quiet | Follow-up cleanup for previous Linux sandbox default change. |
+
+| 141 | `19d0949aa520b0d54aa0f003526f5f67b5ab58c4` | cherry-pick | ported | 5 | 0.86 | cargo test -p codex-core --lib unix_escalation --quiet; cargo test -p codex-core --test all approvals --quiet | Zsh fork approvals now consume pre-approved permission tokens. |
+
+| 142 | `23e55d7666e1596f45e7ee546af1eb8fd2e55fcd` | cherry-pick | ported | 4 | 0.89 | cargo test -p codex-core --lib mcp_tool_call --quiet; cargo test -p codex-tui --lib mcp_server_elicitation --quiet | Improves user-facing elicitation messages for tool calls. |
+
+| 143 | `745ed4e5ecf543a4b65a2e8853b2201ab65e121f` | cherry-pick | ported | 5 | 0.86 | cargo test -p codex-core --lib apply_patch --quiet | apply_patch invocation now respects granted permissions context. |
+
+| 144 | `7f2ca502f6ea30a85e6f98358f4fc2bbcb4f6d6d` | cherry-pick | ported | 1 | 0.97 | cargo test -p codex-tui --lib tooltips --quiet | Tooltip copy refresh only. |
+
+| 145 | `0c8a366761c9f41f76a4d8db09f03f5250b48da2` | cherry-pick+surgical | ported | 8 | 0.71 | cargo test -p codex-core --lib --no-run --quiet | Large test-file move had conflicts in protected core files; preserved local variants and accepted non-conflicting upstream splits. |
+
+| 146 | `2f03b1a32d0604e562d4f7b31a2a069c8f0e2a3f` | cherry-pick | ported | 6 | 0.82 | cargo test -p codex-core --test all code_mode --no-run --quiet | Code-mode tool dispatch path updated for non-awaited execution. |
+
+| 147 | `ff6764e806d8bc2fcbf7f58e6d03f77f694f70f0` | cherry-pick | ported | 7 | 0.80 | python3 -m py_compile codex-rs/python/codex_app_server_sdk/__init__.py codex-rs/python/codex_app_server_sdk/client.py codex-rs/python/codex_app_server_sdk/protocol.py | Introduces Python app-server SDK surface. |
+
+| 148 | `a30b807efe0d013d49daf0462f8e1373840a3e4d` | cherry-pick+surgical | ported | 6 | 0.85 | cargo test -p codex-core --lib features_tests --quiet; cargo test -p codex-cli --lib --quiet | Legacy use_linux_sandbox_bwrap flag compatibility restored. |
+
+| 149 | `09aa71adb7a642408f05fe51db82854142e00945` | cherry-pick | ported | 3 | 0.93 | cargo test -p codex-stdio-to-uds --quiet; just bazel-lock-update; just bazel-lock-check | Fixes stdio-to-uds peer-close test flake and refreshed lock metadata. |
+
+| 150 | `c0528b9bd97dcb0f8d66719fe138a9a244fe6f3d` | cherry-pick | ported | 7 | 0.82 | cargo test -p codex-core --test all code_mode --no-run --quiet | Code-mode files moved under tools/code_mode; local lockfile drift handled in follow-up commit b924b2c71. |
+
+| 151 | `4e99c0f1798856d445624e1c28dcd43c6b6a715f` | cherry-pick+surgical | ported | 6 | 0.84 | cargo test -p codex-core --lib features_tests --quiet; cargo test -p codex-core --lib spec_tests --quiet | Feature flag renamed from spawn_csv to enable_fanout. |
+
+| 152 | `774965f1e8691f1a0568fb801f24b15553e5e6cd` | cherry-pick | ported | 5 | 0.86 | cargo test -p codex-linux-sandbox --quiet | Preserves split filesystem semantics in linux sandbox policy handling. |
+
+| 153 | `cfe3f6821ae91f38d6d6f4e86dcbb0c3a29c123f` | cherry-pick | ported | 4 | 0.89 | cargo test -p codex-core --test all code_mode --no-run --quiet | Code-mode tool descriptions cleaned up. |
+
+| 154 | `4fa7d6f444b919afb6ccec25e49c036aa0180971` | cherry-pick+surgical | ported | 5 | 0.88 | cargo test -p codex-core --lib config_tests --quiet; cargo test -p codex-app-server --lib --quiet | Malformed agent roles now handled nonfatally. |
+
+| 155 | `fa265976890e996ed6ce78ee94f62ddd81544ddc` | cherry-pick | ported | 4 | 0.90 | cargo test -p codex-core --lib unified_exec --quiet | Disables unified_exec in sandboxed Windows scenarios. |
+
+| 156 | `3e96c867fe91a4ffe9a262d1674bb57efdd8c99f` | cherry-pick+surgical | ported | 8 | 0.83 | cargo test -p codex-rmcp-client --quiet; cargo test -p codex-core --lib skill_dependencies --quiet | OAuth scope negotiation now uses scopes_supported when available. |
+
+| 157 | `d1b03f0d7f53f74ee35881be49715162d8f06b5f` | cherry-pick | ported | 6 | 0.87 | cargo test -p codex-core --test all code_mode_yield_timeout_works_for_busy_loop --quiet | Introduces shared default code-mode yield timeout. |
+
+| 158 | `25e301ed9802415450ae071122cbe338450d7844` | cherry-pick | ported | 5 | 0.88 | cargo test -p codex-core --test all code_mode_nested_tool_calls_can_run_in_parallel --quiet | Adds regression coverage for parallel nested tool calls in code_mode. |
+
+| 159 | `4724a2e9e7919997429a5fb3bf7b721220922f06` | cherry-pick+surgical | ported | 9 | 0.86 | cargo test -p codex-app-server-protocol --quiet | Large schema pruning removed EventMsg exports; protected source hunks reviewed and accepted. |
+
+| 160 | `d3e668053161c3f916fab3b6b611de6acd07af16` | cherry-pick+surgical | ported | 5 | 0.90 | cargo test -p codex-app-server --lib turn_start_jsonrpc_span_parents_core_turn_spans --quiet | Flaky tracing test now asserts core invariant with cleaner shutdown handling. |
 
 ## Decision Briefs
 
@@ -1843,6 +1885,226 @@
 - Validation evidence: core approvals filter passed and linux-sandbox crate test gate completed without failures.
 - Rollback note: Revert if post-migration Linux sandbox metadata/runner behavior regresses.
 
+### Commit `19d0949aa520b0d54aa0f003526f5f67b5ab58c4`
+
+- Upstream intent: Handle pre-approved permission grants during zsh fork escalation flow.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock routing/runtime behavior unchanged.
+- Risk factors: Approval-state handling in shell escalation path.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: Both targeted codex-core approval/escalation test filters passed.
+- Rollback note: Revert this sync commit if zsh escalation approval flow regresses.
+
+### Commit `23e55d7666e1596f45e7ee546af1eb8fd2e55fcd`
+
+- Upstream intent: Make elicitation tool-call copy clearer in core and tui rendering.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: No overlay invariants touched.
+- Risk factors: UX wording changes across core+tui tool-call surfaces.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: Core MCP tool-call and tui elicitation filters passed.
+- Rollback note: Revert this sync commit if elicitation copy causes UX regressions.
+
+### Commit `745ed4e5ecf543a4b65a2e8853b2201ab65e121f`
+
+- Upstream intent: Use granted permissions when invoking apply_patch tool execution.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably and Bedrock overlays unchanged.
+- Risk factors: Permission propagation behavior change in patch tool path.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: codex-core apply_patch lib tests passed.
+- Rollback note: Revert this sync commit if apply_patch permission propagation regresses.
+
+### Commit `7f2ca502f6ea30a85e6f98358f4fc2bbcb4f6d6d`
+
+- Upstream intent: Refresh out-of-date free/go plan availability tooltip text.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: User-facing copy-only tweak.
+- Strategy selected: cherry-pick
+- Confidence: 0.97
+- Validation evidence: codex-tui tooltip test filter passed.
+- Rollback note: Revert this sync commit if tooltip text needs rollback.
+
+### Commit `0c8a366761c9f41f76a4d8db09f03f5250b48da2`
+
+- Upstream intent: Move inline codex-core unit tests into sibling files for maintainability.
+- Local overlays touched: Protected overlap in codex-rs/core/src/model_* and related core files.
+- Invariants checked: Preserved local model/provider/auth invariants by restoring conflicted protected files from HEAD.
+- Risk factors: Large file-move commit with conflict potential and compile breakage risk.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.71
+- Validation evidence: Core lib compile gate passed after surgical conflict handling.
+- Rollback note: Revert this sync commit if test module relocation introduces hidden core regressions.
+
+### Commit `2f03b1a32d0604e562d4f7b31a2a069c8f0e2a3f`
+
+- Upstream intent: Dispatch tools when code mode is not awaited directly.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: No overlay invariants touched.
+- Risk factors: Code-mode runtime/control-flow behavior change.
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: codex-core code_mode integration compile gate passed.
+- Rollback note: Revert this sync commit if non-awaited code_mode dispatch regresses.
+
+### Commit `ff6764e806d8bc2fcbf7f58e6d03f77f694f70f0`
+
+- Upstream intent: Add first-party Python app-server SDK package and support files.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Rust overlay invariants unaffected by Python SDK addition.
+- Risk factors: New SDK surface area and packaging footprint.
+- Strategy selected: cherry-pick
+- Confidence: 0.80
+- Validation evidence: Python SDK modules compiled successfully via py_compile.
+- Rollback note: Revert this sync commit if SDK packaging or runtime behavior regresses.
+
+### Commit `a30b807efe0d013d49daf0462f8e1373840a3e4d`
+
+- Upstream intent: Support legacy use_linux_sandbox_bwrap config flag in cli/core paths.
+- Local overlays touched: Protected overlap via codex-rs/core/src/config* pattern.
+- Invariants checked: Preserved local config/provider invariants while accepting compatibility flag bridge.
+- Risk factors: Config compatibility change across cli/core argument plumbing.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.85
+- Validation evidence: codex-cli lib tests and codex-core features compile gate passed.
+- Rollback note: Revert this sync commit if legacy flag handling conflicts with local policy defaults.
+
+### Commit `09aa71adb7a642408f05fe51db82854142e00945`
+
+- Upstream intent: Stabilize stdio-to-uds peer-close handling under test pressure.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants untouched.
+- Risk factors: Runtime edge-case in ipc bridge plus dependency-lock hygiene.
+- Strategy selected: cherry-pick
+- Confidence: 0.93
+- Validation evidence: codex-stdio-to-uds tests passed; Bazel lock update/check completed.
+- Rollback note: Revert this sync commit if stdio-to-uds shutdown semantics regress.
+
+### Commit `c0528b9bd97dcb0f8d66719fe138a9a244fe6f3d`
+
+- Upstream intent: Move code mode tool files under tools/code_mode and split functionality.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Large refactor of code_mode file layout and module wiring.
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: codex-core code_mode compile gate passed after refactor.
+- Rollback note: Revert this sync commit if code_mode module resolution regresses.
+
+### Commit `4e99c0f1798856d445624e1c28dcd43c6b6a715f`
+
+- Upstream intent: Rename spawn_csv feature flag to enable_fanout across config/spec paths.
+- Local overlays touched: Protected overlap via codex-rs/core/src/config* pattern.
+- Invariants checked: Maintained provider/model selection invariants while applying flag rename.
+- Risk factors: Feature-flag compatibility and config-surface churn.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: Targeted core feature/spec compile gates passed.
+- Rollback note: Revert this sync commit if fanout feature toggles regress.
+
+### Commit `774965f1e8691f1a0568fb801f24b15553e5e6cd`
+
+- Upstream intent: Preserve split filesystem semantics in linux sandbox paths.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unchanged.
+- Risk factors: Sandbox semantics update in Linux-specific runtime.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: codex-linux-sandbox test command passed (compile gate on this runner).
+- Rollback note: Revert this sync commit if split filesystem behavior regresses.
+
+### Commit `cfe3f6821ae91f38d6d6f4e86dcbb0c3a29c123f`
+
+- Upstream intent: Cleanup code_mode tool descriptions and prompt copy.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: User-facing tool text updates within code_mode runtime metadata.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: codex-core code_mode compile gate passed.
+- Rollback note: Revert this sync commit if code_mode description copy should be restored.
+
+### Commit `4fa7d6f444b919afb6ccec25e49c036aa0180971`
+
+- Upstream intent: Handle malformed agent role definitions without aborting startup flows.
+- Local overlays touched: Protected overlap via codex-rs/core/src/config* and codex-rs/app-server/src/* patterns.
+- Invariants checked: Preserved local auth/provider invariants while applying resilient parsing path.
+- Risk factors: Config and app-server resilience behavior change.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.88
+- Validation evidence: codex-core config tests and codex-app-server lib tests passed.
+- Rollback note: Revert this sync commit if malformed role handling masks actionable errors.
+
+### Commit `fa265976890e996ed6ce78ee94f62ddd81544ddc`
+
+- Upstream intent: Do not allow unified_exec for sandboxed scenarios on Windows.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Platform-specific runtime gating change.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: codex-core unified_exec lib tests passed (36 passed, 2 ignored).
+- Rollback note: Revert this sync commit if unified_exec availability checks regress on Windows.
+
+### Commit `3e96c867fe91a4ffe9a262d1674bb57efdd8c99f`
+
+- Upstream intent: Use scopes_supported for OAuth when present on MCP servers.
+- Local overlays touched: Protected overlap via codex-rs/app-server/src/* and codex-rs/core/src/config* patterns.
+- Invariants checked: Preserved local overlay behavior while adopting upstream OAuth scope negotiation.
+- Risk factors: Auth negotiation change across rmcp/core/app-server paths.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.83
+- Validation evidence: rmcp-client full tests passed and core skill_dependencies tests passed after ENOSPC recovery.
+- Rollback note: Revert this sync commit if MCP OAuth scope negotiation regresses.
+
+### Commit `d1b03f0d7f53f74ee35881be49715162d8f06b5f`
+
+- Upstream intent: Add default code-mode yield timeout and wire through runtime protocol.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Code-mode scheduler/timing behavior update.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: Focused busy-loop yield-timeout integration test passed.
+- Rollback note: Revert this sync commit if default code_mode yield behavior regresses.
+
+### Commit `25e301ed9802415450ae071122cbe338450d7844`
+
+- Upstream intent: Add code_mode nested parallel tool-call timing test and model pinning.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Concurrency behavior assertion in integration-style code_mode tests.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: New nested parallel tool-call test passed.
+- Rollback note: Revert this sync commit if new test assumptions conflict with runtime guarantees.
+
+### Commit `4724a2e9e7919997429a5fb3bf7b721220922f06`
+
+- Upstream intent: Stop exporting EventMsg schemas and generated TypeScript artifacts from app-server-protocol.
+- Local overlays touched: Protected overlap in codex-rs/app-server-protocol/src/* files.
+- Invariants checked: No Bedrock/Indubitably overlay behavior touched; app-server protocol invariants preserved.
+- Risk factors: Large generated-schema deletion touching protocol export contracts.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.86
+- Validation evidence: codex-app-server-protocol tests passed (116 unit tests + schema fixture checks).
+- Rollback note: Revert this sync commit if downstream tooling requires EventMsg schema artifacts.
+
+### Commit `d3e668053161c3f916fab3b6b611de6acd07af16`
+
+- Upstream intent: Reduce turn_start_jsonrpc_span_parents_core_turn_spans flakiness in app-server tracing tests.
+- Local overlays touched: Protected overlap via codex-rs/app-server/src/* pattern.
+- Invariants checked: Local overlays unaffected; only tracing-test behavior adjusted.
+- Risk factors: Test stability update in protected app-server test module.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.90
+- Validation evidence: Focused app-server tracing test passed.
+- Rollback note: Revert this sync commit if tracing test should enforce stricter span-chain expectations.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -1853,7 +2115,7 @@
 ## Follow-ups
 
 - Blocked commits: none in this 20-commit batch.
-- Manual port TODOs: none; protected-path review strategy used where required (batch 9: orders 107, 114, 115, 116; batch 10: orders 123, 127, 128, 130, 131, 132, 133, 134, 139).
+- Manual port TODOs: none; protected-path review strategy used where required (batch 9: orders 107, 114, 115, 116; batch 10: orders 123, 127, 128, 130, 131, 132, 133, 134, 139; batch 11: orders 145, 148, 151, 154, 156, 159, 160).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -1863,6 +2125,7 @@
 - Batch 8 summary: processed 20 (orders 81-100), blocked 0, skipped 0, branch now ahead 153 / behind 310 vs upstream/main.
 - Batch 9 summary: processed 20 (orders 101-120), blocked 0, skipped 0, branch now ahead 174 / behind 318 vs upstream/main.
 - Batch 10 summary: processed 20 (orders 121-140), blocked 0, skipped 0, branch now ahead 195 / behind 321 vs upstream/main.
-- Risk notes: full `cargo test -p codex-core`, full `cargo test -p codex-app-server`, and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted per-commit filters passed for all processed commits.
+- Batch 11 summary: processed 20 (orders 141-160), blocked 0, skipped 0, branch now ahead 217 / behind 323 vs upstream/main.
+- Risk notes: batch-level full crate tests were attempted this run. `cargo test -p codex-app-server-protocol` passed; `cargo test -p codex-core` failed in this runner with 5 known-environment failures (4 `suite::cli_stream::*` missing `target/debug/codex`, 1 request_permissions apply_patch sandbox signal 6); `cargo test -p codex-app-server` failed with initialize deadline flakes (8 failures; narrowed reruns left 2 reproducible timeout failures in auth/conversation_summary filters).
 - Additional batch-9 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery; low-footprint test settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used to stabilize compilation. Known environment constraints from earlier batches remain: code_mode integration filters requiring `test_stdio_server` resolution and full app-server-protocol schema-fixture parity checks are not fully representative in this runner.
 - Additional batch-10 gate notes: repeated low-space recovery (`cargo clean -p codex-tui`) was required once; full `codex-app-server-protocol` schema fixture checks still show branch baseline drift, and full `code_mode` integration filters remain environment-limited (`test_stdio_server` resolution and custom-tool harness behavior), so commit-level compile/targeted tests were used where necessary.
