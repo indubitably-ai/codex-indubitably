@@ -2354,3 +2354,188 @@
 
 - Batch 12 summary: processed 20 (orders 161-180), blocked 0, skipped 0, branch now ahead 238 / behind 324 vs upstream/main.
 - Batch 12 risk notes: repeated ENOSPC required periodic `cargo clean`; low-footprint settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used for reliability. `codex-app-server` `plugin_read_*` runtime tests were consistently initialize-timeout on this runner, so compile-gate validation was used for that commit.
+
+## Batch 13 Intake (Orders 181-200)
+
+### Commit `f194d4b11539a446629b10c93b67c2b95eb5500a`
+
+- Upstream intent: Reopen writable Linux carveouts under denied parents.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-linux-sandbox landlock --quiet` (0 tests matched; compile gate passed).
+- Rollback note: Revert this sync commit if writable carveout handling regresses under denied parent paths.
+
+### Commit `1a363d5fcfadfac0278c4ffe70d53a8130c13c5e`
+
+- Upstream intent: Add plugin usage telemetry.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.87
+- Validation evidence: `cargo build -p codex-rmcp-client --bin test_stdio_server --quiet`; `cargo test -p codex-core --test all plugins --quiet`; `cargo test -p codex-app-server plugin_install_tracks_analytics_event --quiet`.
+- Rollback note: Revert this sync commit if plugin telemetry events regress or become mis-attributed.
+
+### Commit `0daffe667a755d8d34965e6ffb27b8a1f4a40e83`
+
+- Upstream intent: Move code-mode exec params handling to pragma.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `cargo test -p codex-core --lib parse_freeform_args_with_pragma --quiet`.
+- Rollback note: Revert this sync commit if code-mode pragma argument parsing regresses.
+
+### Commit `650beb177e675aa8b0498b459b757451c347db57`
+
+- Upstream intent: Surface cloud requirements load errors through JSON-RPC.
+- Local overlays touched: Protected overlap (`codex-rs/app-server/src/*`).
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.86
+- Validation evidence: `cargo test -p codex-cloud-requirements --quiet`; `cargo test -p codex-app-server thread_start_surfaces_cloud_requirements_load_errors --quiet`.
+- Rollback note: Revert this sync commit if cloud requirements failures are not propagated correctly over app-server APIs.
+
+### Commit `3e8f47169e523d2004fe4491bd2e29e78f9c6720`
+
+- Upstream intent: Add feature-gated realtime v2 event parser.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: `cargo test -p codex-api realtime_ws_e2e_realtime_v2_parser_emits_handoff_requested --quiet`.
+- Rollback note: Revert this sync commit if realtime v2 parser event handling regresses.
+
+### Commit `7c7e2675010df55565b547ed101aaea60f9acfe4`
+
+- Upstream intent: Simplify available permissions in `request_permissions`.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.85
+- Validation evidence: `cargo test -p codex-tui approval_overlay --quiet`; `cargo test -p codex-core --lib request_permissions_is_auto_denied_when_granular_policy_blocks_tool_requests --quiet`.
+- Rollback note: Revert this sync commit if request permissions UI/policy messaging regresses.
+
+### Commit `0c60eea4a5e125f888140f83e8c87519cc038f62`
+
+- Upstream intent: Support skill-scoped managed network overrides.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: `cargo test -p codex-core --lib managed_network --quiet`; `cargo test -p codex-tui skills --quiet`.
+- Rollback note: Revert this sync commit if managed-network overrides fail to respect skill scope.
+
+### Commit `eaf81d3f6f3d8c9c80ef977bf8da6a3c03f9b900`
+
+- Upstream intent: Add realtime v2 codex tool handoff support.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `cargo test -p codex-api realtime_ws_e2e_realtime_v2_parser_emits_handoff_requested --quiet`; `cargo test -p codex-api --lib parse_realtime_v2_handoff_tool_call_event --quiet`.
+- Rollback note: Revert this sync commit if realtime handoff tool-call parsing regresses.
+
+### Commit `2253a9d1d7832cacb86cebf48c267eb58d039603`
+
+- Upstream intent: Add realtime transcription websocket mode.
+- Local overlays touched: Protected overlap (`codex-rs/core/src/config*`).
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.84
+- Validation evidence: `cargo test -p codex-api --lib parse_realtime_v2_input_audio_transcription_delta_event --quiet`; `cargo test -p codex-core --lib experimental_realtime_ws_mode_loads_from_config_toml --quiet`.
+- Rollback note: Revert this sync commit if transcription-mode realtime configuration or parsing regresses.
+
+### Commit `c7e847aaeb2dba6655f663ed8a887c4e488f2dd6`
+
+- Upstream intent: Add timeout diagnostics for `read_only_unless_trusted`.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.87
+- Validation evidence: `cargo test -p codex-core --test all read_only_unless_trusted --quiet` (0 tests matched; compile gate passed).
+- Rollback note: Revert this sync commit if read-only timeout diagnostics regress.
+
+### Commit `8e89e9ededc64253c228749521fc9d8049f8947b`
+
+- Upstream intent: Split multi-agent handler into dedicated files.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `cargo test -p codex-core --lib spawn_agent_rejects_empty_message --quiet`.
+- Rollback note: Revert this sync commit if multi-agent handler dispatch behavior regresses.
+
+### Commit `9c9867c9fafb98cbae885ee44c0d3327abebb9cf`
+
+- Upstream intent: Format code-mode tool declarations on one line.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.92
+- Validation evidence: `cargo test -p codex-core --lib append_code_mode_sample_uses_global_tools_for_valid_identifiers --quiet`.
+- Rollback note: Revert this sync commit if code-mode sample generation regresses.
+
+### Commit `6b3d82daca540318d074c1ad2afcaba5b3337a3d`
+
+- Upstream intent: Use private desktop for Windows sandbox.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `cargo test -p codex-windows-sandbox --quiet`; `cargo test -p codex-core --lib windows_sandbox --quiet`.
+- Rollback note: Revert this sync commit if Windows sandbox desktop isolation behavior regresses.
+
+### Commit `958f93f899c99e8954535c0a6a2e75adde8fd601`
+
+- Upstream intent: Preserve image-generation calls during model switching.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: `cargo test -p codex-core --test all model_change_from_generated_image_to_text_preserves_prior_generated_image_call --quiet`.
+- Rollback note: Revert this sync commit if generated-image call preservation regresses on model change.
+
+### Commit `59b588b8ec11686d38fc62ff8b6ec491d00fc85d`
+
+- Upstream intent: Improve granular approval policy prompt copy.
+- Local overlays touched: Protected overlap (`codex-rs/app-server-protocol/src/*`).
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.87
+- Validation evidence: `cargo test -p codex-core --test all permissions_messages --quiet` (protocol filter run matched 0 tests in this runner).
+- Rollback note: Revert this sync commit if granular approval prompt messaging regresses.
+
+### Commit `9f2da5a9ce13138b6c455ef0bf205cdad69658c8`
+
+- Upstream intent: Clarify plugin and app instruction copy.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `cargo test -p codex-core --lib render_plugins_section_includes_descriptions_and_skill_naming_guidance --quiet`; `cargo test -p codex-core --lib plugin_telemetry_metadata_uses_default_mcp_config_path --quiet`.
+- Rollback note: Revert this sync commit if plugin/app instruction text behavior regresses.
+
+### Commit `8567e3a5c7e11cb854c5e5950d9ce200bea517a0`
+
+- Upstream intent: Bump Bazel C/C++ and Rust toolchains.
+- Local overlays touched: No protected-path overlap.
+- Strategy selected: cherry-pick.
+- Confidence: 0.86
+- Validation evidence: `just bazel-lock-check`.
+- Rollback note: Revert this sync commit if Bazel toolchain resolution regresses.
+
+### Commit `9dba7337f21dbc720bd5af70c1628d7c3217f47b`
+
+- Upstream intent: Start TUI on embedded in-process app-server.
+- Local overlays touched: Protected overlap (`codex-rs/app-server/src/*`, `codex-rs/tui/src/*`) with local provider-aware `ThreadManager::new` signature preserved.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.80
+- Validation evidence: `cargo test -p codex-app-server-client --quiet`; `cargo test -p codex-tui embedded_app_server --quiet`; `cargo test -p codex-app-server in_process --quiet`.
+- Rollback note: Revert this sync commit if embedded app-server startup/shutdown or TUI thread-manager wiring regresses.
+
+### Commit `3aabce9e0a75767edadf9f1543bb13f731b91ad9`
+
+- Upstream intent: Unify realtime v1/v2 session configuration shape.
+- Local overlays touched: Protected overlap (`codex-rs/core/src/config*`).
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.84
+- Validation evidence: `just write-config-schema`; `cargo test -p codex-core realtime_loads_from_config_toml --quiet`; `cargo test -p codex-core realtime_conversation --quiet`; `cargo test -p codex-app-server realtime_conversation_streams_v2_notifications --quiet`.
+- Rollback note: Revert this sync commit if realtime config mapping or parser selection regresses.
+
+### Commit `50558e6507f5f5e31106948e341dbf2920adbe8a`
+
+- Upstream intent: Add platform OS/family fields to app-server initialize response.
+- Local overlays touched: Protected overlap (`codex-rs/app-server-protocol/src/*`, `codex-rs/app-server/src/*`).
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.88
+- Validation evidence: `just write-app-server-schema`; `cargo test -p codex-app-server-protocol --quiet`; `cargo test -p codex-app-server initialize_uses_client_info_name_as_originator --quiet`; `cargo test -p codex-app-server initialize_respects_originator_override_env_var --quiet`.
+- Rollback note: Revert this sync commit if initialize response wire compatibility regresses.
+
+- Batch 13 summary: processed 20 (orders 181-200), blocked 0, skipped 0, branch now ahead 259 / behind 327 vs upstream/main.
+- Batch 13 risk notes: commit 198 required manual conflict resolution in `app-server`/`tui` files to preserve local provider-aware `ThreadManager` construction; ENOSPC recurred during schema generation and was mitigated by `cargo clean` plus low-footprint build flags.
