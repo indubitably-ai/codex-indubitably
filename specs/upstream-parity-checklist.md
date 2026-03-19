@@ -21,11 +21,13 @@
 - Batch 7 end ahead/behind: ahead 132 / behind 307
 - Batch 8 start ahead/behind: ahead 133 / behind 310
 - Batch 8 end ahead/behind: ahead 153 / behind 310
+- Batch 9 start ahead/behind: ahead 154 / behind 318
+- Batch 9 end ahead/behind: ahead 174 / behind 318
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 8 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 9 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -228,6 +230,46 @@
 | 99 | `9b5078d3e` | cherry-pick | ported | 1 | 0.97 | cargo test -p codex-utils-pty pipe_process_round_trips_stdin --quiet | Stabilizes stdin round-trip behavior in pipe-process test. |
 
 | 100 | `e77b2fd92` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-core --lib guardian_review_request_layout --quiet | Updates guardian prompt text and snapshot layout expectations. |
+
+| 101 | `8a099b3df` | cherry-pick | ported | 6 | 0.84 | cargo test -p codex-core --lib code_mode --quiet | Renames code_mode tool surface to exec across core/spec/tests |
+
+| 102 | `285b3a514` | cherry-pick | ported | 8 | 0.81 | cargo test -p codex-tui --lib chatwidget::tests::collab_spawn_end_shows_requested_model_and_effort --quiet | Shows spawned agent model/effort metadata in tui and event plumbing |
+
+| 103 | `c8446d7cf` | cherry-pick | ported | 5 | 0.88 | cargo test -p codex-api responses_websocket --quiet | Stabilizes websocket response.failed error delivery paths |
+
+| 104 | `da74da668` | cherry-pick | ported | 9 | 0.79 | cargo test -p codex-tui --lib markdown_render_file_link_snapshot --quiet | Renders local file links using target path metadata in tui markdown |
+
+| 105 | `01792a4c6` | cherry-pick | ported | 5 | 0.80 | cargo test -p codex-core --lib code_mode --quiet | Prefixes code_mode output with success/failure framing and error stack |
+
+| 106 | `31bf1dbe6` | cherry-pick | ported | 7 | 0.86 | cargo test -p codex-core --lib unified_exec --quiet | Moves unified-exec session_id to numeric semantics |
+
+| 107 | `39c1bc1c6` | cherry-pick+surgical | ported | 7 | 0.83 | cargo test -p codex-core --lib experimental_realtime_start_instructions_load_from_config_toml --quiet; just write-config-schema | Adds realtime start-instructions config override with docs/schema updates |
+
+| 108 | `a4d884c76` | cherry-pick | ported | 9 | 0.80 | cargo test -p codex-core --lib spawn_csv --quiet | Splits spawn_csv feature surface from broader multi_agent flag |
+
+| 109 | `12ee9eb6e` | cherry-pick | ported | 4 | 0.91 | cargo test -p codex-core --lib code_mode --quiet | Adds type-annotated snippets in tools exports for code_mode |
+
+| 110 | `180a5820f` | cherry-pick | ported | 10 | 0.79 | cargo test -p codex-tui --lib app::agent_navigation::tests::active_agent_label_tracks_current_thread --quiet | Adds keyboard fast switching and agent navigation state in tui |
+
+| 111 | `f385199cc` | cherry-pick | ported | 2 | 0.95 | cargo test -p codex-core monitor_action_posts_expected_arc_request --quiet | Fixes arc monitor API path wiring |
+
+| 112 | `fd4a67352` | cherry-pick | ported | 3 | 0.92 | cargo test -p codex-api responses --quiet | Sets x-client-request-id from conversation_id for responses calls |
+
+| 113 | `7f2232938` | cherry-pick | ported | 5 | 0.89 | cargo test -p codex-core --test all remote_compact_replaces_history_for_followups --quiet | Reverts expanded compaction params from previous sync commit |
+
+| 114 | `548583198` | cherry-pick+surgical | ported | 4 | 0.90 | cargo test -p codex-core --lib web_search_mode_disabled_overrides_legacy_request --quiet | Allows bool web_search values in ToolsToml parsing path |
+
+| 115 | `fa1242c83` | cherry-pick+surgical | ported | 12 | 0.78 | cargo test -p codex-otel otlp_http_loopback --quiet; just bazel-lock-update; just bazel-lock-check | Makes OTEL HTTP trace export survive app-server runtimes |
+
+| 116 | `7b2cee53d` | cherry-pick+surgical | ported | 18 | 0.76 | cargo test -p codex-core --lib plugin --quiet; cargo test -p codex-app-server --test all plugin_list_includes_install_and_enabled_state_from_config --quiet | Wires plugin install/auth policies and category through protocol+server+core |
+
+| 117 | `65b325159` | cherry-pick | ported | 6 | 0.85 | cargo test -p codex-core --lib code_mode --quiet | Adds ALL_TOOLS export support in code_mode bridge/runtime |
+
+| 118 | `8f8a0f55c` | cherry-pick | ported | 5 | 0.88 | cargo test -p codex-core --test all spawn_agent_description --quiet | Expands spawn agent prompt/spec guidance and tests |
+
+| 119 | `52a3bde6c` | cherry-pick | ported | 2 | 0.93 | cargo test -p codex-core --lib network_proxy --quiet | Adds network proxy active-state turn metric emission |
+
+| 120 | `c32c445f1` | cherry-pick | ported | 2 | 0.94 | cargo test -p codex-core --test all subagent_notifications --quiet | Clarifies locked role settings in spawn prompt and notification flow |
 
 ## Decision Briefs
 
@@ -1319,6 +1361,226 @@
 - Validation evidence: `cargo test -p codex-core --lib guardian_review_request_layout --quiet`.
 - Rollback note: Revert if guardian prompt guidance or snapshot expectations regress.
 
+### Commit `8a099b3df`
+
+- Upstream intent: Rename code_mode tool to exec and preserve compatibility hooks.
+- Local overlays touched: Core code_mode/spec surfaces only; no protected overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Tool naming transition and compatibility behavior for nested calls.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: cargo test -p codex-core --lib code_mode --quiet
+- Rollback note: Revert if exec/code_mode naming compatibility regresses tool invocation.
+
+### Commit `285b3a514`
+
+- Upstream intent: Expose spawned agent model and reasoning effort metadata end-to-end.
+- Local overlays touched: Protocol/core/exec/tui event surfaces; no protected overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Cross-surface event-shape propagation and tui rendering updates.
+- Strategy selected: cherry-pick
+- Confidence: 0.81
+- Validation evidence: cargo test -p codex-tui --lib chatwidget::tests::collab_spawn_end_shows_requested_model_and_effort --quiet
+- Rollback note: Revert if spawned-agent metadata rendering or event parsing regresses.
+
+### Commit `c8446d7cf`
+
+- Upstream intent: Ensure websocket response.failed errors are forwarded consistently.
+- Local overlays touched: codex-api websocket endpoint plus core websocket test harness updates.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Websocket error propagation and retry/stream sequencing behavior.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: cargo test -p codex-api responses_websocket --quiet
+- Rollback note: Revert if websocket response.failed handling regresses in client flows.
+
+### Commit `da74da668`
+
+- Upstream intent: Render local file links from target paths in tui markdown.
+- Local overlays touched: TUI markdown/history/streaming rendering surfaces only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Large markdown renderer changes with snapshot and link-shape impact.
+- Strategy selected: cherry-pick
+- Confidence: 0.79
+- Validation evidence: cargo test -p codex-tui --lib markdown_render_file_link_snapshot --quiet
+- Rollback note: Revert if local-file markdown links or rendering snapshots regress.
+
+### Commit `01792a4c6`
+
+- Upstream intent: Add explicit success/failure prefixes and stack details to code_mode output.
+- Local overlays touched: Core code_mode/spec surfaces; no protected overlays touched.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Output formatting changes for custom-tool execution pathways.
+- Strategy selected: cherry-pick
+- Confidence: 0.80
+- Validation evidence: cargo test -p codex-core --lib code_mode --quiet
+- Rollback note: Revert if code_mode result framing or error-stack output regresses.
+
+### Commit `31bf1dbe6`
+
+- Upstream intent: Make unified-exec session_id numeric across tool/context/process-manager paths.
+- Local overlays touched: Core unified_exec and tool context surfaces only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Identifier type migration across async watchers/process manager and tool output.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: cargo test -p codex-core --lib unified_exec --quiet
+- Rollback note: Revert if unified-exec session_id serialization/lookup regresses.
+
+### Commit `39c1bc1c6`
+
+- Upstream intent: Add configurable realtime start instructions override for remote flows.
+- Local overlays touched: Protected core config and docs paths plus compact-remote behavior surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Config parsing and remote compact instruction-shaping changes.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.83
+- Validation evidence: cargo test -p codex-core --lib experimental_realtime_start_instructions_load_from_config_toml --quiet; just write-config-schema
+- Rollback note: Revert if realtime start instruction overrides break config loading or request shaping.
+
+### Commit `a4d884c76`
+
+- Upstream intent: Split spawn_csv from multi_agent feature gating and tool spec text.
+- Local overlays touched: Core feature/spec/task/guardian/memory surfaces; no protected overlays.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Feature-gating behavior changes for multi-agent and csv spawning paths.
+- Strategy selected: cherry-pick
+- Confidence: 0.80
+- Validation evidence: cargo test -p codex-core --lib spawn_csv --quiet
+- Rollback note: Revert if spawn_csv availability diverges from expected feature flags.
+
+### Commit `12ee9eb6e`
+
+- Upstream intent: Add typed snippets and structured descriptions for code_mode tool exports.
+- Local overlays touched: Core code_mode description/spec generation only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Large prompt/spec text generation refactor affecting tool descriptions.
+- Strategy selected: cherry-pick
+- Confidence: 0.91
+- Validation evidence: cargo test -p codex-core --lib code_mode --quiet
+- Rollback note: Revert if code_mode tool snippet generation or descriptions regress.
+
+### Commit `180a5820f`
+
+- Upstream intent: Add keyboard-based fast agent switching in tui collaboration mode.
+- Local overlays touched: TUI app/footer/chatwidget/multi-agent surfaces plus AGENTS.md notes.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Large interaction-model and state-management update in tui agent navigation.
+- Strategy selected: cherry-pick
+- Confidence: 0.79
+- Validation evidence: cargo test -p codex-tui --lib app::agent_navigation::tests::active_agent_label_tracks_current_thread --quiet
+- Rollback note: Revert if agent navigation keyboard flow or active-agent labeling regresses.
+
+### Commit `f385199cc`
+
+- Upstream intent: Fix ARC monitor API path usage for monitor action flow.
+- Local overlays touched: Core arc_monitor and mcp_tool_call wiring only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Low-risk request-path fix in monitor action integration.
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: cargo test -p codex-core monitor_action_posts_expected_arc_request --quiet
+- Rollback note: Revert if ARC monitor action requests route to the wrong endpoint.
+
+### Commit `fd4a67352`
+
+- Upstream intent: Propagate conversation_id into x-client-request-id for responses endpoint calls.
+- Local overlays touched: codex-api responses endpoint plus core client/websocket tests.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Header propagation changes across responses request construction.
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: cargo test -p codex-api responses --quiet
+- Rollback note: Revert if request-id header behavior regresses for responses calls.
+
+### Commit `7f2232938`
+
+- Upstream intent: Revert prior pass-more-compaction-params behavior.
+- Local overlays touched: codex-api common and core client/compact_remote surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Behavioral rollback of compaction request payload shaping.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: cargo test -p codex-core --test all remote_compact_replaces_history_for_followups --quiet
+- Rollback note: Revert this revert if full compaction-param forwarding is reintroduced upstream.
+
+### Commit `548583198`
+
+- Upstream intent: Allow boolean tools.web_search entries in ToolsToml parsing.
+- Local overlays touched: Protected core config parsing + app-server config RPC tests.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Config compatibility and rpc serialization behavior for tools.web_search.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.90
+- Validation evidence: cargo test -p codex-core --lib web_search_mode_disabled_overrides_legacy_request --quiet
+- Rollback note: Revert if bool web_search compatibility causes config parsing regressions.
+
+### Commit `fa1242c83`
+
+- Upstream intent: Preserve OTEL HTTP trace export behavior in app-server runtimes.
+- Local overlays touched: Protected app-server runtime plus core otel init and codex-otel crate surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Cross-runtime telemetry routing and exporter lifecycle behavior changes.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.78
+- Validation evidence: cargo test -p codex-otel otlp_http_loopback --quiet; just bazel-lock-update; just bazel-lock-check
+- Rollback note: Revert if HTTP trace export routing/lifecycle regresses in app-server mode.
+
+### Commit `7b2cee53d`
+
+- Upstream intent: Wire plugin policies and category from marketplace.json through protocol/server/core.
+- Local overlays touched: Protected app-server-protocol and app-server runtime plus core plugin manager/marketplace.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Schema + runtime policy propagation across plugin install/list workflows.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.76
+- Validation evidence: cargo test -p codex-core --lib plugin --quiet; cargo test -p codex-app-server --test all plugin_list_includes_install_and_enabled_state_from_config --quiet
+- Rollback note: Revert if plugin policy/category propagation regresses plugin install or list behavior.
+
+### Commit `65b325159`
+
+- Upstream intent: Add ALL_TOOLS export to code_mode tool bridge and runner behavior.
+- Local overlays touched: Core code_mode bridge/runner/spec surfaces only.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Tool export semantics and compatibility for code_mode module imports.
+- Strategy selected: cherry-pick
+- Confidence: 0.85
+- Validation evidence: cargo test -p codex-core --lib code_mode --quiet
+- Rollback note: Revert if ALL_TOOLS export causes code_mode import/dispatch regressions.
+
+### Commit `8f8a0f55c`
+
+- Upstream intent: Update spawn-agent prompt/description guidance and associated suite coverage.
+- Local overlays touched: Core codex/spec surfaces and dedicated spawn-agent description suite.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Prompt-shape and tool-description behavior for spawn workflows.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: cargo test -p codex-core --test all spawn_agent_description --quiet
+- Rollback note: Revert if spawn prompt/description changes reduce instruction clarity or correctness.
+
+### Commit `52a3bde6c`
+
+- Upstream intent: Emit turn metric indicating whether managed network proxy is active.
+- Local overlays touched: Core task telemetry emission and codex-otel metric-name registry.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Low-risk telemetry addition in turn execution path.
+- Strategy selected: cherry-pick
+- Confidence: 0.93
+- Validation evidence: cargo test -p codex-core --lib network_proxy --quiet
+- Rollback note: Revert if network-proxy metric emission impacts turn performance or telemetry correctness.
+
+### Commit `c32c445f1`
+
+- Upstream intent: Clarify locked role settings in spawn prompt/role handling.
+- Local overlays touched: Core agent role logic plus subagent notification suite coverage.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider/model-selection behavior unchanged.
+- Risk factors: Prompt/role-setting clarity updates with notification behavior checks.
+- Strategy selected: cherry-pick
+- Confidence: 0.94
+- Validation evidence: cargo test -p codex-core --test all subagent_notifications --quiet
+- Rollback note: Revert if role-setting prompt clarifications regress subagent notification behavior.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -1329,7 +1591,7 @@
 ## Follow-ups
 
 - Blocked commits: none in this 20-commit batch.
-- Manual port TODOs: none; protected-path review strategy used where required (orders 83, 87, 90, 94, 95, 98 in this batch).
+- Manual port TODOs: none; protected-path review strategy used where required (orders 107, 114, 115, 116 in this batch).
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -1337,5 +1599,6 @@
 - Batch 6 summary: processed 10 (orders 51-60), blocked 0, skipped 0, branch now ahead 113 / behind 306 vs upstream/main.
 - Batch 7 summary: processed 18 (orders 61-80), blocked 0, skipped 2 (orders 66 and 70 no-op), branch now ahead 132 / behind 307 vs upstream/main.
 - Batch 8 summary: processed 20 (orders 81-100), blocked 0, skipped 0, branch now ahead 153 / behind 310 vs upstream/main.
-- Risk notes: full `cargo test -p codex-core`, full `cargo test -p codex-app-server`, and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted filters passed for each processed commit except environment-limited code_mode integration coverage.
-- Additional batch-8 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery. `cargo test -p codex-core --test all code_mode --quiet` fails in this runner due missing `test_stdio_server` binary + unsupported custom `code_mode` call path. `cargo test -p codex-app-server-protocol --quiet` reports existing schema-fixture drift in this branch state (`just write-app-server-schema` needed) and app-server heavy integration compile attempts hit ENOSPC.
+- Batch 9 summary: processed 20 (orders 101-120), blocked 0, skipped 0, branch now ahead 174 / behind 318 vs upstream/main.
+- Risk notes: full `cargo test -p codex-core`, full `cargo test -p codex-app-server`, and full `cargo test -p codex-app-server-protocol` remain outside this batch gate; targeted per-commit filters passed for all processed commits.
+- Additional batch-9 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery; low-footprint test settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used to stabilize compilation. Known environment constraints from earlier batches remain: code_mode integration filters requiring `test_stdio_server` resolution and full app-server-protocol schema-fixture parity checks are not fully representative in this runner.
