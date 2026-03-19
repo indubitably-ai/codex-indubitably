@@ -2451,7 +2451,11 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
-    let environment = Arc::new(codex_exec_server::Environment);
+    let environment = Arc::new(
+        codex_exec_server::Environment::create(None)
+            .await
+            .expect("create environment"),
+    );
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
@@ -3246,7 +3250,11 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
-    let environment = Arc::new(codex_exec_server::Environment);
+    let environment = Arc::new(
+        codex_exec_server::Environment::create(None)
+            .await
+            .expect("create environment"),
+    );
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
