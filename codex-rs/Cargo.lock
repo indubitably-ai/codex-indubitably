@@ -2337,7 +2337,6 @@ dependencies = [
  "icu_decimal",
  "icu_locale_core",
  "icu_provider",
- "mime_guess",
  "pretty_assertions",
  "schemars 0.8.22",
  "serde",
@@ -2768,6 +2767,7 @@ dependencies = [
  "base64 0.22.1",
  "codex-utils-cache",
  "image",
+ "mime_guess",
  "thiserror 2.0.18",
  "tokio",
 ]
