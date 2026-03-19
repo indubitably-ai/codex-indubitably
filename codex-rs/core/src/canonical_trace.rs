@@ -287,6 +287,7 @@ pub fn build_canonical_trace(lines: &[RolloutLine]) -> CanonicalTrace {
                             increment_event_counts(&mut trace.metadata.event_counts, "reasoning");
                         }
                         TurnItem::Plan(_)
+                        | TurnItem::HookPrompt(_)
                         | TurnItem::WebSearch(_)
                         | TurnItem::ImageGeneration(_)
                         | TurnItem::ContextCompaction(_) => {}
