@@ -149,6 +149,14 @@ mod voice {
 
     pub(crate) struct RealtimeAudioPlayer;
 
+    #[derive(Clone)]
+    pub(crate) enum RealtimeInputBehavior {
+        Ungated,
+        PlaybackAware {
+            playback_queued_samples: Arc<AtomicUsize>,
+        },
+    }
+
     impl VoiceCapture {
         pub fn start() -> Result<Self, String> {
             Err("voice input is unavailable in this build".to_string())
@@ -157,7 +165,7 @@ mod voice {
         pub fn start_realtime(
             _config: &Config,
             _tx: AppEventSender,
-            _playback_queued_samples: Arc<AtomicUsize>,
+            _input_behavior: RealtimeInputBehavior,
         ) -> Result<Self, String> {
             Err("voice input is unavailable in this build".to_string())
         }
