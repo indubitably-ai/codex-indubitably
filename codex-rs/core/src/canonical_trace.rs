@@ -685,7 +685,6 @@ fn origin_from_session_source(source: &SessionSource) -> String {
         | SessionSource::Mcp
         | SessionSource::SubAgent(_)
         | SessionSource::Unknown => "cli".to_string(),
-        SessionSource::Custom(origin) => origin.clone(),
     }
 }
 
