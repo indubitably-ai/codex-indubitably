@@ -1778,15 +1778,15 @@ mod tests {
         assert!(!elicitation_is_rejected_by_policy(
             AskForApproval::UnlessTrusted
         ));
-        assert!(!elicitation_is_rejected_by_policy(AskForApproval::Granular(
-            GranularApprovalConfig {
+        assert!(!elicitation_is_rejected_by_policy(
+            AskForApproval::Granular(GranularApprovalConfig {
                 sandbox_approval: false,
                 rules: false,
                 skill_approval: false,
                 request_permissions: false,
                 mcp_elicitations: false,
-            }
-        )));
+            })
+        ));
     }
 
     #[test]

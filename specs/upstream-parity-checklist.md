@@ -2129,3 +2129,228 @@
 - Risk notes: batch-level full crate tests were attempted this run. `cargo test -p codex-app-server-protocol` passed; `cargo test -p codex-core` failed in this runner with 5 known-environment failures (4 `suite::cli_stream::*` missing `target/debug/codex`, 1 request_permissions apply_patch sandbox signal 6); `cargo test -p codex-app-server` failed with initialize deadline flakes (8 failures; narrowed reruns left 2 reproducible timeout failures in auth/conversation_summary filters).
 - Additional batch-9 gate notes: persistent disk pressure (os error 28) required repeated `cargo clean` recovery; low-footprint test settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used to stabilize compilation. Known environment constraints from earlier batches remain: code_mode integration filters requiring `test_stdio_server` resolution and full app-server-protocol schema-fixture parity checks are not fully representative in this runner.
 - Additional batch-10 gate notes: repeated low-space recovery (`cargo clean -p codex-tui`) was required once; full `codex-app-server-protocol` schema fixture checks still show branch baseline drift, and full `code_mode` integration filters remain environment-limited (`test_stdio_server` resolution and custom-tool harness behavior), so commit-level compile/targeted tests were used where necessary.
+
+## Batch 12 Intake (Orders 161-180)
+
+### Commit `09ba6b47ae5c13aef51924a30763415eed70cb67`
+
+- Upstream intent: Reuse existing tool runtime in code mode worker path.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock/provider overlays untouched.
+- Risk factors: Code-mode runtime execution path change.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `cargo test -p codex-core --test all code_mode --no-run --quiet`.
+- Rollback note: Revert this sync commit if code-mode worker/runtime coupling regresses.
+
+### Commit `f35d46002a34759901d395664c00a89ee0c88bc9`
+
+- Upstream intent: Prevent js_repl hangs on line/paragraph separator handling.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: js_repl text-path edge cases.
+- Strategy selected: cherry-pick.
+- Confidence: 0.91
+- Validation evidence: `cargo test -p codex-core --lib js_repl_dynamic_tool_response_preserves_js_line_separator_text --quiet`.
+- Rollback note: Revert this sync commit if js_repl unicode separator handling regresses.
+
+### Commit `a5a4899d0c0755400534ca1a15f5a1df394675fb`
+
+- Upstream intent: Skip nested code-mode parallel test on Windows.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Platform-gated test behavior.
+- Strategy selected: cherry-pick.
+- Confidence: 0.93
+- Validation evidence: `cargo test -p codex-core --test all code_mode_nested_tool_calls_can_run_in_parallel --quiet`.
+- Rollback note: Revert this sync commit if test-platform gating should be restored.
+
+### Commit `dadffd27d45dd3b330e7b71094b828ce2c1a2d84`
+
+- Upstream intent: Fix MCP tool calling in code-mode runtime.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: MCP namespace import/runtime wiring in code mode.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: Built helper bin `cargo build -p codex-rmcp-client --bin test_stdio_server --quiet`; then `cargo test -p codex-core --test all code_mode_can_dynamically_import_namespaced_mcp_tools --quiet`.
+- Rollback note: Revert this sync commit if dynamic MCP imports in code mode regress.
+
+### Commit `11812383c544e80836a3522a659882ba7bfcc9e1`
+
+- Upstream intent: Refocus memory-write prompts toward user preferences.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Prompt behavior and memory summarization expectations.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `cargo test -p codex-core memories --quiet`.
+- Rollback note: Revert this sync commit if memory prompt behavior regresses.
+
+### Commit `04e14bdf233839830f2c8cb1ee429f46bdcd1747`
+
+- Upstream intent: Rename exec session IDs to cell IDs in code-mode flows.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Identifier semantics across exec wait/status paths.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `cargo test -p codex-core --test all code_mode_exec_wait_returns_error_for_unknown_session --quiet`.
+- Rollback note: Revert this sync commit if code-mode exec ID/cell ID handling regresses.
+
+### Commit `bc48b9289a332673335adb3fc80bde6721cde27b`
+
+- Upstream intent: Update tool search prompt guidance.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Prompt copy/behavior for tool-search planning.
+- Strategy selected: cherry-pick.
+- Confidence: 0.92
+- Validation evidence: `cargo test -p codex-core --lib tool_search --quiet`.
+- Rollback note: Revert this sync commit if tool-search prompt behavior regresses.
+
+### Commit `a314c7d3aea10ac399ef8b3fd06dbd444fd25e40`
+
+- Upstream intent: Decouple request_permissions feature flag and tool availability.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Permission-tool gating behavior changes.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: `cargo test -p codex-core --test all request_permissions_tool_is_auto_denied_when_reject_request_permissions_is_enabled --quiet`.
+- Rollback note: Revert this sync commit if request_permissions gating regresses.
+
+### Commit `b560494c9f997c699f5cc0dec204b18e58e34d78`
+
+- Upstream intent: Persist js_repl codex helpers across cells.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: js_repl state persistence semantics across executions.
+- Strategy selected: cherry-pick.
+- Confidence: 0.90
+- Validation evidence: `cargo test -p codex-core --lib js_repl_persisted_tool_helpers_work_across_cells --quiet`.
+- Rollback note: Revert this sync commit if js_repl helper persistence regresses.
+
+### Commit `a2546d5dff12e7f629ff540bb2603e7ae635748d`
+
+- Upstream intent: Expose code-mode tools via global scope.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Code-mode tool exposure and global binding behavior.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `cargo test -p codex-core --test all code_mode_lists_global_scope_items --quiet`.
+- Rollback note: Revert this sync commit if global tool exposure in code mode regresses.
+
+### Commit `651717323cd664f5dcb357c090fb8d88c66ebc02`
+
+- Upstream intent: Gate search_tool by model capability.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Capability gating can alter tool availability.
+- Strategy selected: cherry-pick.
+- Confidence: 0.91
+- Validation evidence: `cargo test -p codex-core --test all search_tool --quiet`.
+- Rollback note: Revert this sync commit if model-capability gating for search_tool regresses.
+
+### Commit `53d59722268dde82fb93c1f37964ce196c2a86d7`
+
+- Upstream intent: Reapply passing tools/reasoning/text params through remote compaction.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Compaction payload parity with responses request surface.
+- Strategy selected: cherry-pick.
+- Confidence: 0.87
+- Validation evidence: `cargo test -p codex-core --test all remote_compact_replaces_history_for_followups --quiet`.
+- Rollback note: Revert this sync commit if remote compaction payload parity regresses.
+
+### Commit `d32820ab07a38b2f8c35835f6ce8a18a149d697c`
+
+- Upstream intent: Preserve selected profile (`--profile`) when launching exec app-server thread.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: CLI profile propagation into thread startup config.
+- Strategy selected: cherry-pick.
+- Confidence: 0.84
+- Validation evidence: Targeted test needed `codex` bin rebuild and was environment-limited; compile gate used: `CARGO_INCREMENTAL=0 cargo check -p codex-exec --quiet`.
+- Rollback note: Revert this sync commit if profile-scoped instructions/config fail to propagate in `codex exec`.
+
+### Commit `b7dba72dbdb109789fcd426f09a840a9035fac4b`
+
+- Upstream intent: Rename reject approval policy to granular approval config.
+- Local overlays touched: Protected overlap (`codex-rs/app-server-protocol/src/*`, `codex-rs/core/src/config*`, docs/config surface).
+- Invariants checked: Preserved local overlays; aligned lingering local `Reject*` references to upstream `Granular*` semantics.
+- Risk factors: Wide protocol/core rename with behavior semantic inversion notes.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.81
+- Validation evidence: `cargo test -p codex-protocol granular_approval_config_defaults_missing_optional_flags_to_false --quiet`; `cargo test -p codex-app-server-protocol ask_for_approval_granular_round_trips_request_permissions_flag --quiet`; `cargo test -p codex-core --lib request_permissions_is_auto_denied_when_granular_policy_blocks_tool_requests --quiet`.
+- Rollback note: Revert this sync commit if granular policy wire-compat or prompt behavior regresses.
+
+### Commit `1ea69e8d506e3bd3b8e6cf956e3ff8cd04556cf4`
+
+- Upstream intent: Add v2 `plugin/read` request/response plus app-server handling.
+- Local overlays touched: Protected overlap (`codex-rs/app-server-protocol/src/*`, `codex-rs/app-server/src/*`, docs/config surface).
+- Invariants checked: Overlay invariants preserved; plugin-read path integrated without auth/provider overlay changes.
+- Risk factors: New app-server API surface and plugin metadata expansion.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.78
+- Validation evidence: `cargo test -p codex-app-server-protocol --quiet` passed; `cargo test -p codex-app-server plugin_read_*` repeatedly timed out on initialize in this runner; fallback compile gate passed: `cargo check -p codex-app-server --quiet`.
+- Rollback note: Revert this sync commit if plugin/read server behavior or schema contracts regress.
+
+### Commit `76d8d174b1c1fa3978eb4a8cdd437b055b2d7144`
+
+- Upstream intent: Add custom CA support for login flows.
+- Local overlays touched: Protected overlap via docs path.
+- Invariants checked: Overlay invariants preserved; no Bedrock/provider routing change.
+- Risk factors: New CA parsing/loading codepath and dependency surface expansion.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.86
+- Validation evidence: `just bazel-lock-update`; `just bazel-lock-check`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-login --test ca_env --quiet` (8 passed).
+- Rollback note: Revert this sync commit if login custom-CA loading or env precedence regresses.
+
+### Commit `793bf32585c31e5c3a33a538bc816c8023074da7`
+
+- Upstream intent: Split multi-agent handlers into per-tool handlers.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Tool registry/dispatch rewiring for collab tools.
+- Strategy selected: cherry-pick.
+- Confidence: 0.88
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib spawn_agent_rejects_empty_message --quiet`.
+- Rollback note: Revert this sync commit if multi-agent handler dispatch/regression appears.
+
+### Commit `d9a403a8c01b864d284daf0f4ac545fb442d4c40`
+
+- Upstream intent: Hard-stop active js_repl execs on explicit user interrupts.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Interrupt cleanup timing and kernel lifecycle.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib interrupt_turn_exec_clears_matching_submitted_exec --quiet`.
+- Rollback note: Revert this sync commit if interrupt semantics or js_repl kernel reset behavior regresses.
+
+### Commit `6912da84a869a313e77a03b0baf0f35f21d34d8c`
+
+- Upstream intent: Extend custom CA handling to shared HTTP and websocket clients.
+- Local overlays touched: Protected overlap via docs path.
+- Invariants checked: Overlay invariants preserved; auth/provider overlays unaffected.
+- Risk factors: Shared transport-layer CA handling and websocket connector changes.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.85
+- Validation evidence: `just bazel-lock-update`; `just bazel-lock-check`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-client --test ca_env --quiet` (8 passed).
+- Rollback note: Revert this sync commit if custom-CA behavior for HTTPS/websocket clients regresses.
+
+### Commit `7626f612748515d6d79e149c2ae37d7d783cf989`
+
+- Upstream intent: Return typed outputs for multi-agent function tools and add output schemas.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Tool-output serialization and schema compatibility.
+- Strategy selected: cherry-pick.
+- Confidence: 0.89
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib resume_agent_noops_for_active_agent --quiet`.
+- Rollback note: Revert this sync commit if multi-agent output wire shape regresses.
+
+- Batch 12 summary: processed 20 (orders 161-180), blocked 0, skipped 0, branch now ahead 238 / behind 324 vs upstream/main.
+- Batch 12 risk notes: repeated ENOSPC required periodic `cargo clean`; low-footprint settings (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`) were used for reliability. `codex-app-server` `plugin_read_*` runtime tests were consistently initialize-timeout on this runner, so compile-gate validation was used for that commit.
