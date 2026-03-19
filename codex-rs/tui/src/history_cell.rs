@@ -784,7 +784,7 @@ fn truncate_exec_snippet(full_cmd: &str) -> String {
         Some((first, _)) => format!("{first} ..."),
         None => full_cmd.to_string(),
     };
-    snippet = truncate_text(&snippet, 80);
+    snippet = truncate_text(&snippet, /*max_graphemes*/ 80);
     snippet
 }
 
@@ -1005,7 +1005,7 @@ pub(crate) fn card_inner_width(width: u16, max_inner_width: usize) -> Option<usi
 
 /// Render `lines` inside a border sized to the widest span in the content.
 pub(crate) fn with_border(lines: Vec<Line<'static>>) -> Vec<Line<'static>> {
-    with_border_internal(lines, None)
+    with_border_internal(lines, /*forced_inner_width*/ None)
 }
 
 /// Render `lines` inside a border whose inner width is at least `inner_width`.
@@ -1662,7 +1662,7 @@ pub(crate) fn new_active_web_search_call(
     query: String,
     animations_enabled: bool,
 ) -> WebSearchCell {
-    WebSearchCell::new(call_id, query, None, animations_enabled)
+    WebSearchCell::new(call_id, query, /*action*/ None, animations_enabled)
 }
 
 pub(crate) fn new_web_search_call(
@@ -1670,7 +1670,12 @@ pub(crate) fn new_web_search_call(
     query: String,
     action: WebSearchAction,
 ) -> WebSearchCell {
-    let mut cell = WebSearchCell::new(call_id, query, Some(action), false);
+    let mut cell = WebSearchCell::new(
+        call_id,
+        query,
+        Some(action),
+        /*animations_enabled*/ false,
+    );
     cell.complete();
     cell
 }
@@ -1814,7 +1819,7 @@ pub(crate) fn new_mcp_tools_output(
     }
 
     let mcp_manager = McpManager::new(Arc::new(PluginsManager::new(config.codex_home.clone())));
-    let effective_servers = mcp_manager.effective_servers(config, None);
+    let effective_servers = mcp_manager.effective_servers(config, /*auth*/ None);
     let mut servers: Vec<_> = effective_servers.iter().collect();
     servers.sort_by(|(a, _), (b, _)| a.cmp(b));
 
@@ -2347,7 +2352,7 @@ pub(crate) fn new_reasoning_summary_block(
                     header_buffer,
                     summary_buffer,
                     &cwd,
-                    false,
+                    /*transcript_only*/ false,
                 ));
             }
         }
@@ -2356,7 +2361,7 @@ pub(crate) fn new_reasoning_summary_block(
         "".to_string(),
         full_reasoning_buffer.to_string(),
         &cwd,
-        true,
+        /*transcript_only*/ true,
     ))
 }
 

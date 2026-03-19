@@ -77,11 +77,11 @@ impl SessionTask for ReviewTask {
         input: Vec<UserInput>,
         cancellation_token: CancellationToken,
     ) -> Option<String> {
-        let _ = session
-            .session
-            .services
-            .session_telemetry
-            .counter("codex.task.review", 1, &[]);
+        let _ = session.session.services.session_telemetry.counter(
+            "codex.task.review",
+            /*inc*/ 1,
+            &[],
+        );
 
         // Start sub-codex conversation and get the receiver for events.
         let output = match start_review_conversation(
@@ -102,7 +102,7 @@ impl SessionTask for ReviewTask {
     }
 
     async fn abort(&self, session: Arc<SessionTaskContext>, ctx: Arc<TurnContext>) {
-        exit_review_mode(session.clone_session(), None, ctx).await;
+        exit_review_mode(session.clone_session(), /*review_output*/ None, ctx).await;
     }
 }
 
@@ -142,8 +142,8 @@ async fn start_review_conversation(
         ctx.clone(),
         cancellation_token,
         SubAgentSource::Review,
-        None,
-        None,
+        /*final_output_json_schema*/ None,
+        /*initial_history*/ None,
     )
     .await)
         .ok()
@@ -238,7 +238,7 @@ pub(crate) async fn exit_review_mode(
             findings_str.push_str(text);
         }
         if !out.findings.is_empty() {
-            let block = format_review_findings_block(&out.findings, None);
+            let block = format_review_findings_block(&out.findings, /*selection*/ None);
             findings_str.push_str(&format!("\n{block}"));
         }
         let rendered =
