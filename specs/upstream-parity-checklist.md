@@ -42,7 +42,7 @@
 - Batch 18 start ahead/behind: ahead 348 / behind 341
 - Batch 18 end ahead/behind: ahead 371 / behind 342
 - Batch 19 start ahead/behind: ahead 372 / behind 342
-- Batch 19 end ahead/behind: ahead 394 / behind 342
+- Batch 19 end ahead/behind: ahead 394 / behind 345
 
 ## Protected Surfaces
 
@@ -4128,5 +4128,5 @@
 - Batch 17 risk notes: order 266 touched protected config/model surfaces and required local compatibility follow-ups (`ModelClient::new` provider-id callsites plus `websocket_connect_timeout_ms` struct initializers) while preserving Bedrock defaults; order 276 required a `thread_manager.rs` conflict resolution that kept provider-aware thread wiring intact; repeated ENOSPC required multiple `cargo clean` cycles and compile-gate fallbacks for orders 265/268/272/275; order 271 code_mode_yield test failed in this runner with an unsupported custom tool call output, so compile-gate validation was used.
 - Batch 18 summary: processed 20 (orders 281-300), blocked 0, skipped 0, branch now ahead 371 / behind 342 vs upstream/main after publish.
 - Batch 18 risk notes: protected-path conflicts were resolved in `core/src/client.rs`, `core/src/models_manager/manager.rs`, `core/src/rollout/policy.rs`, `core/src/lib.rs`, and `core/src/thread_manager.rs` while preserving Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring; one follow-up fix commit (`sync(upstream): fix websocket constructor arg cleanup`) was required after order 293 to remove stale constructor arguments; repeated long-running test/link steps forced compile-gate fallbacks and one interrupted `just fix -p codex-core` run.
-- Batch 19 summary: processed 20 (orders 301-320), blocked 0, skipped 0, branch now ahead 394 / behind 342 vs upstream/main after publish.
+- Batch 19 summary: processed 20 (orders 301-320), blocked 0, skipped 0, branch now ahead 394 / behind 345 vs upstream/main after publish.
 - Batch 19 risk notes: protected-path overlaps in orders 301/306/312/319 were integrated surgically while preserving Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware `ThreadManager` wiring; orders 317/318 hit a pre-existing `ModelClient::new` test-compile mismatch in `codex-core` tests so compile-gate validation was used; order 319 hit ENOSPC during app-server test linking and was recovered via `cargo clean` plus `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0'`; order 320 added `codex-exec-server` and required lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) from repo root.
