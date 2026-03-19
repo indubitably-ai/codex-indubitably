@@ -5208,6 +5208,8 @@ impl ChatWidget {
             | EventMsg::AgentMessageContentDelta(_)
             | EventMsg::ReasoningContentDelta(_)
             | EventMsg::ReasoningRawContentDelta(_)
+            | EventMsg::TurnSkillContext(_)
+            | EventMsg::SkillInvocation(_)
             | EventMsg::DynamicToolCallRequest(_)
             | EventMsg::DynamicToolCallResponse(_) => {}
             EventMsg::HookStarted(event) => self.on_hook_started(event),

@@ -42,7 +42,6 @@ codex-stdio-to-uds = { workspace = true }
 codex-tui = { workspace = true }
 dirs = { workspace = true }
 codex-tui-app-server = { workspace = true }
-dirs = { workspace = true }
 libc = { workspace = true }
 owo-colors = { workspace = true }
 rand = { workspace = true }
