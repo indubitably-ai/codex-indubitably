@@ -679,6 +679,7 @@ fn turn_status_from_abort_reason(reason: &TurnAbortReason) -> &'static str {
 
 fn origin_from_session_source(source: &SessionSource) -> String {
     match source {
+        SessionSource::Custom(origin) => origin.clone(),
         SessionSource::Cli
         | SessionSource::VSCode
         | SessionSource::Exec
