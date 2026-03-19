@@ -52,7 +52,6 @@ use codex_core::config::edit::ConfigEditsBuilder;
 use codex_core::config::find_codex_home;
 use codex_core::features::Stage;
 use codex_core::features::is_known_feature_key;
-use codex_core::terminal::TerminalName;
 use codex_core::util::INVOKED_COMMAND_NAME_ENV_VAR;
 use codex_core::util::command_with_args;
 
@@ -60,6 +59,7 @@ const CLI_VERSION: &str = match option_env!("INDUBITABLY_CLI_VERSION") {
     Some(version) => version,
     None => env!("CARGO_PKG_VERSION"),
 };
+use codex_terminal_detection::TerminalName;
 
 /// Codex CLI
 ///
@@ -1209,7 +1209,7 @@ async fn run_interactive_tui(
         interactive.prompt = Some(prompt.replace("\r\n", "\n").replace('\r', "\n"));
     }
 
-    let terminal_info = codex_core::terminal::terminal_info();
+    let terminal_info = codex_terminal_detection::terminal_info();
     if terminal_info.name == TerminalName::Dumb {
         if !(std::io::stdin().is_terminal() && std::io::stderr().is_terminal()) {
             return Ok(AppExitInfo::fatal(
