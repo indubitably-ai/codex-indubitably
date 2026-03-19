@@ -121,10 +121,11 @@ impl ModelsManager {
             auth_manager,
             model_catalog,
             collaboration_modes_config,
-            ModelProviderInfo::create_openai_provider(),
+            ModelProviderInfo::create_openai_provider(/* base_url */ None),
         )
     }
 
+    /// Construct a manager with an explicit provider used for remote model refreshes.
     pub fn new_with_provider(
         codex_home: PathBuf,
         auth_manager: Arc<AuthManager>,
@@ -614,17 +615,13 @@ impl ModelsManager {
         auth_manager: Arc<AuthManager>,
         provider: ModelProviderInfo,
     ) -> Self {
-        let cache_path = codex_home.join(MODEL_CACHE_FILE);
-        let cache_manager = ModelsCacheManager::new(cache_path, DEFAULT_MODEL_CACHE_TTL);
-        Self {
-            remote_models: RwLock::new(Self::load_default_remote_models(&provider)),
-            catalog_mode: CatalogMode::Default,
-            collaboration_modes_config: CollaborationModesConfig::default(),
+        Self::new_with_provider(
+            codex_home,
             auth_manager,
-            etag: RwLock::new(None),
-            cache_manager,
+            None,
+            CollaborationModesConfig::default(),
             provider,
-        }
+        )
     }
 
     /// Get model identifier without consulting remote state or cache.
@@ -743,7 +740,7 @@ mod tests {
     }
 
     fn openai_provider_for(base_url: String) -> ModelProviderInfo {
-        let mut provider = ModelProviderInfo::create_openai_provider();
+        let mut provider = ModelProviderInfo::create_openai_provider(/* base_url */ None);
         provider.base_url = Some(base_url);
         provider.request_max_retries = Some(0);
         provider.stream_max_retries = Some(0);
@@ -752,10 +749,11 @@ mod tests {
     }
 
     fn bedrock_provider_for(base_url: String) -> ModelProviderInfo {
-        let mut provider = crate::model_provider_info::built_in_model_providers()
-            .get(crate::model_provider_info::BEDROCK_PROVIDER_ID)
-            .expect("bedrock provider should exist")
-            .clone();
+        let mut provider =
+            crate::model_provider_info::built_in_model_providers(/* openai_base_url */ None)
+                .get(crate::model_provider_info::BEDROCK_PROVIDER_ID)
+                .expect("bedrock provider should exist")
+                .clone();
         provider.base_url = Some(base_url);
         provider.experimental_bearer_token = Some("bedrock-test-token".to_string());
         provider.request_max_retries = Some(0);

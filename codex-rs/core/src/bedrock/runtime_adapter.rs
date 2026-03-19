@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn proxy_adapter_new_uses_default_proxy_base_url() {
-        let provider = built_in_model_providers()
+        let provider = built_in_model_providers(/* openai_base_url */ None)
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();
@@ -274,7 +274,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn resolve_bearer_token_ignores_aws_credentials() {
-        let mut provider = built_in_model_providers()
+        let mut provider = built_in_model_providers(/* openai_base_url */ None)
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();
@@ -298,7 +298,7 @@ mod tests {
     #[tokio::test]
     #[serial]
     async fn resolve_bearer_token_prefers_provider_env_key() {
-        let mut provider = built_in_model_providers()
+        let mut provider = built_in_model_providers(/* openai_base_url */ None)
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();

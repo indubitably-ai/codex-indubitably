@@ -1570,7 +1570,7 @@ mod tests {
 
     #[tokio::test]
     async fn bedrock_provider_stream_returns_auth_error_without_token() {
-        let provider = built_in_model_providers()
+        let provider = built_in_model_providers(/* openai_base_url */ None)
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();
@@ -1613,7 +1613,7 @@ mod tests {
 
     #[tokio::test]
     async fn bedrock_provider_stream_uses_injected_runtime_adapter() {
-        let provider = built_in_model_providers()
+        let provider = built_in_model_providers(/* openai_base_url */ None)
             .get(BEDROCK_PROVIDER_ID)
             .expect("bedrock provider should exist")
             .clone();

@@ -10,7 +10,7 @@ const BEDROCK_PROVIDER_ID: &str = "bedrock";
 const TEST_MODEL_SLUG: &str = "claude-3-7-sonnet";
 
 pub fn provider_for_mock_server_uri(server_uri: &str) -> ModelProviderInfo {
-    let mut provider = built_in_model_providers()
+    let mut provider = built_in_model_providers(None)
         .get(BEDROCK_PROVIDER_ID)
         .unwrap_or_else(|| panic!("bedrock provider should exist"))
         .clone();

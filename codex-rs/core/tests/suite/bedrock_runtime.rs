@@ -56,7 +56,7 @@ fn bedrock_stream_fixture_parses_expected_chunk_sequence() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn bedrock_provider_stream_without_token_returns_auth_error() {
-    let provider = built_in_model_providers()
+    let provider = built_in_model_providers(/* openai_base_url */ None)
         .get(BEDROCK_PROVIDER_ID)
         .unwrap_or_else(|| panic!("bedrock provider should exist"))
         .clone();
