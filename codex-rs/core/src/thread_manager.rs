@@ -169,13 +169,18 @@ impl ThreadManager {
         model_provider: ModelProviderInfo,
     ) -> Self {
         let codex_home = config.codex_home.clone();
+        let restriction_product = session_source.restriction_product();
         let (thread_created_tx, _) = broadcast::channel(THREAD_CREATED_CHANNEL_CAPACITY);
-        let plugins_manager = Arc::new(PluginsManager::new(codex_home.clone()));
+        let plugins_manager = Arc::new(PluginsManager::new_with_restriction_product(
+            codex_home.clone(),
+            restriction_product,
+        ));
         let mcp_manager = Arc::new(McpManager::new(Arc::clone(&plugins_manager)));
-        let skills_manager = Arc::new(SkillsManager::new(
+        let skills_manager = Arc::new(SkillsManager::new_with_restriction_product(
             codex_home.clone(),
             Arc::clone(&plugins_manager),
             config.bundled_skills_enabled(),
+            restriction_product,
         ));
         let file_watcher = build_file_watcher(codex_home.clone(), Arc::clone(&skills_manager));
         Self {
@@ -231,12 +236,17 @@ impl ThreadManager {
         set_thread_manager_test_mode_for_tests(true);
         let auth_manager = AuthManager::from_auth_for_testing(auth);
         let (thread_created_tx, _) = broadcast::channel(THREAD_CREATED_CHANNEL_CAPACITY);
-        let plugins_manager = Arc::new(PluginsManager::new(codex_home.clone()));
+        let restriction_product = SessionSource::Exec.restriction_product();
+        let plugins_manager = Arc::new(PluginsManager::new_with_restriction_product(
+            codex_home.clone(),
+            restriction_product,
+        ));
         let mcp_manager = Arc::new(McpManager::new(Arc::clone(&plugins_manager)));
-        let skills_manager = Arc::new(SkillsManager::new(
+        let skills_manager = Arc::new(SkillsManager::new_with_restriction_product(
             codex_home.clone(),
             Arc::clone(&plugins_manager),
-            true,
+            /*bundled_skills_enabled*/ true,
+            restriction_product,
         ));
         let file_watcher = build_file_watcher(codex_home.clone(), Arc::clone(&skills_manager));
         Self {
