@@ -27,11 +27,22 @@
 - Batch 10 end ahead/behind: ahead 195 / behind 321
 - Batch 11 start ahead/behind: ahead 196 / behind 323
 - Batch 11 end ahead/behind: ahead 217 / behind 323
+- Batch 12 start ahead/behind: ahead 218 / behind 323
+- Batch 12 end ahead/behind: ahead 239 / behind 324
+- Batch 13 start ahead/behind: ahead 239 / behind 324
+- Batch 13 end ahead/behind: ahead 259 / behind 327
+- Batch 14 start ahead/behind: ahead 260 / behind 328
+- Batch 14 end ahead/behind: ahead 280 / behind 328
+- Batch 15 start ahead/behind: ahead 281 / behind 328
+- Batch 15 end ahead/behind: ahead 303 / behind 329
+- Batch 16 start ahead/behind: ahead 304 / behind 329
+- Batch 16 end ahead/behind: ahead 324 / behind 331
+- Batch 17 start ahead/behind: ahead 325 / behind 334
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 11 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 17 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -474,6 +485,46 @@
 | 259 | `57f865c069c4acc213d43371a82671b2deed4e1c` | cherry-pick+surgical | ported | 5 | 0.80 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui-app-server --quiet | Ignored duplicate legacy stream events in tui_app_server adapter; test-link hit ENOSPC and was validated via compile gate after cargo clean. |
 
 | 260 | `d37dcca7e080a8d397f37f8bf4bf695d40f7d88e` | cherry-pick+surgical | ported | 8 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui --quiet | Reverted tui in-process app-server dependency; conflict resolved by keeping local Bedrock provider constant and thread-manager provider wiring. |
+
+| 261 | `603b6493a9d93f110bacf8d29295acdcdc080d89` | cherry-pick | ported | 2 | 0.93 | cargo test -p codex-linux-sandbox landlock --quiet | Linux sandbox writable-root handling now skips missing roots. |
+
+| 262 | `31648563c8d7f77957c79cc04501d0ed11844635` | cherry-pick | ported | 4 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Centralized artifact runtime version constant under core packages module. |
+
+| 263 | `4ed19b07664d28ef67592ab5d77aa30d13d3aba0` | cherry-pick | ported | 4 | 0.88 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib close_agent --quiet | close_agent output field renamed to previous_status with schema/tool-description updates. |
+
+| 264 | `ef36d39199c7328899e4f1f6b20a2c9ba5065f83` | cherry-pick | ported | 5 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-state agent_jobs --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all suite::agent_jobs --quiet | Agent-job completion/state transition race fix with reduced status polling churn. |
+
+| 265 | `e8add54e5dda2fc6f49757aa939378a21b8515e9` | cherry-pick | ported | 6 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib spawn_agent_requested_model_and_reasoning_override_inherited_settings_without_role --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server turn_start_emits_spawn_agent_item_with_effective_role_model_metadata_v2 --quiet | Spawn-agent completion metadata now reports effective role-derived model/reasoning. |
+
+| 266 | `6ea041032b500a6f3e8511d225af366d5e53439b` | cherry-pick+surgical | ported | 9 | 0.79 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just write-config-schema; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib model_provider_info; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all suite::client_websockets | Protected config/model paths updated; added local compatibility fixes for provider-id constructor and new timeout field initializers. |
+
+| 267 | `8e258eb3f57a42477b5811a54321263185136a6a` | cherry-pick | ported | 5 | 0.87 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-protocol reasoning_effort_from_str --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-state extract --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib realtime_context_tests --quiet | Persists thread model and reasoning effort metadata to sqlite with migration and extraction wiring. |
+
+| 268 | `78e8ee4591d4ff42d180000fbad29d5fb3bcd2a5` | cherry-pick | ported | 6 | 0.80 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server restore_started_app_server_thread_replays_remote_history; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui-app-server --quiet | Restores remote resume/fork history by replaying thread snapshots into TUI event pipeline. |
+
+| 269 | `f26ad3c92c3ac1bd1c63325d74924053d3cd0c01` | cherry-pick | ported | 3 | 0.91 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server fuzzy_file_search --quiet | App-server fuzzy-search test harness now buffers unmatched notifications by payload-aware matching. |
+
+| 270 | `d484bb57d9baea4603df0a89ad4f602cee79871d` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core shell_snapshot --quiet | Shell snapshot filenames now include generation suffix with cleanup parser handling legacy and suffixed names. |
+
+| 271 | `0d531c05f2cc497d29da8e478f6770850cdb51bc` | cherry-pick | ported | 6 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all code_mode_yield; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Code-mode worker now emits started signal before scheduling initial yield timeout to avoid startup race. |
+
+| 272 | `904dbd414f223027ecdb3d54a8444d3c94395aa6` | cherry-pick+surgical | ported | 8 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server-protocol --quiet | Adds hidden CLI subcommand to emit internal RolloutLine schema and aligns schemars/ts output mapping for function-call outputs. |
+
+| 273 | `95bdea93d2600aabef1b87ee5fab05a6022a7d45` | cherry-pick | ported | 5 | 0.85 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-windows-sandbox --quiet | Windows elevated runner now uses framed IPC transport instead of request-file bootstrap path. |
+
+| 274 | `49e7dda2dfd6e67dd5f9dd8bfa22b7c2b1df17ef` | cherry-pick | ported | 7 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server refresh_request_uses_local_chatgpt_auth --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server device_code_attempt_matches_only_for_matching_cancel --quiet | Adds device-code onboarding path and local ChatGPT token refresh handling in tui_app_server. |
+
+| 275 | `683c37ce755f198f417db27f780965a5972b5b7b` | cherry-pick | ported | 7 | 0.79 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core -p codex-tui -p codex-tui-app-server --quiet | Adds plugin-backed discoverable tool suggestions and plugin-install elicitation wiring across core/tui/tui_app_server. |
+
+| 276 | `b02388672f7df432fbe34a9128f78e7a1e9d43ea` | cherry-pick+surgical | ported | 6 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all apply_patch_cli_can_use_shell_command_output_as_patch_input --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all websocket_test_codex_shell_chain --quiet | Resolved thread_manager conflict by preserving provider-aware wiring and passing explicit None for parent_trace/user_shell_override in internal helpers. |
+
+| 277 | `23a44ddbe8f45154a6e55280a74d28957dfefe72` | cherry-pick | ported | 3 | 0.93 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui permissions_selection --quiet | TUI permissions-popup tests now assert semantic selected row/preset rather than fragile row-order assumptions. |
+
+| 278 | `4d9d4b7b0f2b8cfbe4ab18e31a7bd80465a975e4` | cherry-pick | ported | 2 | 0.94 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all approvals --quiet | Approval matrix write-file scenario now uses deterministic python file I/O plus extra diagnostics. |
+
+| 279 | `2cc4ee413f8d86c38a5a46887d2fd5a18d40efbe` | cherry-pick | ported | 2 | 0.95 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-windows-sandbox --quiet | Temporarily disables private desktop flag in elevated IPC process spawn path. |
+
+| 280 | `ee756eb80f94fe018c7a07306c0e43e1a42bcfa6` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib code_mode_only_restricts_model_tools_to_exec_tools --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all code_mode_only_restricts_prompt_tools --quiet | Renames code-mode wait tool from exec_wait to wait across feature docs/spec/tests. |
 
 ## Decision Briefs
 
@@ -2885,6 +2936,226 @@
 - Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui --quiet
 - Rollback note: Revert this sync commit if the touched behavior regresses in targeted flows.
 
+### Commit `603b6493a9d93f110bacf8d29295acdcdc080d89`
+
+- Upstream intent: Skip missing writable roots in bubblewrap mounts while keeping existing roots writable.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Linux sandbox mount behavior and regression-test updates.
+- Strategy selected: Direct cherry-pick.
+- Confidence: 0.93
+- Validation evidence: cargo test -p codex-linux-sandbox landlock --quiet (compile gate; filter matched 0 tests).
+- Rollback note: Revert commit ab32d851a if writable-root mount behavior regresses.
+
+### Commit `31648563c8d7f77957c79cc04501d0ed11844635`
+
+- Upstream intent: Move pinned artifact runtime version into shared package-version module.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Core module layout change plus artifacts handler/test updates.
+- Strategy selected: cherry-pick with compile-gate validation due ENOSPC pressure.
+- Confidence: 0.86
+- Validation evidence: Initial cargo test hit ENOSPC; after cargo clean, low-footprint cargo check -p codex-core passed.
+- Rollback note: Revert commit 075952a75 if artifact runtime version resolution regresses.
+
+### Commit `4ed19b07664d28ef67592ab5d77aa30d13d3aba0`
+
+- Upstream intent: Make close_agent output explicit by returning previous_status.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Core tool-output shape and tests/spec update for multi-agent close flow.
+- Strategy selected: Direct cherry-pick with focused core test.
+- Confidence: 0.88
+- Validation evidence: cargo test -p codex-core --lib close_agent --quiet passed (1 test).
+- Rollback note: Revert commit 868755618 if close_agent output contract regresses.
+
+### Commit `ef36d39199c7328899e4f1f6b20a2c9ba5065f83`
+
+- Upstream intent: Make agent job finalization atomic and replace blind polling with status-subscription waiting.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Cross-crate behavioral change across core job runner and state runtime completion semantics.
+- Strategy selected: Direct cherry-pick with focused core/state integration tests.
+- Confidence: 0.86
+- Validation evidence: codex-state agent_jobs tests passed (2 tests); codex-core suite::agent_jobs filter passed (4 tests).
+- Rollback note: Revert commit 03e547ce7 if agent-job finalization/regression appears.
+
+### Commit `e8add54e5dda2fc6f49757aa939378a21b8515e9`
+
+- Upstream intent: Expose effective model/reasoning in spawn-agent events after config layering.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Cross-crate event-contract changes across core/protocol plus app-server integration test coverage.
+- Strategy selected: Direct cherry-pick with targeted core/app-server validation.
+- Confidence: 0.82
+- Validation evidence: Core targeted filter compiled (0 tests matched); app-server targeted filter passed with 1 test.
+- Rollback note: Revert commit 903a9db78 if spawn-agent metadata contract regresses.
+
+### Commit `6ea041032b500a6f3e8511d225af366d5e53439b`
+
+- Upstream intent: Prevent turn/start hangs by bounding websocket warmup and enabling clean HTTP fallback/interrupt behavior.
+- Local overlays touched: Protected overlap in core config/model-provider surfaces; Bedrock defaults preserved with websocket timeout unset.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior preserved; ThreadManager provider wiring unchanged.
+- Risk factors: Large core behavioral refactor plus protected config/model files and schema updates.
+- Strategy selected: cherry-pick+surgical due protected-path overlap and local API compatibility adjustments.
+- Confidence: 0.79
+- Validation evidence: After ENOSPC recovery and schema regen, codex-core model_provider_info tests passed (5) and client_websockets suite passed (29).
+- Rollback note: Revert commit 81bb0c463 if websocket prewarm timeout/fallback behavior regresses.
+
+### Commit `8e258eb3f57a42477b5811a54321263185136a6a`
+
+- Upstream intent: Store latest model/reasoning effort in thread metadata for later thread/resume reuse.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: State migration plus cross-crate metadata serialization updates.
+- Strategy selected: Direct cherry-pick with protocol/state/core targeted validation.
+- Confidence: 0.87
+- Validation evidence: codex-protocol reasoning_effort tests passed (2); codex-state extract tests passed (9); core filter compiled (0 tests matched).
+- Rollback note: Revert commit f2a397734 if thread metadata persistence/regression occurs.
+
+### Commit `78e8ee4591d4ff42d180000fbad29d5fb3bcd2a5`
+
+- Upstream intent: Preserve and replay full thread snapshots for start/resume/fork in tui_app_server.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Large tui_app_server replay-state refactor touching app/session/chatwidget paths.
+- Strategy selected: Direct cherry-pick with compile fallback under disk pressure.
+- Confidence: 0.80
+- Validation evidence: Targeted tui_app_server test run failed at link with ENOSPC; after cargo clean, low-footprint cargo check -p codex-tui-app-server passed.
+- Rollback note: Revert commit c0311a132 if remote resume/fork transcript restoration regresses.
+
+### Commit `f26ad3c92c3ac1bd1c63325d74924053d3cd0c01`
+
+- Upstream intent: Stabilize fuzzy-search tests under out-of-order notification delivery by buffering/matching notifications correctly.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Test harness behavior update in app-server test utilities and fuzzy-search suite.
+- Strategy selected: Direct cherry-pick with targeted app-server test filter.
+- Confidence: 0.91
+- Validation evidence: cargo test -p codex-app-server fuzzy_file_search --quiet passed (11 tests).
+- Rollback note: Revert commit 875bfd98b if fuzzy-search test notification handling regresses.
+
+### Commit `d484bb57d9baea4603df0a89ad4f602cee79871d`
+
+- Upstream intent: Avoid snapshot path collisions by appending generation suffix and updating stale-snapshot cleanup parsing.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Core shell snapshot path/cleanup behavior with expanded test coverage.
+- Strategy selected: Direct cherry-pick with targeted core shell_snapshot tests.
+- Confidence: 0.90
+- Validation evidence: cargo test -p codex-core shell_snapshot --quiet passed (12 + 4 tests, 4 ignored).
+- Rollback note: Revert commit 163403635 if shell snapshot lifecycle behavior regresses.
+
+### Commit `0d531c05f2cc497d29da8e478f6770850cdb51bc`
+
+- Upstream intent: Eliminate startup race by starting initial-yield timer only after worker posts explicit started event.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Runtime sequencing change in code-mode JS runner can affect yield timing semantics.
+- Strategy selected: Direct cherry-pick with compile fallback after environment-specific integration failure.
+- Confidence: 0.78
+- Validation evidence: code_mode_yield filter failed in this runner with unsupported custom tool call output; low-footprint cargo check -p codex-core passed.
+- Rollback note: Revert commit 47a8e8d8e if code-mode startup yield behavior regresses.
+
+### Commit `904dbd414f223027ecdb3d54a8444d3c94395aa6`
+
+- Upstream intent: Generate internal RolloutLine JSON schema and fix writer/reader schema mismatches in protocol models.
+- Local overlays touched: Protected overlap in app-server-protocol src and cli main; no Indubitably/Bedrock behavior changes.
+- Invariants checked: Indubitably auth preserved; Bedrock runtime/provider behavior unchanged; ThreadManager provider wiring unchanged.
+- Risk factors: Schema/export surface changes across app-server-protocol and CLI with generated fixture churn.
+- Strategy selected: cherry-pick+surgical with protected-path review and compile gate under ENOSPC constraints.
+- Confidence: 0.78
+- Validation evidence: Full protocol test run hit ENOSPC; after cargo clean, low-footprint cargo check -p codex-app-server-protocol passed.
+- Rollback note: Revert commit ce52c15ee if internal schema generation or protocol schema mapping regresses.
+
+### Commit `95bdea93d2600aabef1b87ee5fab05a6022a7d45`
+
+- Upstream intent: Switch elevated one-shot Windows command path to framed runner IPC in preparation for unified_exec session support.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Windows sandbox process-launch and IPC transport refactor across multiple modules.
+- Strategy selected: Direct cherry-pick with windows-sandbox targeted validation.
+- Confidence: 0.85
+- Validation evidence: cargo test -p codex-windows-sandbox --quiet passed (compile gate on non-Windows host; 0 tests matched).
+- Rollback note: Revert commit c011d4b05 if elevated Windows command execution regressions appear.
+
+### Commit `49e7dda2dfd6e67dd5f9dd8bfa22b7c2b1df17ef`
+
+- Upstream intent: Support headless ChatGPT onboarding and token refresh requests in app-server-backed TUI flows.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unaffected; ThreadManager provider wiring unchanged.
+- Risk factors: Large tui_app_server auth/onboarding flow expansion with new local token loader and request handling.
+- Strategy selected: Direct cherry-pick with focused tui_app_server auth test filters.
+- Confidence: 0.84
+- Validation evidence: Two targeted tui_app_server filters passed (refresh handling and device-code attempt matching).
+- Rollback note: Revert commit 9e155d4f5 if onboarding or chatgpt token refresh flows regress.
+
+### Commit `683c37ce755f198f417db27f780965a5972b5b7b`
+
+- Upstream intent: Allow tool-suggest flow to elicit plugin installation for allowed discoverable plugin/connectors not yet installed.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Broad multi-crate UX and suggestion-logic changes with new core plugin discovery modules.
+- Strategy selected: Direct cherry-pick with compile-gate fallback under ENOSPC pressure.
+- Confidence: 0.79
+- Validation evidence: Targeted test run hit ENOSPC; after cargo clean, low-footprint cargo check for core/tui/tui_app_server passed.
+- Rollback note: Revert commit 446011d10 if plugin installation elicitation or tool-suggest behavior regresses.
+
+### Commit `b02388672f7df432fbe34a9128f78e7a1e9d43ea`
+
+- Upstream intent: Stabilize Windows shell-driven integration harnesses by allowing test-only shell override and safer nested cmd/PowerShell handling.
+- Local overlays touched: No protected-path overlap; local ThreadManager provider-aware behavior preserved during conflict resolution.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring preserved.
+- Risk factors: Core session/thread initialization plumbing plus integration harness behavior for shell execution tests.
+- Strategy selected: cherry-pick+surgical due thread_manager conflict resolution.
+- Confidence: 0.84
+- Validation evidence: Targeted core integration filters passed: apply_patch_cli_can_use_shell_command_output_as_patch_input and websocket_test_codex_shell_chain.
+- Rollback note: Revert commit 97d254fc8 if Windows shell test harness behavior or thread start wiring regresses.
+
+### Commit `23a44ddbe8f45154a6e55280a74d28957dfefe72`
+
+- Upstream intent: Stabilize permissions selection tests across platform-specific initial row ordering and popup layout differences.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Test-only assertions/helpers in tui chatwidget suite.
+- Strategy selected: Direct cherry-pick with targeted tui permissions selection tests.
+- Confidence: 0.93
+- Validation evidence: cargo test -p codex-tui permissions_selection --quiet passed (10 tests).
+- Rollback note: Revert commit 9c412bf09 if permissions popup test semantics regress.
+
+### Commit `4d9d4b7b0f2b8cfbe4ab18e31a7bd80465a975e4`
+
+- Upstream intent: Remove shell-redirection/quoting variance from write-file approval scenario by using explicit UTF-8 read/write script.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Test-only adjustment in core approvals suite.
+- Strategy selected: Direct cherry-pick with targeted approvals test filter.
+- Confidence: 0.94
+- Validation evidence: cargo test -p codex-core --test all approvals --quiet passed (8 tests).
+- Rollback note: Revert commit e1c60c7b7 if approvals test harness behavior regresses.
+
+### Commit `2cc4ee413f8d86c38a5a46887d2fd5a18d40efbe`
+
+- Upstream intent: Mitigate elevated IPC path instability by forcing non-private desktop until compatibility is restored.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Single-line behavior toggle in Windows elevated command runner path.
+- Strategy selected: Direct cherry-pick with windows-sandbox compile validation.
+- Confidence: 0.95
+- Validation evidence: cargo test -p codex-windows-sandbox --quiet passed (compile gate on non-Windows host; 0 tests matched).
+- Rollback note: Revert commit f5fc27931 if private desktop behavior needs to be restored earlier.
+
+### Commit `ee756eb80f94fe018c7a07306c0e43e1a42bcfa6`
+
+- Upstream intent: Align code-mode tool naming and documentation by replacing exec_wait with wait.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and ThreadManager provider wiring unchanged.
+- Risk factors: Tool-name contract changes in code-mode spec and tests.
+- Strategy selected: Direct cherry-pick with focused core spec/integration filters.
+- Confidence: 0.90
+- Validation evidence: Both targeted tests passed: code_mode_only_restricts_model_tools_to_exec_tools and code_mode_only_restricts_prompt_tools.
+- Rollback note: Revert commit d9e15ce82 if code-mode tool naming compatibility regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -3328,3 +3599,5 @@
 - Batch 14 risk notes: order 218 required surgical conflict resolution plus local Bedrock/openai provider compatibility callsite updates; repeated ENOSPC required targeted `cargo clean` and low-footprint validation (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`), with `codex-core` test-binary linking for order 220 falling back to compile-gate validation.
 - Batch 15 risk notes: order 230 required protected-path conflict resolution in `models_manager` plus follow-up error-field completion (`216b90e45`), and order 240 required CLI conflict resolution with a compatibility follow-up (`ad0c3da0f`) after temporary ENOSPC recovery via `cargo clean`.
 - Batch 16 risk notes: order 248 required surgical conflict resolution in `core/src/thread_manager.rs` and `tui/src/lib.rs` to preserve local provider-aware startup behavior during broad lint churn; orders 250 and 259 required ENOSPC recovery (`cargo clean`) with compile-gate fallback where test-binary linking exceeded local disk capacity.
+- Batch 17 summary: processed 20 (orders 261-280), blocked 0, skipped 0, branch now ahead 345 / behind 334 vs upstream/main before publish.
+- Batch 17 risk notes: order 266 touched protected config/model surfaces and required local compatibility follow-ups (`ModelClient::new` provider-id callsites plus `websocket_connect_timeout_ms` struct initializers) while preserving Bedrock defaults; order 276 required a `thread_manager.rs` conflict resolution that kept provider-aware thread wiring intact; repeated ENOSPC required multiple `cargo clean` cycles and compile-gate fallbacks for orders 265/268/272/275; order 271 code_mode_yield test failed in this runner with an unsupported custom tool call output, so compile-gate validation was used.
