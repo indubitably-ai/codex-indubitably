@@ -41,11 +41,13 @@
 - Batch 17 end ahead/behind: ahead 347 / behind 334
 - Batch 18 start ahead/behind: ahead 348 / behind 341
 - Batch 18 end ahead/behind: ahead 371 / behind 342
+- Batch 19 start ahead/behind: ahead 372 / behind 342
+- Batch 19 end ahead/behind: ahead 394 / behind 342
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 18 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 19 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -568,6 +570,46 @@
 | 299 | `40a7d1d15b446991094c5ecfbb1d0f21f2d9ad40` | cherry-pick | ported | 2 | 0.74 | Attempted CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo run -p codex-core --bin codex-write-config-schema --quiet (no resulting diff); cargo check -p codex-core --quiet | Protected config paths touched; config schema in commit remained consistent |
 
 | 300 | `0f9484dc8a7ad0962a808892924bb160e9466ad9` | cherry-pick | ported | 2 | 0.83 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-artifacts -p codex-core --quiet | Dependency update handled with bazel lock verification |
+
+| 301 | `a265d6043edc8b41e42ae508291f4cfb9ed46805` | cherry-pick | ported | 8 | 0.83 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core -p codex-protocol -p codex-tui-app-server --quiet | Protected app-server-protocol surfaces touched; no conflict |
+
+| 302 | `58ac2a8773da0ac6eb21471e6d3da5744d9e9e0c` | cherry-pick | ported | 1 | 0.97 | N/A (template text-only) | No Rust code changed |
+
+| 303 | `347c6b12ec63e8fe41e1dce6b00cca83dd2dba67` | cherry-pick | ported | 4 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server --quiet | Large tui_app_server-only refactor with snapshot updates |
+
+| 304 | `7ae99576a615d524bb22bf0f68e2b2baf88c37ce` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet | Memory phase2 gate update |
+
+| 305 | `606d85055f61ca9e81f0b96a4e7f6effc33c82be` | cherry-pick (manual compile fix) | ported | 7 | 0.76 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core --quiet | Added local compatibility fixes for CustomToolCallOutput.name in bedrock adapters |
+
+| 306 | `580f32ad2ab642e3fe9661bce838d972f8989663` | cherry-pick (manual compile fix) | ported | 8 | 0.75 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-app-server -p codex-core -p codex-app-server-client --quiet | Protected app-server/protocol/cli paths; added local SessionSource::Custom compatibility in canonical_trace |
+
+| 307 | `334164a6f714c171bb9f6440c7d3cd04ec04d295` | cherry-pick | ported | 4 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server --quiet; cargo check -p codex-core --quiet | Applied cleanly |
+
+| 308 | `392347d436cddac41c535e70dd0357ff74624559` | cherry-pick | ported | 1 | 0.96 | N/A (workflow-only change) | No Rust code touched |
+
+| 309 | `88e5382fc4cc7d7694fe99e39996bf148ebe9bcd` | cherry-pick | ported | 4 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet | Code-mode error propagation updates |
+
+| 310 | `5cada46ddf74701dbaf1a152df0514b918ead70c` | cherry-pick | ported | 4 | 0.84 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-protocol -p codex-utils-image --quiet | Dependency updates handled with lock verification |
+
+| 311 | `e5de13644d9459d3c2be0e60610009e619f50488` | cherry-pick | ported | 4 | 0.92 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui --quiet | TUI startup warning + snapshot update |
+
+| 312 | `86982ca1f93c2e18711dd192eb2989f91f6814a1` | cherry-pick (manual compile fix) | ported | 8 | 0.75 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core --quiet; cargo check -p codex-app-server --quiet; cargo check -p codex-app-server-client --quiet | Protected app-server/protocol/cli paths; removed local SessionSource::Custom compatibility arm after revert |
+
+| 313 | `7b37a0350f40c646e5cd36d55892da3fc4df4891` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-api -p codex-core --quiet | Realtime handoff output formatting update |
+
+| 314 | `ebbbc52ce40324d6f47745fe6edf41f3a1cfbe48` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-state --quiet | State/log formatting migration alignment |
+
+| 315 | `bb304324216e1305e9b7b5aa59700907c6326bd7` | cherry-pick | ported | 4 | 0.89 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet | App-server thread resume behavior update |
+
+| 316 | `b306885bd8ea4cd6c7e742b93c20614b79e6ac5d` | cherry-pick | ported | 4 | 0.92 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-api --quiet | Realtime V2 transcript gating; no protected overlap |
+
+| 317 | `3590e181fa2736c88a559389ea70dd1fe68d228e` | cherry-pick | ported | 4 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-core code_mode_update_plan_nested_tool_result_is_empty_object --quiet (fails due pre-existing ModelClient::new test compile mismatch); cargo check -p codex-core --quiet | Code-mode update_plan output wiring applied; core check passes |
+
+| 318 | `56d0c6bf67e15ff94c4bbf9e4fbc369b978b0bf1` | cherry-pick | ported | 4 | 0.81 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-core code_mode_can_apply_patch_via_nested_tool --quiet (fails due pre-existing ModelClient::new test compile mismatch); cargo check -p codex-core --quiet | Apply-patch code-mode output object wiring; core check passes |
+
+| 319 | `dcd5e0826960258b0b0c79fbd80aa66e9dd24296` | cherry-pick | ported | 8 | 0.78 | cargo test -p codex-app-server plugin_list_skips_invalid_marketplace_file --quiet (failed: no space left on device); df -h .; cargo clean; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server -p codex-core -p codex-config --quiet | Protected app-server overlap reviewed; uses resolved config for skills/plugin gating; compile gate used after disk cleanup |
+
+| 320 | `81996fcde605a452ca94662eb7028e8c8b6f9ebb` | cherry-pick | ported | 4 | 0.88 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-exec-server --quiet | New exec-server crate + docs landed cleanly; lock checks passed from repo root |
 
 ## Decision Briefs
 
@@ -3419,6 +3461,226 @@
 - Validation evidence: just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-artifacts -p codex-core --quiet
 - Rollback note: Revert commit 0f9484dc8a7ad0962a808892924bb160e9466ad9 if regression is detected.
 
+### Commit `a265d6043edc8b41e42ae508291f4cfb9ed46805`
+
+- Upstream intent: feat: add memory citation to agent message (#14821)
+- Local overlays touched: Protected surfaces touched; reconciled without changing auth/Bedrock/provider wiring
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Protected app-server-protocol surfaces touched; no conflict
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core -p codex-protocol -p codex-tui-app-server --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `58ac2a8773da0ac6eb21471e6d3da5744d9e9e0c`
+
+- Upstream intent: nit: disable live memory edition (#15058)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: No Rust code changed
+- Strategy selected: cherry-pick
+- Confidence: 0.97
+- Validation evidence: N/A (template text-only)
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `347c6b12ec63e8fe41e1dce6b00cca83dd2dba67`
+
+- Upstream intent: Removed remaining core events from tui_app_server (#14942)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Large tui_app_server-only refactor with snapshot updates
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `7ae99576a615d524bb22bf0f68e2b2baf88c37ce`
+
+- Upstream intent: chore: disable memory read path for morpheus (#15059)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Memory phase2 gate update
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `606d85055f61ca9e81f0b96a4e7f6effc33c82be`
+
+- Upstream intent: Add notify to code-mode (#14842)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Added local compatibility fixes for CustomToolCallOutput.name in bedrock adapters
+- Strategy selected: cherry-pick (manual compile fix)
+- Confidence: 0.76
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `580f32ad2ab642e3fe9661bce838d972f8989663`
+
+- Upstream intent: fix: harden plugin feature gating (#15020)
+- Local overlays touched: Protected surfaces touched; reconciled without changing auth/Bedrock/provider wiring
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Protected app-server/protocol/cli paths; added local SessionSource::Custom compatibility in canonical_trace
+- Strategy selected: cherry-pick (manual compile fix)
+- Confidence: 0.75
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-app-server -p codex-core -p codex-app-server-client --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `334164a6f714c171bb9f6440c7d3cd04ec04d295`
+
+- Upstream intent: feat(tui): restore composer history in app-server tui (#14945)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Applied cleanly
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server --quiet; cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `392347d436cddac41c535e70dd0357ff74624559`
+
+- Upstream intent: fix: try to fix "Stage npm package" step in ci.yml (#15092)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: No Rust code touched
+- Strategy selected: cherry-pick
+- Confidence: 0.96
+- Validation evidence: N/A (workflow-only change)
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `88e5382fc4cc7d7694fe99e39996bf148ebe9bcd`
+
+- Upstream intent: Propagate tool errors to code mode (#15075)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Code-mode error propagation updates
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `5cada46ddf74701dbaf1a152df0514b918ead70c`
+
+- Upstream intent: Return image URL from view_image tool (#15072)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Dependency updates handled with lock verification
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-protocol -p codex-utils-image --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `e5de13644d9459d3c2be0e60610009e619f50488`
+
+- Upstream intent: Add a startup deprecation warning for custom prompts (#15076)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: TUI startup warning + snapshot update
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `86982ca1f93c2e18711dd192eb2989f91f6814a1`
+
+- Upstream intent: Revert "fix: harden plugin feature gating" (#15102)
+- Local overlays touched: Protected surfaces touched; reconciled without changing auth/Bedrock/provider wiring
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Protected app-server/protocol/cli paths; removed local SessionSource::Custom compatibility arm after revert
+- Strategy selected: cherry-pick (manual compile fix)
+- Confidence: 0.75
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet; cargo check -p codex-core --quiet; cargo check -p codex-app-server --quiet; cargo check -p codex-app-server-client --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `7b37a0350f40c646e5cd36d55892da3fc4df4891`
+
+- Upstream intent: Add final message prefix to realtime handoff output (#15077)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Realtime handoff output formatting update
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-api -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `ebbbc52ce40324d6f47745fe6edf41f3a1cfbe48`
+
+- Upstream intent: Align SQLite feedback logs with feedback formatter (#13494)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: State/log formatting migration alignment
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-state --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `bb304324216e1305e9b7b5aa59700907c6326bd7`
+
+- Upstream intent: Feat: reuse persisted model and reasoning effort on thread resume (#14888)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: App-server thread resume behavior update
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `b306885bd8ea4cd6c7e742b93c20614b79e6ac5d`
+
+- Upstream intent: don't add transcript for v2 realtime (#15111)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Realtime V2 transcript gating; no protected overlap
+- Strategy selected: cherry-pick
+- Confidence: 0.92
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-api --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `3590e181fa2736c88a559389ea70dd1fe68d228e`
+
+- Upstream intent: Add update_plan code mode result (#15103)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Code-mode update_plan output wiring applied; core check passes
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-core code_mode_update_plan_nested_tool_result_is_empty_object --quiet (fails due pre-existing ModelClient::new test compile mismatch); cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `56d0c6bf67e15ff94c4bbf9e4fbc369b978b0bf1`
+
+- Upstream intent: Add apply_patch code mode result (#15100)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Apply-patch code-mode output object wiring; core check passes
+- Strategy selected: cherry-pick
+- Confidence: 0.81
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-core code_mode_can_apply_patch_via_nested_tool --quiet (fails due pre-existing ModelClient::new test compile mismatch); cargo check -p codex-core --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `dcd5e0826960258b0b0c79fbd80aa66e9dd24296`
+
+- Upstream intent: fix: harden plugin feature gating (#15104)
+- Local overlays touched: Protected surfaces touched; reconciled without changing auth/Bedrock/provider wiring
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: Protected app-server overlap reviewed; uses resolved config for skills/plugin gating; compile gate used after disk cleanup
+- Strategy selected: cherry-pick
+- Confidence: 0.78
+- Validation evidence: cargo test -p codex-app-server plugin_list_skips_invalid_marketplace_file --quiet (failed: no space left on device); df -h .; cargo clean; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server -p codex-core -p codex-config --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
+### Commit `81996fcde605a452ca94662eb7028e8c8b6f9ebb`
+
+- Upstream intent: Add exec-server stub server and protocol docs (#15089)
+- Local overlays touched: No protected overlap
+- Invariants checked: Indubitably auth behavior preserved; Bedrock runtime/provider behavior preserved; provider-aware ThreadManager wiring preserved.
+- Risk factors: New exec-server crate + docs landed cleanly; lock checks passed from repo root
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-exec-server --quiet
+- Rollback note: Revert the corresponding sync commit if regressions appear.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -3866,3 +4128,5 @@
 - Batch 17 risk notes: order 266 touched protected config/model surfaces and required local compatibility follow-ups (`ModelClient::new` provider-id callsites plus `websocket_connect_timeout_ms` struct initializers) while preserving Bedrock defaults; order 276 required a `thread_manager.rs` conflict resolution that kept provider-aware thread wiring intact; repeated ENOSPC required multiple `cargo clean` cycles and compile-gate fallbacks for orders 265/268/272/275; order 271 code_mode_yield test failed in this runner with an unsupported custom tool call output, so compile-gate validation was used.
 - Batch 18 summary: processed 20 (orders 281-300), blocked 0, skipped 0, branch now ahead 371 / behind 342 vs upstream/main after publish.
 - Batch 18 risk notes: protected-path conflicts were resolved in `core/src/client.rs`, `core/src/models_manager/manager.rs`, `core/src/rollout/policy.rs`, `core/src/lib.rs`, and `core/src/thread_manager.rs` while preserving Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring; one follow-up fix commit (`sync(upstream): fix websocket constructor arg cleanup`) was required after order 293 to remove stale constructor arguments; repeated long-running test/link steps forced compile-gate fallbacks and one interrupted `just fix -p codex-core` run.
+- Batch 19 summary: processed 20 (orders 301-320), blocked 0, skipped 0, branch now ahead 394 / behind 342 vs upstream/main after publish.
+- Batch 19 risk notes: protected-path overlaps in orders 301/306/312/319 were integrated surgically while preserving Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware `ThreadManager` wiring; orders 317/318 hit a pre-existing `ModelClient::new` test-compile mismatch in `codex-core` tests so compile-gate validation was used; order 319 hit ENOSPC during app-server test linking and was recovered via `cargo clean` plus `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0'`; order 320 added `codex-exec-server` and required lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) from repo root.
