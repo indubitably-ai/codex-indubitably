@@ -72,6 +72,7 @@ pub mod plugins;
 mod sandbox_tags;
 pub mod sandboxing;
 mod session_prefix;
+mod session_startup_prewarm;
 mod shell_detect;
 mod stream_events_utils;
 pub mod test_support;
