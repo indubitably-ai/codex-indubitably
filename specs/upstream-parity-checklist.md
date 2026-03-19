@@ -395,6 +395,46 @@
 
 | 220 | `bbd329a81233a8bb35f5ced9aacf93b57f2f9999` | cherry-pick+surgical | ported | 7 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Turn-context replay/backtracking reconstruction fix applied; test-linking environment constrained by ENOSPC. |
 
+| 221 | `6dc04df5e6ffdf7d85c935864c71eede3f214515` | cherry-pick | ported | 6 | 0.88 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib start_managed_network_proxy_ --quiet | Persist network host approvals across session boundaries. |
+
+| 222 | `7f571396c8819d7f4c4486ed1e967e40a2c9ffae` | cherry-pick | ported | 5 | 0.89 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib spawn_agent --quiet | Subagent split sandbox-policy sync fix. |
+
+| 223 | `d272f4505874fafef4753830b40d751674e8fd9b` | cherry-pick | ported | 6 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-protocol --quiet | Large instruction/layout reorder with snapshot updates; ENOSPC prevented integration test link. |
+
+| 224 | `ae0a6510e19c1d65aaa1ef1824826832ac9e160a` | cherry-pick | ported | 6 | 0.88 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib reserved_builtin_provider_override_rejected --quiet | Reject overrides of built-in provider keys (openai/ollama/lmstudio). |
+
+| 225 | `8ca358a13cd29bb174bebe1a32cf608e31a6494e` | cherry-pick | ported | 3 | 0.93 | python3 -m compileall sdk/python/src/codex_app_server/generated | Python SDK generated type refresh; pytest unavailable in environment. |
+
+| 226 | `e3890910427940c9106ea61d75f82dffbf20c7a6` | cherry-pick | ported | 7 | 0.87 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet | V2 plugin defaultPrompt switched to array with back-compat handling. |
+
+| 227 | `70eddad6b075f26f0f93c66f7ec9a4e49cdadc93` | cherry-pick | ported | 8 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server dynamic_tools --quiet | Added dynamic tool exposeToContext flag to optionally hide tools from context. |
+
+| 228 | `4b31848f5b3adb7f237dd5109f83428fbd2cf343` | cherry-pick | ported | 5 | 0.88 | (cd tools/argument-comment-lint && cargo test --quiet) | Added standalone Dylint runner and argument-comment lint crate. |
+
+| 229 | `9060dc7557848feb80a0fca612b9b1037c2ec217` | cherry-pick | ported | 7 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-protocol --quiet | Fix symlinked writable-root handling in sandbox policies and related protocol model. |
+
+| 230 | `d692b7400786e7bbe9f1366e697fc867bd10b3c1` | cherry-pick+surgical | ported | 9 | 0.79 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core auth --quiet | Conflict in models_manager resolved with local Bedrock path preserved; follow-up compile-fix commit added. |
+
+| 231 | `49edf311ac3ae84659b0ec5eacd5e471c881eee8` | cherry-pick | ported | 8 | 0.83 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib mcp_tool_call --quiet | Apps tool-call metadata wiring added across MCP/spec surfaces. |
+
+| 232 | `d4af6053e212a982e53372a3dff5a627c60af1db` | cherry-pick | ported | 6 | 0.88 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all search_tool --quiet | Improved apps search-tool fallback resolution in core. |
+
+| 233 | `ba463a9dc78180d9cd61b28ef6562e03342a14be` | cherry-pick | ported | 8 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui interrupt_preserves_unified_exec_wait_streak --quiet | Interrupt now preserves background terminals; cleanup command renamed to /stop. |
+
+| 234 | `6fdeb1d602842b80088641b941dea174435c01b7` | cherry-pick | ported | 9 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib guardian --quiet | Guardian session reuse landed with large core guardian refactor and prompt/policy split. |
+
+| 235 | `029aab5563caed2f2bbea8a1815a42cbf22b79a2` | cherry-pick | ported | 7 | 0.87 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib mcp_tool_call --quiet | Preserved tool_params through elicitation flow in MCP tool-call path. |
+
+| 236 | `33acc1e65faec89172b80a0a8a4faafe9b65c8c5` | cherry-pick | ported | 6 | 0.89 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib apply_role_uses_active_profile_model_provider_update --quiet | Fixed sub-agent role resolution when profiles are active. |
+
+| 237 | `18ad67549ca30c78b966d0bc9d8bc4a4a828c854` | cherry-pick | ported | 7 | 0.88 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib skills_for_config_reuses_cache_for_same_effective_config --quiet | Skills cache key now includes config layering semantics. |
+
+| 238 | `3f266bcd68c78ac043969f8a7a916c7ee30df112` | cherry-pick | ported | 8 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet | Interrupt state for multi-agents made non-terminal with protocol/tui updates. |
+
+| 239 | `c04a0a745483066da3e004ec1822a5c0838b6feb` | cherry-pick | ported | 8 | 0.80 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server --quiet | Fix for TUI freeze with sub-agents in app-server message processing path. |
+
+| 240 | `db89b73a9cd553ac2a2afda93c9f9bdcc223540c` | cherry-pick+surgical | ported | 9 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server --quiet | Conflict-resolved CLI/TUI-app-server integration plus follow-up compatibility fixes for new event/status enums under local provider-aware routing. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -2365,6 +2405,226 @@
 - Validation evidence: Repeated ENOSPC while linking codex-core test binary; compile gate passed.
 - Rollback note: Revert if rollback/backtracking context reconstruction regresses.
 
+### Commit `6dc04df5e6ffdf7d85c935864c71eede3f214515`
+
+- Upstream intent: Persist future managed-network host approvals across sessions.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Network approval persistence and replayed policy state.
+- Strategy selected: Straight cherry-pick with targeted core test filter.
+- Confidence: 0.88
+- Validation evidence: 2 targeted codex-core tests passed.
+- Rollback note: Revert if future network host approvals no longer persist correctly.
+
+### Commit `7f571396c8819d7f4c4486ed1e967e40a2c9ffae`
+
+- Upstream intent: Sync split sandbox policies when spawning subagents.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Propagation of file/network sandbox policy into subagent turns.
+- Strategy selected: Straight cherry-pick with focused multi-agent tests.
+- Confidence: 0.89
+- Validation evidence: 16 codex-core multi-agent tests passed.
+- Rollback note: Revert if subagents inherit incorrect sandbox policies.
+
+### Commit `d272f4505874fafef4753830b40d751674e8fd9b`
+
+- Upstream intent: Move plugin/skill instructions into developer message and reorder prompt sections.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Prompt composition reordering across core render paths and many snapshots.
+- Strategy selected: Straight cherry-pick with compile-gate validation under disk constraints.
+- Confidence: 0.82
+- Validation evidence: core+protocol compile gates passed; collaboration_instructions test-all link failed from ENOSPC.
+- Rollback note: Revert if plugin/skill instruction ordering or visible prompt layout regresses.
+
+### Commit `ae0a6510e19c1d65aaa1ef1824826832ac9e160a`
+
+- Upstream intent: Enforce explicit configuration errors when built-in model providers are overridden.
+- Local overlays touched: Protected overlap (codex-rs/core/src/config*); no Bedrock/Indubitably auth logic touched.
+- Invariants checked: Provider-aware model routing preserved; Bedrock runtime/provider behavior unchanged; Indubitably auth invariants unchanged.
+- Risk factors: Config validation surface and schema update; potential startup regression if errors misfire.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib reserved_builtin_provider_override_rejected --quiet
+- Rollback note: Revert this sync commit if provider override validation breaks valid config startup.
+
+### Commit `8ca358a13cd29bb174bebe1a32cf608e31a6494e`
+
+- Upstream intent: Refresh generated Python SDK app-server type surfaces to match upstream schema.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior not touched.
+- Risk factors: Generated SDK output churn only; low runtime risk.
+- Strategy selected: cherry-pick
+- Confidence: 0.93
+- Validation evidence: python3 -m compileall sdk/python/src/codex_app_server/generated (pytest not installed for sdk/python test execution)
+- Rollback note: Revert this sync commit if Python SDK generated interfaces mismatch runtime expectations.
+
+### Commit `e3890910427940c9106ea61d75f82dffbf20c7a6`
+
+- Upstream intent: Make plugin defaultPrompt list-shaped while preserving compatibility for legacy scalar form.
+- Local overlays touched: Protected overlap (codex-rs/app-server-protocol/src/*); no auth/provider override logic touched.
+- Invariants checked: Indubitably auth invariants unchanged; Bedrock runtime/provider routing unchanged.
+- Risk factors: Wire-shape/schema changes across protocol, app-server tests, and plugin manifest parsing.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet
+- Rollback note: Revert this sync commit if plugin defaultPrompt compatibility or app-server schema integration regresses.
+
+### Commit `70eddad6b075f26f0f93c66f7ec9a4e49cdadc93`
+
+- Upstream intent: Support dynamic-tool visibility control with exposeToContext plumbing across protocol/app-server/core.
+- Local overlays touched: Protected overlap (codex-rs/app-server-protocol/src/*, codex-rs/core/src/*, codex-rs/app-server/src/*); applied cleanly.
+- Invariants checked: Indubitably auth invariants preserved; Bedrock runtime/provider selection behavior unchanged.
+- Risk factors: Wire-shape and context-building behavior changes plus DB migration for deferred dynamic tool loading.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server dynamic_tools --quiet
+- Rollback note: Revert this sync commit if dynamic tool visibility or deferred loading semantics regress.
+
+### Commit `4b31848f5b3adb7f237dd5109f83428fbd2cf343`
+
+- Upstream intent: Introduce a repository-supported Dylint runner that enforces argument-comment rules.
+- Local overlays touched: No protected-path overlap in core auth/provider behavior.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider invariants unaffected.
+- Risk factors: New lint tooling and workspace-level hooks/justfile updates; minimal runtime impact.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: (cd tools/argument-comment-lint && cargo test --quiet) [passes on pinned nightly toolchain]
+- Rollback note: Revert this sync commit if new Dylint runner causes toolchain or lint workflow regressions.
+
+### Commit `9060dc7557848feb80a0fca612b9b1037c2ec217`
+
+- Upstream intent: Correct writable-root sandbox policy behavior when roots include symlinked paths.
+- Local overlays touched: Protected overlap (codex-rs/protocol/src/*); merged cleanly.
+- Invariants checked: Indubitably auth unchanged; Bedrock provider/runtime behavior unchanged.
+- Risk factors: Permissions semantics in protocol and seatbelt tests can affect sandbox policy enforcement.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-protocol --quiet
+- Rollback note: Revert this sync commit if sandbox writable-root permission handling regresses.
+
+### Commit `d692b7400786e7bbe9f1366e697fc867bd10b3c1`
+
+- Upstream intent: Add richer auth 401 observability tags/telemetry for client bug reports.
+- Local overlays touched: Protected overlap (core auth/client/models manager plus telemetry crates); preserved Indubitably Bedrock model-fetch path.
+- Invariants checked: Indubitably auth recovery messaging retained; Bedrock provider/runtime behavior preserved in model fetch flow.
+- Risk factors: Cross-cutting auth error/telemetry changes with merge conflict in models manager and error-shape expansion.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.79
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core auth --quiet; plus local fix commit 216b90e45 for UnexpectedResponseError field completeness
+- Rollback note: Revert commit chain (379720676 + 216b90e45) if auth telemetry/recovery behavior regresses.
+
+### Commit `49edf311ac3ae84659b0ec5eacd5e471c881eee8`
+
+- Upstream intent: Add app/tool-call metadata propagation for app and MCP tool flows.
+- Local overlays touched: Protected overlap (codex-rs/core/src/*, config schema/template surfaces); auto-merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime invariants unchanged.
+- Risk factors: Core tool-spec/MCP metadata path changes with schema/template updates.
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: Initial non-lib filter hit missing test_stdio_server harness in integration tests; authoritative gate: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib mcp_tool_call --quiet
+- Rollback note: Revert this sync commit if app/MCP tool-call metadata propagation regresses.
+
+### Commit `d4af6053e212a982e53372a3dff5a627c60af1db`
+
+- Upstream intent: Improve fallback behavior for app-backed search tool execution.
+- Local overlays touched: Protected overlap (codex-rs/core/src/*); merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: Search fallback logic affects tool routing behavior under failure/missing-path scenarios.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all search_tool --quiet
+- Rollback note: Revert this sync commit if search tool fallback selection regresses.
+
+### Commit `ba463a9dc78180d9cd61b28ef6562e03342a14be`
+
+- Upstream intent: Preserve unified-exec background sessions on interrupt and rename cleanup UX to /stop.
+- Local overlays touched: Protected overlap (app-server/protocol/core/tui); merged cleanly with snapshot rename.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: Cross-layer behavior changes spanning protocol events, task management, and TUI UX/snapshots.
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui interrupt_preserves_unified_exec_wait_streak --quiet
+- Rollback note: Revert this sync commit if interrupt/session preservation or /stop command behavior regresses.
+
+### Commit `6fdeb1d602842b80088641b941dea174435c01b7`
+
+- Upstream intent: Reuse guardian sessions across approvals to improve continuity and reduce reinitialization.
+- Local overlays touched: Protected overlap (core config/codex/features + tui app/chatwidget); auto-merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime invariants unchanged.
+- Risk factors: Large module move/refactor with behavior changes in guardian state machine and UI integration.
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib guardian --quiet
+- Rollback note: Revert this sync commit if guardian review session reuse or approval flow behavior regresses.
+
+### Commit `029aab5563caed2f2bbea8a1815a42cbf22b79a2`
+
+- Upstream intent: Ensure elicitation paths retain tool_params rather than dropping them in core flow.
+- Local overlays touched: Protected overlap (codex-rs/core/src/* and tui elicitation pane); merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: MCP tool-call serialization/approval template behavior and elicitation UI coupling.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib mcp_tool_call --quiet
+- Rollback note: Revert this sync commit if elicitation tool parameter propagation regresses.
+
+### Commit `33acc1e65faec89172b80a0a8a4faafe9b65c8c5`
+
+- Upstream intent: Correct sub-agent role behavior in profile-based configurations.
+- Local overlays touched: Protected overlap (codex-rs/core/src/agent/*); merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: Role/profile precedence logic affects spawned-agent model/provider selection semantics.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: Initial filter --lib sub_agent matched 0 tests; authoritative gate: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib apply_role_uses_active_profile_model_provider_update --quiet
+- Rollback note: Revert this sync commit if role/profile precedence for sub-agents regresses.
+
+### Commit `18ad67549ca30c78b966d0bc9d8bc4a4a828c854`
+
+- Upstream intent: Improve skills cache-key derivation so config-layer changes invalidate/reuse cache correctly.
+- Local overlays touched: Protected overlap (codex-rs/core/src/codex* and skills manager); merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: Cache reuse/invalidations can alter skill loading behavior across sessions and profile stacks.
+- Strategy selected: cherry-pick
+- Confidence: 0.88
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib skills_for_config_reuses_cache_for_same_effective_config --quiet
+- Rollback note: Revert this sync commit if skills cache invalidation or reuse behavior regresses.
+
+### Commit `3f266bcd68c78ac043969f8a7a916c7ee30df112`
+
+- Upstream intent: Allow interrupt state transitions to remain resumable in multi-agent flows.
+- Local overlays touched: Protected overlap (app-server-protocol/protocol/exec/tui); merged cleanly with new snapshot.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: State-machine semantics and protocol notification shape implications for multi-agent resume/interrupt flows.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet
+- Rollback note: Revert this sync commit if multi-agent interrupt/resume state handling regresses.
+
+### Commit `c04a0a745483066da3e004ec1822a5c0838b6feb`
+
+- Upstream intent: Prevent freeze conditions when sub-agents are present by tightening app-server thread/message handling.
+- Local overlays touched: Protected overlap (codex-rs/app-server/src/*); merged cleanly.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior unchanged.
+- Risk factors: Concurrency/state flow changes in message processor and in-process thread state.
+- Strategy selected: cherry-pick
+- Confidence: 0.80
+- Validation evidence: Full crate test run had one flaky tracing timeout (message_processor::tracing_tests::turn_start_jsonrpc_span_parents_core_turn_spans); compile gate passed: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server --quiet
+- Rollback note: Revert this sync commit if sub-agent presence still causes app-server/TUI freeze behavior.
+
+### Commit `db89b73a9cd553ac2a2afda93c9f9bdcc223540c`
+
+- Upstream intent: Introduce the parallel `tui_app_server` stack and route TUI startup through app-server pathways behind feature-gated integration points.
+- Local overlays touched: Protected overlap (`codex-rs/cli/src/*`, `codex-rs/tui_app_server/src/*`, and compile-coupled core/protocol surfaces); preserved local provider-selection routing and remote-mode guards.
+- Invariants checked: Indubitably auth and Bedrock provider/runtime invariants preserved; CLI provider propagation for `exec/login/review` kept intact during conflict resolution.
+- Risk factors: Large cross-crate integration with enum-shape drift and conflict-prone startup path wiring.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.78
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server --quiet (1342 passed / 0 failed / 2 ignored); plus follow-up fix commit `ad0c3da0f` to reconcile new event/status variants and CLI dependency dedupe.
+- Rollback note: Revert commit chain (`efb48eb49` + `ad0c3da0f`) if app-server TUI startup, agent status rendering, or CLI routing behavior regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -2803,4 +3063,6 @@
 ## Batch 14 Intake (Orders 201-220)
 
 - Batch 14 summary: processed 20 (orders 201-220), blocked 0, skipped 0, branch now ahead 280 / behind 328 vs upstream/main.
+- Batch 15 summary: processed 20 (orders 221-240), blocked 0, skipped 0, branch now ahead 303 / behind 329 vs upstream/main.
 - Batch 14 risk notes: order 218 required surgical conflict resolution plus local Bedrock/openai provider compatibility callsite updates; repeated ENOSPC required targeted `cargo clean` and low-footprint validation (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`), with `codex-core` test-binary linking for order 220 falling back to compile-gate validation.
+- Batch 15 risk notes: order 230 required protected-path conflict resolution in `models_manager` plus follow-up error-field completion (`216b90e45`), and order 240 required CLI conflict resolution with a compatibility follow-up (`ad0c3da0f`) after temporary ENOSPC recovery via `cargo clean`.
