@@ -29,6 +29,19 @@ pub(crate) fn convert_tools(tools: &[ToolSpec]) -> Option<Vec<BedrockTool>> {
                     input_schema: Some(freeform_schema(freeform)),
                 });
             }
+            ToolSpec::ToolSearch {
+                execution,
+                description,
+                parameters,
+            } => {
+                let schema = to_value(parameters).unwrap_or_else(|_| json!({}));
+                let description = (!description.trim().is_empty()).then_some(description.clone());
+                out.push(BedrockTool {
+                    name: execution.clone(),
+                    description,
+                    input_schema: Some(schema),
+                });
+            }
             ToolSpec::LocalShell {} => out.push(BedrockTool {
                 name: "local_shell".to_string(),
                 description: Some("Execute commands on the local shell.".to_string()),

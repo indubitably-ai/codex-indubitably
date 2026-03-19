@@ -146,6 +146,33 @@ fn convert_item(item: &ResponseItem) -> Option<BedrockMessage> {
             "web_search",
             serde_json::to_value(action).unwrap_or_else(|_| json!({})),
         )),
+        ResponseItem::ToolSearchCall {
+            call_id,
+            execution,
+            arguments,
+            ..
+        } => Some(tool_use_message(
+            call_id.as_deref().unwrap_or("tool_search"),
+            execution,
+            arguments.clone(),
+        )),
+        ResponseItem::ToolSearchOutput {
+            call_id,
+            status,
+            execution,
+            tools,
+        } => {
+            let output = serde_json::to_string(&json!({
+                "status": status,
+                "execution": execution,
+                "tools": tools,
+            }))
+            .unwrap_or_else(|_| "(tool_search output)".to_string());
+            Some(tool_result_message(
+                call_id.as_deref().unwrap_or("tool_search"),
+                output.as_str(),
+            ))
+        }
         ResponseItem::Reasoning { .. }
         | ResponseItem::GhostSnapshot { .. }
         | ResponseItem::Compaction { .. }

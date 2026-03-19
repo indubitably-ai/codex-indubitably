@@ -83,6 +83,10 @@ fn index_tools(tools: Vec<ToolSpec>) -> HashMap<String, ToolKind> {
             ToolSpec::Function(_) => {
                 map.insert(tool.name().to_string(), ToolKind::Function);
             }
+            ToolSpec::ToolSearch { execution, .. } => {
+                map.insert(execution, ToolKind::Function);
+                map.insert("tool_search".to_string(), ToolKind::Function);
+            }
             ToolSpec::Freeform(_) => {
                 map.insert(tool.name().to_string(), ToolKind::Freeform);
             }
@@ -364,6 +368,7 @@ fn function_call_item(name: &str, call_id: &str, input: &Value) -> ResponseItem 
     ResponseItem::FunctionCall {
         id: None,
         name: name.to_string(),
+        namespace: None,
         arguments: to_compact_json(input),
         call_id: call_id.to_string(),
     }
