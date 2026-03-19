@@ -44,7 +44,7 @@
 - Batch 19 start ahead/behind: ahead 372 / behind 342
 - Batch 19 end ahead/behind: ahead 394 / behind 345
 - Batch 20 start ahead/behind: ahead 395 / behind 345
-- Batch 20 end ahead/behind: ahead 418 / behind 345
+- Batch 20 end ahead/behind: ahead 419 / behind 349
 
 ## Protected Surfaces
 
@@ -4392,5 +4392,5 @@
 - Batch 18 risk notes: protected-path conflicts were resolved in `core/src/client.rs`, `core/src/models_manager/manager.rs`, `core/src/rollout/policy.rs`, `core/src/lib.rs`, and `core/src/thread_manager.rs` while preserving Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring; one follow-up fix commit (`sync(upstream): fix websocket constructor arg cleanup`) was required after order 293 to remove stale constructor arguments; repeated long-running test/link steps forced compile-gate fallbacks and one interrupted `just fix -p codex-core` run.
 - Batch 19 summary: processed 20 (orders 301-320), blocked 0, skipped 0, branch now ahead 394 / behind 345 vs upstream/main after publish.
 - Batch 19 risk notes: protected-path overlaps in orders 301/306/312/319 were integrated surgically while preserving Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware `ThreadManager` wiring; orders 317/318 hit a pre-existing `ModelClient::new` test-compile mismatch in `codex-core` tests so compile-gate validation was used; order 319 hit ENOSPC during app-server test linking and was recovered via `cargo clean` plus `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0'`; order 320 added `codex-exec-server` and required lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) from repo root.
-- Batch 20 summary: processed 20 (orders 321-340), blocked 0, skipped 0, branch now ahead 418 / behind 345 vs upstream/main after publish.
+- Batch 20 summary: processed 20 (orders 321-340), blocked 0, skipped 0, branch now ahead 419 / behind 349 vs upstream/main after publish.
 - Batch 20 risk notes: protected-path overlaps in orders 321/327/328/329/332/336/337 were resolved without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 329 required a `thread_manager.rs` merge plus a `SessionSource::Custom` canonical-trace compatibility follow-up, order 336 required a `TurnItem::HookPrompt` canonical-trace compatibility follow-up, and order 339 required an exec-server `Environment` initialization follow-up in `server/filesystem.rs`; ENOSPC recurred during orders 336 and 338 and was mitigated with `cargo clean` and low-footprint compile gates.
