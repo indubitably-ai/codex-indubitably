@@ -39,11 +39,12 @@
 - Batch 16 end ahead/behind: ahead 324 / behind 331
 - Batch 17 start ahead/behind: ahead 325 / behind 334
 - Batch 17 end ahead/behind: ahead 347 / behind 334
+- Batch 18 start ahead/behind: ahead 348 / behind 341
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 17 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 18 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -526,6 +527,46 @@
 | 279 | `2cc4ee413f8d86c38a5a46887d2fd5a18d40efbe` | cherry-pick | ported | 2 | 0.95 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-windows-sandbox --quiet | Temporarily disables private desktop flag in elevated IPC process spawn path. |
 
 | 280 | `ee756eb80f94fe018c7a07306c0e43e1a42bcfa6` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib code_mode_only_restricts_model_tools_to_exec_tools --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all code_mode_only_restricts_prompt_tools --quiet | Renames code-mode wait tool from exec_wait to wait across feature docs/spec/tests. |
+
+| 281 | `0d2ff40a58dde63e5aa8be85b5a5f19f384c354c` | cherry-pick (manual conflict resolution) | ported | 2 | 0.79 | ENOSPC on cargo test; cargo clean + CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core | Merged upstream auth-env telemetry with local Bedrock/provider wiring; preserved invariants |
+
+| 282 | `43ee72a9b9c9c88dccc86e1e50901ac90dadcc37` | cherry-pick | ported | 2 | 0.84 | Switched from long-running cargo test to CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server | Applied cleanly; snapshot files included |
+
+| 283 | `1a9555eda98cc561b4beec51fd1c577b0b068e2a` | cherry-pick (manual conflict resolution) | ported | 2 | 0.83 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet (134 passed) | Resolved rollout policy conflict by dropping removed remote-skill events while retaining existing PlanUpdate persistence behavior |
+
+| 284 | `c6ab4ee537e5b118a20e9e0d3e0c0023cae2d982` | cherry-pick | ported | 2 | 0.72 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server-protocol --quiet; cargo check -p codex-app-server --quiet | Protected paths touched; preserved local config/provider behavior. write-config-schema attempted but blocked by ENOSPC |
+
+| 285 | `98be562fd393b23250090e36b43012ed69000a69` | cherry-pick | ported | 2 | 0.77 | Reatime test filter was long-running; fallback CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet | Applied cleanly |
+
+| 286 | `0d1539e74c28c7de9a6c471c7e96d77f15dfcd6e` | cherry-pick | ported | 2 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-linux-sandbox --quiet; cargo check -p codex-app-server --quiet | Protected config paths touched; retained local overlay behavior |
+
+| 287 | `fc75d07504ae816c57ec8d3102a45137e89c535f` | cherry-pick | ported | 2 | 0.86 | python3 -m compileall -q sdk/python/src/codex_app_server sdk/python/examples | Non-Rust SDK/docs/examples expansion; compileall passed |
+
+| 288 | `a5d3114e97166cab28bf5806204314f9ade1dbdc` | cherry-pick | ported | 2 | 0.76 | Plugin test filter timed out; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet && cargo check -p codex-core --quiet | Protected app-server path touched; preserved local provider/auth invariants |
+
+| 289 | `19b887128e6b9ddc1aa134a7bdd481858473b663` | cherry-pick | ported | 2 | 0.79 | connection_handling_websocket test filter timed out; fallback CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet | Protected app-server transport path touched; behavior preserved |
+
+| 290 | `83a60fdb94d5ee074a9ec33a48699d576a89c4a1` | cherry-pick | ported | 2 | 0.81 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-app-server -p codex-environment -p codex-utils-image --quiet | Dependency change handling completed; protected app-server paths preserved |
+
+| 291 | `6fe8a05dcbeb62df3d9cb0388f7dd9364488f5ca` | cherry-pick | ported | 2 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet | Applied cleanly |
+
+| 292 | `d950543e6559db52855a718c96f7577922411fcd` | cherry-pick | ported | 2 | 0.83 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-windows-sandbox --quiet | Applied cleanly |
+
+| 293 | `770616414a51fa179ce4cef10f7f8df838d3f46f` | cherry-pick (manual compile fix) | ported | 2 | 0.75 | Initial websocket_fallback test revealed compile break; fixed stale constructor arg in core/src/client.rs, then CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-app-server --quiet | Reviewed provider/websocket diffs to preserve Bedrock/provider invariants; protected app-server path touched |
+
+| 294 | `3ce879c64610cae8e460d3e8c126e57acbeb437d` | cherry-pick | ported | 2 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui -p codex-tui-app-server --quiet | Applied cleanly after restoring clean tree |
+
+| 295 | `226241f035de7df4946ba3866fee9e22f83a9f99` | cherry-pick | ported | 2 | 0.74 | Attempted CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo run -p codex-core --bin codex-write-config-schema --quiet (no resulting diff); cargo check -p codex-core -p codex-app-server -p codex-tui -p codex-tui-app-server --quiet | Protected config/app-server paths touched; guardian snapshots updated |
+
+| 296 | `6fef4216546cc9b8880f1616e349e77277b50ba3` | cherry-pick (manual conflict resolution) | ported | 2 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet (134 passed); cargo check -p codex-core -p codex-hooks --quiet | Resolved core/lib conflict by keeping both indubitably_auth and upstream hook_runtime modules |
+
+| 297 | `a3613035f32a45146297a74e058a8c70b91c56c2` | cherry-pick | ported | 2 | 0.95 | N/A (workflow-only change) | No runtime code touched |
+
+| 298 | `84f4e7b39d17fea6d28c98bc748652ea4b279a14` | cherry-pick (manual conflict resolution) | ported | 2 | 0.77 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet | Resolved thread_manager conflict by preserving upstream inherited exec-policy args and local provider/thread wiring flow |
+
+| 299 | `40a7d1d15b446991094c5ecfbb1d0f21f2d9ad40` | cherry-pick | ported | 2 | 0.74 | Attempted CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo run -p codex-core --bin codex-write-config-schema --quiet (no resulting diff); cargo check -p codex-core --quiet | Protected config paths touched; config schema in commit remained consistent |
+
+| 300 | `0f9484dc8a7ad0962a808892924bb160e9466ad9` | cherry-pick | ported | 2 | 0.83 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-artifacts -p codex-core --quiet | Dependency update handled with bazel lock verification |
 
 ## Decision Briefs
 
@@ -3157,6 +3198,226 @@
 - Validation evidence: Both targeted tests passed: code_mode_only_restricts_model_tools_to_exec_tools and code_mode_only_restricts_prompt_tools.
 - Rollback note: Revert commit d9e15ce82 if code-mode tool naming compatibility regresses.
 
+### Commit `0d2ff40a58dde63e5aa8be85b5a5f19f384c354c`
+
+- Upstream intent: Add auth env observability (#14905)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Merged upstream auth-env telemetry with local Bedrock/provider wiring; preserved invariants
+- Strategy selected: cherry-pick (manual conflict resolution)
+- Confidence: 0.79
+- Validation evidence: ENOSPC on cargo test; cargo clean + CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core
+- Rollback note: Revert commit 0d2ff40a58dde63e5aa8be85b5a5f19f384c354c if regression is detected.
+
+### Commit `43ee72a9b9c9c88dccc86e1e50901ac90dadcc37`
+
+- Upstream intent: fix(tui): implement /mcp inventory for tui_app_server (#14931)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Applied cleanly; snapshot files included
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: Switched from long-running cargo test to CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui-app-server
+- Rollback note: Revert commit 43ee72a9b9c9c88dccc86e1e50901ac90dadcc37 if regression is detected.
+
+### Commit `1a9555eda98cc561b4beec51fd1c577b0b068e2a`
+
+- Upstream intent: Cleanup skills/remote/xxx endpoints. (#14977)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Resolved rollout policy conflict by dropping removed remote-skill events while retaining existing PlanUpdate persistence behavior
+- Strategy selected: cherry-pick (manual conflict resolution)
+- Confidence: 0.83
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet (134 passed)
+- Rollback note: Revert commit 1a9555eda98cc561b4beec51fd1c577b0b068e2a if regression is detected.
+
+### Commit `c6ab4ee537e5b118a20e9e0d3e0c0023cae2d982`
+
+- Upstream intent: Gate realtime audio interruption logic to v2 (#14984)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected paths touched; preserved local config/provider behavior. write-config-schema attempted but blocked by ENOSPC
+- Strategy selected: cherry-pick
+- Confidence: 0.72
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server-protocol --quiet; cargo check -p codex-app-server --quiet
+- Rollback note: Revert commit c6ab4ee537e5b118a20e9e0d3e0c0023cae2d982 if regression is detected.
+
+### Commit `98be562fd393b23250090e36b43012ed69000a69`
+
+- Upstream intent: Unify realtime shutdown in core (#14902)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Applied cleanly
+- Strategy selected: cherry-pick
+- Confidence: 0.77
+- Validation evidence: Reatime test filter was long-running; fallback CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet
+- Rollback note: Revert commit 98be562fd393b23250090e36b43012ed69000a69 if regression is detected.
+
+### Commit `0d1539e74c28c7de9a6c471c7e96d77f15dfcd6e`
+
+- Upstream intent: fix(linux-sandbox): prefer system /usr/bin/bwrap when available (#14963)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected config paths touched; retained local overlay behavior
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-linux-sandbox --quiet; cargo check -p codex-app-server --quiet
+- Rollback note: Revert commit 0d1539e74c28c7de9a6c471c7e96d77f15dfcd6e if regression is detected.
+
+### Commit `fc75d07504ae816c57ec8d3102a45137e89c535f`
+
+- Upstream intent: Add Python SDK public API and examples (#14446)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Non-Rust SDK/docs/examples expansion; compileall passed
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: python3 -m compileall -q sdk/python/src/codex_app_server sdk/python/examples
+- Rollback note: Revert commit fc75d07504ae816c57ec8d3102a45137e89c535f if regression is detected.
+
+### Commit `a5d3114e97166cab28bf5806204314f9ade1dbdc`
+
+- Upstream intent: feat: Add product-aware plugin policies and clean up manifest naming (#14993)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected app-server path touched; preserved local provider/auth invariants
+- Strategy selected: cherry-pick
+- Confidence: 0.76
+- Validation evidence: Plugin test filter timed out; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet && cargo check -p codex-core --quiet
+- Rollback note: Revert commit a5d3114e97166cab28bf5806204314f9ade1dbdc if regression is detected.
+
+### Commit `19b887128e6b9ddc1aa134a7bdd481858473b663`
+
+- Upstream intent: app-server: reject websocket requests with Origin headers (#14995)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected app-server transport path touched; behavior preserved
+- Strategy selected: cherry-pick
+- Confidence: 0.79
+- Validation evidence: connection_handling_websocket test filter timed out; fallback CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-app-server --quiet
+- Rollback note: Revert commit 19b887128e6b9ddc1aa134a7bdd481858473b663 if regression is detected.
+
+### Commit `83a60fdb94d5ee074a9ec33a48699d576a89c4a1`
+
+- Upstream intent: Add FS abstraction and use in view_image (#14960)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Dependency change handling completed; protected app-server paths preserved
+- Strategy selected: cherry-pick
+- Confidence: 0.81
+- Validation evidence: just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-app-server -p codex-environment -p codex-utils-image --quiet
+- Rollback note: Revert commit 83a60fdb94d5ee074a9ec33a48699d576a89c4a1 if regression is detected.
+
+### Commit `6fe8a05dcbeb62df3d9cb0388f7dd9364488f5ca`
+
+- Upstream intent: fix: honor active permission profiles in sandbox debug (#14293)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Applied cleanly
+- Strategy selected: cherry-pick
+- Confidence: 0.84
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet
+- Rollback note: Revert commit 6fe8a05dcbeb62df3d9cb0388f7dd9364488f5ca if regression is detected.
+
+### Commit `d950543e6559db52855a718c96f7577922411fcd`
+
+- Upstream intent: feat: support restricted ReadOnlyAccess in elevated Windows sandbox (#14610)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Applied cleanly
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-windows-sandbox --quiet
+- Rollback note: Revert commit d950543e6559db52855a718c96f7577922411fcd if regression is detected.
+
+### Commit `770616414a51fa179ce4cef10f7f8df838d3f46f`
+
+- Upstream intent: Prefer websockets when providers support them (#13592)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Reviewed provider/websocket diffs to preserve Bedrock/provider invariants; protected app-server path touched
+- Strategy selected: cherry-pick (manual compile fix)
+- Confidence: 0.75
+- Validation evidence: Initial websocket_fallback test revealed compile break; fixed stale constructor arg in core/src/client.rs, then CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-app-server --quiet
+- Rollback note: Revert commit 770616414a51fa179ce4cef10f7f8df838d3f46f if regression is detected.
+
+### Commit `3ce879c64610cae8e460d3e8c126e57acbeb437d`
+
+- Upstream intent: Handle realtime conversation end in the TUI (#14903)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Applied cleanly after restoring clean tree
+- Strategy selected: cherry-pick
+- Confidence: 0.82
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-tui -p codex-tui-app-server --quiet
+- Rollback note: Revert commit 3ce879c64610cae8e460d3e8c126e57acbeb437d if regression is detected.
+
+### Commit `226241f035de7df4946ba3866fee9e22f83a9f99`
+
+- Upstream intent: Use workspace requirements for guardian prompt override (#14727)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected config/app-server paths touched; guardian snapshots updated
+- Strategy selected: cherry-pick
+- Confidence: 0.74
+- Validation evidence: Attempted CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo run -p codex-core --bin codex-write-config-schema --quiet (no resulting diff); cargo check -p codex-core -p codex-app-server -p codex-tui -p codex-tui-app-server --quiet
+- Rollback note: Revert commit 226241f035de7df4946ba3866fee9e22f83a9f99 if regression is detected.
+
+### Commit `6fef4216546cc9b8880f1616e349e77277b50ba3`
+
+- Upstream intent: [hooks] userpromptsubmit - hook before user's prompt is executed (#14626)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Resolved core/lib conflict by keeping both indubitably_auth and upstream hook_runtime modules
+- Strategy selected: cherry-pick (manual conflict resolution)
+- Confidence: 0.78
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-app-server-protocol --quiet (134 passed); cargo check -p codex-core -p codex-hooks --quiet
+- Rollback note: Revert commit 6fef4216546cc9b8880f1616e349e77277b50ba3 if regression is detected.
+
+### Commit `a3613035f32a45146297a74e058a8c70b91c56c2`
+
+- Upstream intent: Pin setup-zig GitHub Action to immutable SHA (#14858)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: No runtime code touched
+- Strategy selected: cherry-pick
+- Confidence: 0.95
+- Validation evidence: N/A (workflow-only change)
+- Rollback note: Revert commit a3613035f32a45146297a74e058a8c70b91c56c2 if regression is detected.
+
+### Commit `84f4e7b39d17fea6d28c98bc748652ea4b279a14`
+
+- Upstream intent: fix(subagents) share execpolicy by default (#13702)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Resolved thread_manager conflict by preserving upstream inherited exec-policy args and local provider/thread wiring flow
+- Strategy selected: cherry-pick (manual conflict resolution)
+- Confidence: 0.77
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core --quiet
+- Rollback note: Revert commit 84f4e7b39d17fea6d28c98bc748652ea4b279a14 if regression is detected.
+
+### Commit `40a7d1d15b446991094c5ecfbb1d0f21f2d9ad40`
+
+- Upstream intent: [plugins] Support configuration tool suggest allowlist. (#15022)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Protected config paths touched; config schema in commit remained consistent
+- Strategy selected: cherry-pick
+- Confidence: 0.74
+- Validation evidence: Attempted CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo run -p codex-core --bin codex-write-config-schema --quiet (no resulting diff); cargo check -p codex-core --quiet
+- Rollback note: Revert commit 40a7d1d15b446991094c5ecfbb1d0f21f2d9ad40 if regression is detected.
+
+### Commit `0f9484dc8a7ad0962a808892924bb160e9466ad9`
+
+- Upstream intent: feat: adapt artifacts to new packaging and 2.5.6 (#14947)
+- Local overlays touched: Reviewed against Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring invariants.
+- Invariants checked: Preserve Indubitably auth behavior; preserve Bedrock runtime/provider behavior; no ThreadManager provider wiring regression.
+- Risk factors: Dependency update handled with bazel lock verification
+- Strategy selected: cherry-pick
+- Confidence: 0.83
+- Validation evidence: just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-artifacts -p codex-core --quiet
+- Rollback note: Revert commit 0f9484dc8a7ad0962a808892924bb160e9466ad9 if regression is detected.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -3602,3 +3863,5 @@
 - Batch 16 risk notes: order 248 required surgical conflict resolution in `core/src/thread_manager.rs` and `tui/src/lib.rs` to preserve local provider-aware startup behavior during broad lint churn; orders 250 and 259 required ENOSPC recovery (`cargo clean`) with compile-gate fallback where test-binary linking exceeded local disk capacity.
 - Batch 17 summary: processed 20 (orders 261-280), blocked 0, skipped 0, branch now ahead 345 / behind 334 vs upstream/main before publish.
 - Batch 17 risk notes: order 266 touched protected config/model surfaces and required local compatibility follow-ups (`ModelClient::new` provider-id callsites plus `websocket_connect_timeout_ms` struct initializers) while preserving Bedrock defaults; order 276 required a `thread_manager.rs` conflict resolution that kept provider-aware thread wiring intact; repeated ENOSPC required multiple `cargo clean` cycles and compile-gate fallbacks for orders 265/268/272/275; order 271 code_mode_yield test failed in this runner with an unsupported custom tool call output, so compile-gate validation was used.
+- Batch 18 summary: processed 20 (orders 281-300), blocked 0, skipped 0, branch now ahead 369 / behind 341 vs upstream/main before publish.
+- Batch 18 risk notes: protected-path conflicts were resolved in `core/src/client.rs`, `core/src/models_manager/manager.rs`, `core/src/rollout/policy.rs`, `core/src/lib.rs`, and `core/src/thread_manager.rs` while preserving Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring; one follow-up fix commit (`sync(upstream): fix websocket constructor arg cleanup`) was required after order 293 to remove stale constructor arguments; repeated long-running test/link steps forced compile-gate fallbacks and one interrupted `just fix -p codex-core` run.
