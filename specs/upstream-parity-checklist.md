@@ -355,6 +355,46 @@
 
 | 160 | `d3e668053161c3f916fab3b6b611de6acd07af16` | cherry-pick+surgical | ported | 5 | 0.90 | cargo test -p codex-app-server --lib turn_start_jsonrpc_span_parents_core_turn_spans --quiet | Flaky tracing test now asserts core invariant with cleaner shutdown handling. |
 
+| 201 | `d58620c852c5ff5cfd65959d80de265c225e59ba` | cherry-pick | ported | 3 | 0.93 | cargo test -p codex-tui multi_agent_enable_prompt --quiet | TUI naming-only update. |
+
+| 202 | `914f7c73175b038b4d396219754fe21ba6678af2` | cherry-pick+surgical | ported | 6 | 0.87 | cargo test -p codex-core requirements_disabled_connector_overrides_enabled_connector --quiet; cargo test -p codex-core cloud_requirements_disable_connector_overrides_user_apps_config --quiet; cargo test -p codex-tui set_connector_mentions_skips_disabled_connectors --quiet | Config + connector override behavior aligned. |
+
+| 203 | `014e19510d9fb4bc09c3b8e90fb05d7f3aa39700` | cherry-pick+surgical | ported | 7 | 0.84 | cargo test -p codex-core --lib get_model_info_tracks_fallback_usage --quiet; cargo test -p codex-app-server --lib turn_start_jsonrpc_span_parents_core_turn_spans --quiet; cargo test -p codex-protocol --quiet | Resolved import conflict in models manager. |
+
+| 204 | `ef37d313c6c0c00b91f2ea8a0641d4deace1d67b` | cherry-pick | ported | 4 | 0.92 | cargo test -p codex-utils-pty --quiet; cargo test -p codex-shell-escalation --quiet | Unified-exec zsh-fork FD handling update. |
+
+| 205 | `477a2dd3458be962178abc891422215bf3c22f52` | cherry-pick | ported | 5 | 0.90 | cargo test -p codex-core --lib code_mode_only_requires_code_mode --quiet; cargo test -p codex-core --lib code_mode_only_restricts_model_tools_to_exec_tools --quiet; cargo test -p codex-core --test all code_mode_only_restricts_prompt_tools --quiet; cargo test -p codex-core --test all code_mode_only_can_call_nested_tools --quiet | New code_mode_only feature integrated. |
+
+| 206 | `6720caf778acd9a9ec5f8eb838b48e1a4ce944e8` | cherry-pick | ported | 3 | 0.93 | cargo test -p codex-tui clipboard_text --quiet | WSL clipboard OSC52 support. |
+
+| 207 | `cfd97b36da76a17db407b2d9653ed993636e0a30` | cherry-pick | ported | 4 | 0.91 | cargo test -p codex-core --lib wait_agent --quiet | Tool rename wait -> wait_agent. |
+
+| 208 | `36dfb844277e79793766f96305c9633f90bc043e` | cherry-pick+surgical | ported | 6 | 0.82 | cargo check -p codex-core --quiet | Feature-flag stabilization with cross-commit dependency on stale helper references. |
+
+| 209 | `f8f82bfc2b558229cc4f7ef6245c474ee8b389c7` | cherry-pick+surgical | ported | 8 | 0.80 | just write-app-server-schema; just bazel-lock-update; just bazel-lock-check; cargo test -p codex-app-server-protocol --quiet; cargo test -p codex-app-server fs_methods_reject_relative_paths --quiet | High-risk app-server v2 filesystem API surface update. |
+
+| 210 | `cb7d8f45a1393d71b333aea64123227028ae535f` | cherry-pick | ported | 5 | 0.86 | cargo test -p codex-core --test all search_tool --quiet; cargo test -p codex-core --test all plugins --quiet; cargo check -p codex-core --quiet | MCP tool-name normalization for code-mode safety. |
+
+| 211 | `e3cbf913e801a611f0b17fa14e9a77865244ba8f` | cherry-pick | ported | 4 | 0.91 | cargo test -p codex-core --test all prompt_tools_are_consistent_across_requests --quiet; cargo check -p codex-core --quiet | Follow-up test expectation fix for wait_agent rename. |
+
+| 212 | `bc24017d64829d0b97b8bc6ed529a389e1e8bc1b` | cherry-pick+surgical | ported | 8 | 0.79 | just write-app-server-schema; just write-config-schema; cargo test -p codex-app-server-protocol --quiet; cargo test -p codex-core --test all permissions_messages --quiet; cargo test -p codex-app-server turn_start --quiet; cargo check -p codex-tui --quiet | Smart Approvals guardian flow integrated across protected surfaces. |
+
+| 213 | `467e6216bbfd2ffb1dbdeeffda248cd040274131` | cherry-pick | ported | 3 | 0.94 | cargo test -p codex-core --lib code_mode_only_restricts_model_tools_to_exec_tools --quiet | Stale helper symbol cleanup. |
+
+| 214 | `9a44a7e499f18eaed5d06aabb5acf9184deb06b8` | cherry-pick | ported | 5 | 0.89 | cargo test -p codex-hooks --quiet; cargo test -p codex-core --test all hooks --quiet | Hooks stop/continuation mechanics adjusted. |
+
+| 215 | `e9050e3e649a0d659208f8fc3ed9082f6b9ec4c1` | cherry-pick | ported | 4 | 0.92 | cargo test -p codex-api parse_realtime_v2_input_audio_transcription_delta_event --quiet | Realtime transcription payload fix. |
+
+| 216 | `7fa52013653465661441ac016886ee843855a08c` | cherry-pick | ported | 4 | 0.90 | cargo test -p codex-api parse_realtime_v2_input_audio_transcription_delta_event --quiet | Parser-specific realtime voice enum alignment. |
+
+| 217 | `b859a98e0f017f374aaff35c9e2e44f849222622` | cherry-pick | ported | 5 | 0.90 | cargo test -p codex-core --test all unified_exec --quiet; cargo test -p codex-core --lib unified_exec --quiet | zsh-fork unified-exec state explicitness update. |
+
+| 218 | `4b9d5c8c1bdb6d9cfd43570e0b8e88c88b54d823` | cherry-pick+surgical | ported | 8 | 0.81 | cargo test -p codex-core new_uses_configured_openai_provider_for_model_refresh --quiet; cargo test -p codex-core built_in_model_providers_include_bedrock --quiet; cargo test -p codex-core bedrock_provider_stream_returns_auth_error_without_token --quiet; cargo test -p codex-core bedrock_provider_stream_without_token_returns_auth_error --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui chatwidget --quiet | Manual conflict resolution plus local Bedrock/openai provider compatibility callsite updates. |
+
+| 219 | `69c8a1ef9e7c5a3c447ea8b0f01ec5d3a068693d` | cherry-pick | ported | 4 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib guardian --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui chatwidget --quiet | Windows CI assertion stabilization in tests. |
+
+| 220 | `bbd329a81233a8bb35f5ced9aacf93b57f2f9999` | cherry-pick+surgical | ported | 7 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Turn-context replay/backtracking reconstruction fix applied; test-linking environment constrained by ENOSPC. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -2105,6 +2145,226 @@
 - Validation evidence: Focused app-server tracing test passed.
 - Rollback note: Revert this sync commit if tracing test should enforce stricter span-chain expectations.
 
+### Commit `d58620c852c5ff5cfd65959d80de265c225e59ba`
+
+- Upstream intent: Use subagent naming in TUI prompt path.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: UI copy-level update in multi-agent flow.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.93
+- Validation evidence: 2 tests passed in codex-tui filter.
+- Rollback note: Revert if subagent naming regresses in TUI.
+
+### Commit `914f7c73175b038b4d396219754fe21ba6678af2`
+
+- Upstream intent: Honor requirements.toml app settings overrides for connector gating.
+- Local overlays touched: Touches core config and connector behavior surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Override precedence across requirements/config apps.
+- Strategy selected: Cherry-pick with local overlay review.
+- Confidence: 0.87
+- Validation evidence: Targeted core+tui tests passed; one extra filter matched 0 tests.
+- Rollback note: Revert if requirements override precedence regresses.
+
+### Commit `014e19510d9fb4bc09c3b8e90fb05d7f3aa39700`
+
+- Upstream intent: Add model fallback accounting and related protocol/app-server coverage.
+- Local overlays touched: Core + protocol/app-server overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Conflict resolution in shared manager imports.
+- Strategy selected: Cherry-pick with conflict fix preserving local constants/imports.
+- Confidence: 0.84
+- Validation evidence: Core/app-server/protocol targeted tests passed (protocol 114 passed).
+- Rollback note: Revert if model fallback accounting or spans regress.
+
+### Commit `ef37d313c6c0c00b91f2ea8a0641d4deace1d67b`
+
+- Upstream intent: Preserve zsh-fork escalation file descriptors in unified-exec path.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Process IO inheritance semantics.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.92
+- Validation evidence: codex-utils-pty and codex-shell-escalation suites passed.
+- Rollback note: Revert if zsh-fork escalation IO breaks.
+
+### Commit `477a2dd3458be962178abc891422215bf3c22f52`
+
+- Upstream intent: Add code_mode_only feature gates for tool/runtime behavior.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Tool exposure constraints and feature gating.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.90
+- Validation evidence: 4 targeted codex-core tests passed.
+- Rollback note: Revert if code_mode_only gating behavior regresses.
+
+### Commit `6720caf778acd9a9ec5f8eb838b48e1a4ce944e8`
+
+- Upstream intent: Add WSL support for slash-copy OSC52 behavior.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Platform-specific clipboard path.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.93
+- Validation evidence: 2 clipboard tests passed.
+- Rollback note: Revert if WSL slash-copy behavior regresses.
+
+### Commit `cfd97b36da76a17db407b2d9653ed993636e0a30`
+
+- Upstream intent: Rename multi-agent wait tool to wait_agent.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Tool-name migration and caller compatibility.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.91
+- Validation evidence: 7 codex-core lib tests passed; integration filter matched 0 tests.
+- Rollback note: Revert if wait_agent invocation compatibility regresses.
+
+### Commit `36dfb844277e79793766f96305c9633f90bc043e`
+
+- Upstream intent: Stabilize multi-agent feature flag semantics.
+- Local overlays touched: No direct protected overlap; interacted with nearby local test deltas.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Cross-commit dependency surfaced stale helper symbol during validation.
+- Strategy selected: Cherry-pick with immediate compile-gate and follow-on fix in next commit.
+- Confidence: 0.82
+- Validation evidence: codex-core compile gate passed.
+- Rollback note: Revert if multi-agent flag defaults regress.
+
+### Commit `f8f82bfc2b558229cc4f7ef6245c474ee8b389c7`
+
+- Upstream intent: Add app-server v2 filesystem APIs and related schema surface.
+- Local overlays touched: Protected-path overlap: app-server/app-server-protocol/schema.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Wire-shape/API expansion and schema regeneration.
+- Strategy selected: Cherry-pick with protected-path review and schema/lock regeneration.
+- Confidence: 0.80
+- Validation evidence: Protocol suite passed (123); targeted app-server fs test passed after ENOSPC recovery.
+- Rollback note: Revert if v2 filesystem RPC contracts regress.
+
+### Commit `cb7d8f45a1393d71b333aea64123227028ae535f`
+
+- Upstream intent: Normalize MCP tool names for code-mode safe filtering.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Tool-name matching and filtering logic.
+- Strategy selected: Straight cherry-pick with compile fallback for unrelated stale helper error.
+- Confidence: 0.86
+- Validation evidence: search_tool/plugins tests passed; compile gate passed.
+- Rollback note: Revert if MCP tool filtering/name normalization regresses.
+
+### Commit `e3cbf913e801a611f0b17fa14e9a77865244ba8f`
+
+- Upstream intent: Fix wait_agent test expectations in core.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Consistency assertions after tool rename.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.91
+- Validation evidence: Targeted prompt-tools test and compile gate passed.
+- Rollback note: Revert if prompt-tool consistency assertions regress.
+
+### Commit `bc24017d64829d0b97b8bc6ed529a389e1e8bc1b`
+
+- Upstream intent: Add Smart Approvals guardian review flow and config/protocol wiring.
+- Local overlays touched: Protected-path overlap: core config, app-server protocol, app-server.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Policy/wire/config interaction and UI guardrails.
+- Strategy selected: Cherry-pick with protected-path review and schema regeneration.
+- Confidence: 0.79
+- Validation evidence: Protocol/core/app-server targeted tests passed; tui compile gate used after ENOSPC on full test.
+- Rollback note: Revert if Smart Approvals policy prompts or wire behavior regress.
+
+### Commit `467e6216bbfd2ffb1dbdeeffda248cd040274131`
+
+- Upstream intent: Fix stale create_wait_tool reference.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Test-helper symbol consistency.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.94
+- Validation evidence: Targeted codex-core lib test passed.
+- Rollback note: Revert if helper symbol mismatches reappear.
+
+### Commit `9a44a7e499f18eaed5d06aabb5acf9184deb06b8`
+
+- Upstream intent: Improve hooks stop continuation mechanics.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Hook lifecycle semantics.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.89
+- Validation evidence: codex-hooks suite passed; core hooks filter passed.
+- Rollback note: Revert if hook stop/continue sequencing regresses.
+
+### Commit `e9050e3e649a0d659208f8fc3ed9082f6b9ec4c1`
+
+- Upstream intent: Fix realtime transcription tools payload handling.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Realtime event payload parsing.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.92
+- Validation evidence: Targeted codex-api parser test passed.
+- Rollback note: Revert if realtime transcription payload parsing regresses.
+
+### Commit `7fa52013653465661441ac016886ee843855a08c`
+
+- Upstream intent: Use parser-specific realtime voice enum.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Enum wire mapping in realtime parser.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.90
+- Validation evidence: Targeted parser test passed; secondary e2e filter matched 0 tests.
+- Rollback note: Revert if realtime voice enum parsing regresses.
+
+### Commit `b859a98e0f017f374aaff35c9e2e44f849222622`
+
+- Upstream intent: Make unified-exec zsh-fork state explicit.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Unified-exec state lifecycle semantics.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.90
+- Validation evidence: core unified_exec tests passed (28 integration, 37 lib).
+- Rollback note: Revert if unified-exec zsh-fork state handling regresses.
+
+### Commit `4b9d5c8c1bdb6d9cfd43570e0b8e88c88b54d823`
+
+- Upstream intent: Add openai_base_url config override for built-in provider.
+- Local overlays touched: Protected-path overlap: core config/provider + app-server test/config surfaces.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Provider construction signature changes with local Bedrock overlay interactions.
+- Strategy selected: Cherry-pick with surgical conflict resolution and compatibility callsite fixes.
+- Confidence: 0.81
+- Validation evidence: Core targeted tests passed; app-server compile gate passed; tui chatwidget filter passed.
+- Rollback note: Revert if openai_base_url override or provider selection behavior regresses.
+
+### Commit `69c8a1ef9e7c5a3c447ea8b0f01ec5d3a068693d`
+
+- Upstream intent: Fix Windows CI assertions for guardian and Smart Approvals tests.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: Test assertion portability across platforms.
+- Strategy selected: Straight cherry-pick.
+- Confidence: 0.90
+- Validation evidence: Core guardian lib filter and tui chatwidget filter passed.
+- Rollback note: Revert if guardian/Smart Approvals test assertions regress on Windows.
+
+### Commit `bbd329a81233a8bb35f5ced9aacf93b57f2f9999`
+
+- Upstream intent: Fix turn context reconstruction after backtracking.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Indubitably auth and Bedrock runtime/provider behavior preserved.
+- Risk factors: History reconstruction correctness during rollback/backtracking.
+- Strategy selected: Straight cherry-pick with compile-gate validation in this runner.
+- Confidence: 0.78
+- Validation evidence: Repeated ENOSPC while linking codex-core test binary; compile gate passed.
+- Rollback note: Revert if rollback/backtracking context reconstruction regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -2539,3 +2799,8 @@
 
 - Batch 13 summary: processed 20 (orders 181-200), blocked 0, skipped 0, branch now ahead 259 / behind 327 vs upstream/main.
 - Batch 13 risk notes: commit 198 required manual conflict resolution in `app-server`/`tui` files to preserve local provider-aware `ThreadManager` construction; ENOSPC recurred during schema generation and was mitigated by `cargo clean` plus low-footprint build flags.
+
+## Batch 14 Intake (Orders 201-220)
+
+- Batch 14 summary: processed 20 (orders 201-220), blocked 0, skipped 0, branch now ahead 280 / behind 328 vs upstream/main.
+- Batch 14 risk notes: order 218 required surgical conflict resolution plus local Bedrock/openai provider compatibility callsite updates; repeated ENOSPC required targeted `cargo clean` and low-footprint validation (`CARGO_INCREMENTAL=0`, `RUSTFLAGS='-C debuginfo=0'`), with `codex-core` test-binary linking for order 220 falling back to compile-gate validation.
