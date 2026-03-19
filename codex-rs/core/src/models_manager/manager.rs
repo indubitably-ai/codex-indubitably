@@ -569,6 +569,8 @@ impl ModelsManager {
                 url: Some(url),
                 cf_ray: None,
                 request_id: None,
+                identity_authorization_error: None,
+                identity_error_code: None,
             }));
         }
 
