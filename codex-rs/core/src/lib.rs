@@ -47,6 +47,7 @@ mod flags;
 pub mod git_info;
 mod guardian;
 mod indubitably_auth;
+mod hook_runtime;
 pub mod instructions;
 pub mod landlock;
 pub mod mcp;
