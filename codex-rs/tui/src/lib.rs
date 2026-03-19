@@ -142,6 +142,7 @@ mod voice {
     use std::sync::Mutex;
     use std::sync::atomic::AtomicBool;
     use std::sync::atomic::AtomicU16;
+    use std::sync::atomic::AtomicUsize;
 
     pub struct RecordedAudio {
         pub data: Vec<i16>,
@@ -160,7 +161,11 @@ mod voice {
             Err("voice input is unavailable in this build".to_string())
         }
 
-        pub fn start_realtime(_config: &Config, _tx: AppEventSender) -> Result<Self, String> {
+        pub fn start_realtime(
+            _config: &Config,
+            _tx: AppEventSender,
+            _playback_queued_samples: Arc<AtomicUsize>,
+        ) -> Result<Self, String> {
             Err("voice input is unavailable in this build".to_string())
         }
 
@@ -200,7 +205,10 @@ mod voice {
     }
 
     impl RealtimeAudioPlayer {
-        pub(crate) fn start(_config: &Config) -> Result<Self, String> {
+        pub(crate) fn start(
+            _config: &Config,
+            _queued_samples: Arc<AtomicUsize>,
+        ) -> Result<Self, String> {
             Err("voice output is unavailable in this build".to_string())
         }
 
