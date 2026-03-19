@@ -2467,6 +2467,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
+    let environment = Arc::new(codex_environment::Environment);
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
@@ -2522,6 +2523,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         code_mode_service: crate::tools::code_mode::CodeModeService::new(
             config.js_repl_node_path.clone(),
         ),
+        environment: Arc::clone(&environment),
     };
     let js_repl = Arc::new(JsReplHandle::with_node_path(
         config.js_repl_node_path.clone(),
@@ -2541,6 +2543,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         model_info,
         &models_manager,
         None,
+        environment,
         "turn_id".to_string(),
         Arc::clone(&js_repl),
         skills_outcome,
@@ -3260,6 +3263,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         true,
     ));
     let network_approval = Arc::new(NetworkApprovalService::default());
+    let environment = Arc::new(codex_environment::Environment);
 
     let file_watcher = Arc::new(FileWatcher::noop());
     let services = SessionServices {
@@ -3315,6 +3319,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         code_mode_service: crate::tools::code_mode::CodeModeService::new(
             config.js_repl_node_path.clone(),
         ),
+        environment: Arc::clone(&environment),
     };
     let js_repl = Arc::new(JsReplHandle::with_node_path(
         config.js_repl_node_path.clone(),
@@ -3334,6 +3339,7 @@ pub(crate) async fn make_session_and_context_with_dynamic_tools_and_rx(
         model_info,
         &models_manager,
         None,
+        environment,
         "turn_id".to_string(),
         Arc::clone(&js_repl),
         skills_outcome,
