@@ -40,6 +40,7 @@
 - Batch 17 start ahead/behind: ahead 325 / behind 334
 - Batch 17 end ahead/behind: ahead 347 / behind 334
 - Batch 18 start ahead/behind: ahead 348 / behind 341
+- Batch 18 end ahead/behind: ahead 370 / behind 342
 
 ## Protected Surfaces
 
@@ -3863,5 +3864,5 @@
 - Batch 16 risk notes: order 248 required surgical conflict resolution in `core/src/thread_manager.rs` and `tui/src/lib.rs` to preserve local provider-aware startup behavior during broad lint churn; orders 250 and 259 required ENOSPC recovery (`cargo clean`) with compile-gate fallback where test-binary linking exceeded local disk capacity.
 - Batch 17 summary: processed 20 (orders 261-280), blocked 0, skipped 0, branch now ahead 345 / behind 334 vs upstream/main before publish.
 - Batch 17 risk notes: order 266 touched protected config/model surfaces and required local compatibility follow-ups (`ModelClient::new` provider-id callsites plus `websocket_connect_timeout_ms` struct initializers) while preserving Bedrock defaults; order 276 required a `thread_manager.rs` conflict resolution that kept provider-aware thread wiring intact; repeated ENOSPC required multiple `cargo clean` cycles and compile-gate fallbacks for orders 265/268/272/275; order 271 code_mode_yield test failed in this runner with an unsupported custom tool call output, so compile-gate validation was used.
-- Batch 18 summary: processed 20 (orders 281-300), blocked 0, skipped 0, branch now ahead 369 / behind 341 vs upstream/main before publish.
+- Batch 18 summary: processed 20 (orders 281-300), blocked 0, skipped 0, branch now ahead 370 / behind 342 vs upstream/main after publish.
 - Batch 18 risk notes: protected-path conflicts were resolved in `core/src/client.rs`, `core/src/models_manager/manager.rs`, `core/src/rollout/policy.rs`, `core/src/lib.rs`, and `core/src/thread_manager.rs` while preserving Indubitably auth, Bedrock runtime/provider behavior, and provider-aware thread wiring; one follow-up fix commit (`sync(upstream): fix websocket constructor arg cleanup`) was required after order 293 to remove stale constructor arguments; repeated long-running test/link steps forced compile-gate fallbacks and one interrupted `just fix -p codex-core` run.
