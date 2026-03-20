@@ -45,11 +45,13 @@
 - Batch 19 end ahead/behind: ahead 394 / behind 345
 - Batch 20 start ahead/behind: ahead 395 / behind 345
 - Batch 20 end ahead/behind: ahead 419 / behind 349
+- Batch 21 start ahead/behind: ahead 419 / behind 349
+- Batch 21 end ahead/behind: ahead 429 / behind 349
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 20 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 21 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -652,6 +654,24 @@
 | 339 | `1d210f639e39040bdb1611267b02df723eb1901f` | cherry-pick (manual compile fix) | ported | 7 | 0.80 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo test -p codex-exec-server --quiet | Added exec/filesystem RPC flow in exec-server; fixed Environment callsite compatibility in server/filesystem.rs |
 
 | 340 | `fe287ac467e915a4a75fccb8ce7b7b82d5c12e53` | cherry-pick | ported | 4 | 0.94 | CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-otel --quiet | Telemetry now records guardian-routed approvals as automated_reviewer source distinct from user/config |
+
+| 341 | `60cd0cf75eb29798c71bdfd80f1625e69a26d58d` | cherry-pick+surgical | ported | 8 | 0.81 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui title_setup --quiet; cargo test -p codex-core config_toml_deserializes_model_availability_nux --quiet (pre-existing ModelClient::new mismatch); CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Added terminal-title status surface and config schema wiring; protected config overlap reviewed. |
+
+| 342 | `668330acc12b8907ecd82bc15148e0a627246783` | cherry-pick+surgical | ported | 6 | 0.89 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server turn_start_jsonrpc_span_parents_core_turn_spans --quiet | App-server request spans now record turn.id for start/steer/interrupt. |
+
+| 343 | `7eb19e53198470304eb9e74599ec8fb4b97adc3c` | cherry-pick+surgical | ported | 8 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-terminal-detection --quiet; just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core -p codex-cli -p codex-tui -p codex-tui-app-server --quiet | Resolved conflicts in cli/main.rs and tui/lib.rs while keeping local CLI version/env behavior and command helper usage. |
+
+| 344 | `69750a0b5a9f10f2e085b48943d41fd5b12ebc0b` | cherry-pick | ported | 4 | 0.87 | cargo test -p codex-core test_exec_command_tool_windows_description_includes_shell_safety_guidance --quiet (blocked by pre-existing ModelClient::new mismatch); cargo test -p codex-core --lib test_shell_tool --quiet (same baseline mismatch); CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Windows shell/exec tool descriptions now include explicit destructive-filesystem safety guidance. |
+
+| 345 | `27977d67166cc3d0b32c04780e153d05077a66a1` | cherry-pick | ported | 5 | 0.90 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui image_generation_call_adds_history_cell --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server image_generation_call_adds_history_cell --quiet | TUI and tui_app_server now retain/render full image file URI path for generated images with snapshot updates. |
+
+| 346 | `2254ec4f30b78469bbb0fc310894ea2d7bf6944f` | cherry-pick+surgical | ported | 7 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server plugin_read --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server plugin_install --quiet (ENOSPC); df -h .; cargo clean; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server --quiet | Exposed needsAuth in plugin/read+install summaries; app-server/plugin helper logic updated; compile fallback after ENOSPC. |
+
+| 347 | `2bee37fe69fee6a8af13cd82850718433e8eb742` | cherry-pick | ported | 7 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-rmcp-client --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | MCP tool calls now include x-codex-turn-metadata in _meta, preserving _codex_apps metadata. |
+
+| 348 | `9e695fe83083ba5201f9b53021a56fec183d32c6` | cherry-pick+surgical | ported | 8 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server thread_start --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui-app-server --quiet | Added v2 mcpServer/startupStatus/updated notification schema/protocol/app-server mapping and tui_app_server handling. |
+
+| 349 | `6b8175c7346d25a13479bc044819ca406ea1c3ae` | cherry-pick | ported | 6 | 0.85 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Image-generation artifacts now default under codex_home/generated_images/<thread>/<call>.png with sanitized names and updated tests. |
 
 ## Decision Briefs
 
@@ -3943,6 +3963,105 @@
 - Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS=-C debuginfo=0 cargo check -p codex-core -p codex-otel --quiet
 - Rollback note: Revert the corresponding sync commit if regressions appear.
 
+### Commit `60cd0cf75eb29798c71bdfd80f1625e69a26d58d`
+
+- Upstream intent: Add /title terminal title configuration and shared status-surface refresh path in TUI.
+- Local overlays touched: Protected overlap on core config files only; no auth/provider wiring changes.
+- Invariants checked: Indubitably auth, Bedrock runtime/provider behavior, and provider-aware ThreadManager wiring unchanged.
+- Risk factors: Large TUI surface change plus config schema updates and new snapshots.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.81
+- Validation evidence: Targeted codex-tui title tests passed; codex-core compile gate passed after known baseline test mismatch.
+- Rollback note: Revert this sync commit if terminal title rendering/config persistence regresses.
+
+### Commit `668330acc12b8907ecd82bc15148e0a627246783`
+
+- Upstream intent: Tag app-server turn request spans with turn_id for trace filtering.
+- Local overlays touched: Protected app-server path overlap; no Bedrock/auth code touched.
+- Invariants checked: Indubitably auth behavior and provider-aware thread wiring preserved.
+- Risk factors: Tracing field additions in request-context lifecycle.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.89
+- Validation evidence: Focused app-server tracing test passed.
+- Rollback note: Revert this sync commit if turn span attribution or tracing context propagation regresses.
+
+### Commit `7eb19e53198470304eb9e74599ec8fb4b97adc3c`
+
+- Upstream intent: Move terminal detection module into standalone codex-terminal-detection crate and update consumers.
+- Local overlays touched: No protected-path overlap; conflict resolution kept local Indubitably CLI metadata wiring intact.
+- Invariants checked: Indubitably auth behavior, Bedrock provider/runtime behavior, and ThreadManager provider wiring unaffected.
+- Risk factors: Workspace member/dependency refactor with crate moves and broad import rewiring.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: Terminal-detection tests and multi-crate compile gate passed; Bazel lock updated and checked.
+- Rollback note: Revert this sync commit if terminal detection imports/user-agent reporting regress across cli/core/tui surfaces.
+
+### Commit `69750a0b5a9f10f2e085b48943d41fd5b12ebc0b`
+
+- Upstream intent: Add stronger Windows destructive-command guidance to tool specs and tests.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected; behavior change is documentation/schema text only.
+- Risk factors: Prompt/tool-description text changes can affect model behavior.
+- Strategy selected: cherry-pick
+- Confidence: 0.87
+- Validation evidence: codex-core compile gate passed; targeted tests blocked by known branch-wide core test mismatch.
+- Rollback note: Revert this sync commit if tool-spec descriptions cause regressions in approval/tool prompting behavior.
+
+### Commit `27977d67166cc3d0b32c04780e153d05077a66a1`
+
+- Upstream intent: Render full saved image path/URI in generated-image history cells so links are openable.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Provider/auth overlays untouched.
+- Risk factors: User-visible snapshot and history-cell formatting changes across both TUI implementations.
+- Strategy selected: cherry-pick
+- Confidence: 0.90
+- Validation evidence: Targeted image-generation history tests passed in both TUI crates.
+- Rollback note: Revert this sync commit if image history rendering or URI handling regresses.
+
+### Commit `2254ec4f30b78469bbb0fc310894ea2d7bf6944f`
+
+- Upstream intent: Expose app summary needs_auth in plugin/read/install responses and protocol schema.
+- Local overlays touched: Protected overlap in app-server-protocol and app-server helper path reviewed with invariants preserved.
+- Invariants checked: Indubitably auth and Bedrock/provider overlays unchanged.
+- Risk factors: Protected API surface changes plus connector accessibility resolution logic.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.82
+- Validation evidence: Protocol tests and plugin_read filter passed; app-server compile gate used after ENOSPC in plugin_install link step.
+- Rollback note: Revert this sync commit if plugin read/install app summary compatibility or auth-state reporting regresses.
+
+### Commit `2bee37fe69fee6a8af13cd82850718433e8eb742`
+
+- Upstream intent: Plumb turn/session metadata into MCP tools/call _meta payloads for end-to-end tracing.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Overlay invariants unaffected.
+- Risk factors: Core MCP metadata wiring and request-shape changes for custom and codex_apps servers.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: rmcp-client suite passed and codex-core compile gate passed.
+- Rollback note: Revert this sync commit if MCP tool-call metadata payload compatibility regresses.
+
+### Commit `9e695fe83083ba5201f9b53021a56fec183d32c6`
+
+- Upstream intent: Expose MCP startup-status update as app-server v2 notification.
+- Local overlays touched: Protected overlap in app-server-protocol/common+v2 and app-server bespoke event handling.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware ThreadManager wiring preserved.
+- Risk factors: Protected protocol surface growth with notification wiring across server and UI adapter.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.84
+- Validation evidence: Protocol tests and app-server thread_start filter passed; tui_app_server compile gate passed.
+- Rollback note: Revert this sync commit if mcp startup notification wire compatibility or event routing regresses.
+
+### Commit `6b8175c7346d25a13479bc044819ca406ea1c3ae`
+
+- Upstream intent: Change default image-generation save directory from temp dir to codex_home thread-scoped path.
+- Local overlays touched: No protected-path overlap.
+- Invariants checked: Auth/provider overlays unaffected.
+- Risk factors: Filesystem path behavior change for generated image persistence and user-facing save-message text.
+- Strategy selected: cherry-pick
+- Confidence: 0.85
+- Validation evidence: codex-core compile gate passed; targeted core test filters remain constrained by known baseline test mismatch.
+- Rollback note: Revert this sync commit if generated image artifact pathing or save-message behavior regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -4394,3 +4513,5 @@
 - Batch 19 risk notes: protected-path overlaps in orders 301/306/312/319 were integrated surgically while preserving Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware `ThreadManager` wiring; orders 317/318 hit a pre-existing `ModelClient::new` test-compile mismatch in `codex-core` tests so compile-gate validation was used; order 319 hit ENOSPC during app-server test linking and was recovered via `cargo clean` plus `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0'`; order 320 added `codex-exec-server` and required lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) from repo root.
 - Batch 20 summary: processed 20 (orders 321-340), blocked 0, skipped 0, branch now ahead 419 / behind 349 vs upstream/main after publish.
 - Batch 20 risk notes: protected-path overlaps in orders 321/327/328/329/332/336/337 were resolved without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 329 required a `thread_manager.rs` merge plus a `SessionSource::Custom` canonical-trace compatibility follow-up, order 336 required a `TurnItem::HookPrompt` canonical-trace compatibility follow-up, and order 339 required an exec-server `Environment` initialization follow-up in `server/filesystem.rs`; ENOSPC recurred during orders 336 and 338 and was mitigated with `cargo clean` and low-footprint compile gates.
+- Batch 21 summary: processed 9 (orders 341-349), blocked 0, skipped 0, branch now ahead 429 / behind 349 vs upstream/main after publish.
+- Batch 21 risk notes: protected-path overlaps in orders 341/342/346/348 were integrated surgically without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 343 required conflict resolution in `cli/src/main.rs` and `tui/src/lib.rs` during terminal-detection crate extraction while preserving local CLI version/env behavior; ENOSPC recurred during order 346 app-server test linking and was mitigated with `cargo clean` and low-footprint compile gates; the pre-existing `ModelClient::new` core test-signature mismatch continued to require compile-gate fallback for core-targeted validation.
