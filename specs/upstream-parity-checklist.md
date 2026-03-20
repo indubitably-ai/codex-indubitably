@@ -47,11 +47,13 @@
 - Batch 20 end ahead/behind: ahead 419 / behind 349
 - Batch 21 start ahead/behind: ahead 419 / behind 349
 - Batch 21 end ahead/behind: ahead 429 / behind 349
+- Batch 22 start ahead/behind: ahead 429 / behind 350
+- Batch 22 end ahead/behind: ahead 431 / behind 350
 
 ## Protected Surfaces
 
 - Protected paths file: .upstream-sync-protected-paths
-- Notes: Batch 1 through Batch 21 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
+- Notes: Batch 1 through Batch 22 of phased sync (mixed 10/20 commits per run), direct-to-main push cadence.
 
 ## Commit Intake Log
 
@@ -672,6 +674,8 @@
 | 348 | `9e695fe83083ba5201f9b53021a56fec183d32c6` | cherry-pick+surgical | ported | 8 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server-protocol --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server thread_start --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-tui-app-server --quiet | Added v2 mcpServer/startupStatus/updated notification schema/protocol/app-server mapping and tui_app_server handling. |
 
 | 349 | `6b8175c7346d25a13479bc044819ca406ea1c3ae` | cherry-pick | ported | 6 | 0.85 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet | Image-generation artifacts now default under codex_home/generated_images/<thread>/<call>.png with sanitized names and updated tests. |
+
+| 350 | `403b397e4e1d1830a5848367fe05096f8b41faac` | cherry-pick+surgical | ported | 8 | 0.85 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server -p codex-core --quiet | Exec-server filesystem split into shared trait + local/remote implementations; protected app-server fs_api overlap reviewed. |
 
 ## Decision Briefs
 
@@ -4062,6 +4066,17 @@
 - Validation evidence: codex-core compile gate passed; targeted core test filters remain constrained by known baseline test mismatch.
 - Rollback note: Revert this sync commit if generated image artifact pathing or save-message behavior regresses.
 
+### Commit `403b397e4e1d1830a5848367fe05096f8b41faac`
+
+- Upstream intent: Refactor exec-server filesystem into local and remote implementations behind a shared trait and handler split.
+- Local overlays touched: Protected overlap in codex-rs/app-server/src/fs_api.rs only; no auth/model-provider custom paths changed.
+- Invariants checked: Indubitably auth behavior, Bedrock runtime/provider behavior, and ThreadManager provider wiring preserved.
+- Risk factors: Broad exec-server refactor touching environment wiring, transport handlers, and filesystem tests; dependency lock updated.
+- Strategy selected: cherry-pick+surgical
+- Confidence: 0.85
+- Validation evidence: Bazel lock update/check passed; codex-exec-server tests passed; app-server/core compile gate passed.
+- Rollback note: Revert this sync commit if remote/local filesystem routing or fs API behavior regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -4515,3 +4530,5 @@
 - Batch 20 risk notes: protected-path overlaps in orders 321/327/328/329/332/336/337 were resolved without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 329 required a `thread_manager.rs` merge plus a `SessionSource::Custom` canonical-trace compatibility follow-up, order 336 required a `TurnItem::HookPrompt` canonical-trace compatibility follow-up, and order 339 required an exec-server `Environment` initialization follow-up in `server/filesystem.rs`; ENOSPC recurred during orders 336 and 338 and was mitigated with `cargo clean` and low-footprint compile gates.
 - Batch 21 summary: processed 9 (orders 341-349), blocked 0, skipped 0, branch now ahead 429 / behind 349 vs upstream/main after publish.
 - Batch 21 risk notes: protected-path overlaps in orders 341/342/346/348 were integrated surgically without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 343 required conflict resolution in `cli/src/main.rs` and `tui/src/lib.rs` during terminal-detection crate extraction while preserving local CLI version/env behavior; ENOSPC recurred during order 346 app-server test linking and was mitigated with `cargo clean` and low-footprint compile gates; the pre-existing `ModelClient::new` core test-signature mismatch continued to require compile-gate fallback for core-targeted validation.
+- Batch 22 summary: processed 1 (order 350), blocked 0, skipped 0, branch now ahead 431 / behind 350 vs upstream/main after publish.
+- Batch 22 risk notes: order 350 touched protected `app-server/src/fs_api.rs` while introducing a broad exec-server filesystem split; integration preserved Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware thread wiring; dependency lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) passed; targeted `codex-exec-server` tests passed and app-server/core compile-gate validation succeeded without regressions.
