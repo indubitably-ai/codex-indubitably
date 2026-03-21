@@ -7753,6 +7753,8 @@ async fn experimental_popup_includes_guardian_approval() {
         normalized_popup.contains(guardian_description),
         "expected guardian approvals description in experimental popup, got:\n{popup}"
     );
+    #[cfg(target_os = "linux")]
+    assert_snapshot!("experimental_popup_includes_guardian_approval_linux", popup);
 }
 
 #[tokio::test]
