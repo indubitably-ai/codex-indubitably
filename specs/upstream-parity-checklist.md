@@ -49,6 +49,8 @@
 - Batch 21 end ahead/behind: ahead 429 / behind 349
 - Batch 22 start ahead/behind: ahead 429 / behind 350
 - Batch 22 end ahead/behind: ahead 431 / behind 350
+- Batch 23 start ahead/behind: ahead 431 / behind 384
+- Batch 23 end ahead/behind: ahead 435 / behind 384
 
 ## Protected Surfaces
 
@@ -60,10 +62,10 @@
 | order | upstream sha | action | status | risk score | confidence | tests | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `b9a2e400018c219e3010a5a5b8ded8645184da0b` | cherry-pick | ported | 1 | 0.93 | `cargo check -p codex-skills --quiet` | Skill sample asset removal only. |
-| 2 | `1c888709b5d718b2452f4bf59ef20f65ff4b5331` | cherry-pick | ported | 2 | 0.91 | `cargo test -p codex-core guardian --quiet` | Removes obsolete guardian snapshot test. |
-| 3 | `92f7541624810406d5c3d1c424147bcfa458efce` | cherry-pick+surgical | ported | 5 | 0.86 | `cargo test -p codex-core guardian --quiet && cargo test -p codex-tui guardian --quiet` | Guardian CI follow-up + local exhaustive-match compatibility fixes. |
+| 2 | `1c888709b5d718b2452f4bf59ef20f65ff4b5331` | skip | skipped | 0 | 0.96 | Verified `HEAD` already omits `codex-rs/core/src/guardian_tests.rs` and the legacy guardian snapshot file is absent. | Obsolete on this branch because the old guardian test file and snapshot were already removed by earlier test-layout changes. |
+| 3 | `92f7541624810406d5c3d1c424147bcfa458efce` | cherry-pick+surgical | ported | 3 | 0.84 | `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui experimental_popup_includes_guardian_approval --quiet` | Guardian CI follow-up reconciled with branch-local test layout by keeping semantic assertions and adding Linux popup snapshot coverage. |
 
-| 4 | `e8d7ede83cf09c99134866f19e5378c546d53191` | cherry-pick | ported | 2 | 0.90 | cargo test -p codex-tui context_window --quiet | TUI token-count timing display fix. |
+| 4 | `e8d7ede83cf09c99134866f19e5378c546d53191` | skip | skipped | 0 | 0.94 | Verified current TUI already applies `TurnStarted.model_context_window` before `TokenCount` and retains regression coverage. | No-op on this branch because the TUI runtime context-window refresh path is already present. |
 
 | 5 | `bf5c2f48a5730f8076a65a1a5f637398ec92ae22` | cherry-pick | ported | 4 | 0.84 | cargo test -p codex-core request_permissions --quiet | Seatbelt split filesystem policy handling update. |
 
@@ -694,36 +696,36 @@
 
 ### Commit `1c888709b5d718b2452f4bf59ef20f65ff4b5331`
 
-- Upstream intent: Remove stale guardian snapshot assertions that no longer reflect current output.
-- Local overlays touched: None (no protected-path overlap).
+- Upstream intent: Remove a flaky legacy guardian snapshot test and its old snapshot artifact.
+- Local overlays touched: None (no protected-path overlap); the targeted legacy files are already absent on this branch.
 - Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unchanged.
-- Risk factors: Core test cleanup with low runtime behavior impact.
-- Strategy selected: cherry-pick.
-- Confidence: 0.91.
-- Validation evidence: `cargo test -p codex-core guardian --quiet` (20 passed).
-- Rollback note: Revert this sync commit if guardian output assertions are needed for local regressions.
+- Risk factors: No-op relative to current branch state because earlier guardian test restructuring already removed the old file and snapshot.
+- Strategy selected: skip.
+- Confidence: 0.96.
+- Validation evidence: Verified `HEAD` does not track `codex-rs/core/src/guardian_tests.rs` and the old guardian snapshot path is already absent.
+- Rollback note: No rollback needed because no code changes were applied.
 
 ### Commit `92f7541624810406d5c3d1c424147bcfa458efce`
 
 - Upstream intent: Fix guardian-related CI instability across core and TUI tests.
-- Local overlays touched: None (no protected-path overlap).
+- Local overlays touched: None (no protected-path overlap), but upstream overlapped the branch's already-diverged guardian/TUI test layout.
 - Invariants checked: Indubitably auth and Bedrock runtime/provider behavior unchanged.
-- Risk factors: Cross-crate test updates and required local exhaustive event-match compatibility adjustments.
+- Risk factors: Conflicts landed in already-diverged guardian and TUI test files, and the popup snapshot coverage is platform-specific.
 - Strategy selected: cherry-pick+surgical.
-- Confidence: 0.86.
-- Validation evidence: `cargo test -p codex-core guardian --quiet` and `cargo test -p codex-tui guardian --quiet` passed.
-- Rollback note: Revert this sync commit if guardian test behavior regresses or event handling compatibility should be isolated.
+- Confidence: 0.84.
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui experimental_popup_includes_guardian_approval --quiet`.
+- Rollback note: Revert this sync commit if guardian popup snapshot coverage or related TUI test stability regresses.
 
 ### Commit `e8d7ede83cf09c99134866f19e5378c546d53191`
 
-- Upstream intent: Correct context window display before initial TokenCount events in TUI.
-- Local overlays touched: None (no protected-path overlap).
+- Upstream intent: Correct context window display before initial `TokenCount` events in the TUI.
+- Local overlays touched: None (no protected-path overlap); the equivalent runtime context-window behavior is already present on this branch.
 - Invariants checked: No auth/provider/runtime overlay paths modified.
-- Risk factors: UI timing logic update with targeted tests available.
-- Strategy selected: cherry-pick
-- Confidence: 0.90
-- Validation evidence: codex-tui context_window filtered tests passed.
-- Rollback note: Revert this sync commit if TUI header metrics regress.
+- Risk factors: No-op relative to current branch state because `TurnStarted.model_context_window` handling and regression coverage are already integrated.
+- Strategy selected: skip.
+- Confidence: 0.94.
+- Validation evidence: Reviewed current TUI sources/tests for `TurnStarted.model_context_window` handling and matching regression coverage.
+- Rollback note: No rollback needed because no code changes were applied.
 
 ### Commit `bf5c2f48a5730f8076a65a1a5f637398ec92ae22`
 
@@ -4545,3 +4547,5 @@
 - Batch 21 risk notes: protected-path overlaps in orders 341/342/346/348 were integrated surgically without regressing Indubitably auth, Bedrock runtime/provider behavior, or provider-aware thread wiring; order 343 required conflict resolution in `cli/src/main.rs` and `tui/src/lib.rs` during terminal-detection crate extraction while preserving local CLI version/env behavior; ENOSPC recurred during order 346 app-server test linking and was mitigated with `cargo clean` and low-footprint compile gates; the pre-existing `ModelClient::new` core test-signature mismatch continued to require compile-gate fallback for core-targeted validation.
 - Batch 22 summary: processed 1 (order 350), blocked 0, skipped 0, branch now ahead 431 / behind 350 vs upstream/main after publish.
 - Batch 22 risk notes: order 350 touched protected `app-server/src/fs_api.rs` while introducing a broad exec-server filesystem split; integration preserved Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware thread wiring; dependency lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) passed; targeted `codex-exec-server` tests passed and app-server/core compile-gate validation succeeded without regressions.
+- Batch 23 summary: processed 4 (orders 351-354), blocked 0, skipped 2, branch now ahead 435 / behind 384 vs upstream/main before publish.
+- Batch 23 risk notes: order 351 added Bazel V8 source-build/release wiring and validated cleanly via `just bazel-lock-check` plus `bazel query //third_party/v8:all`; order 352 was already obsolete on this branch because the legacy guardian test file and snapshot had been removed earlier; order 353 required surgical reconciliation with branch-local guardian/TUI test layout and was validated with `cargo test -p codex-tui experimental_popup_includes_guardian_approval --quiet`; order 354 was a true no-op because the `TurnStarted.model_context_window` TUI refresh path and regression coverage were already present.
