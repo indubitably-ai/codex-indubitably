@@ -677,6 +677,8 @@
 
 | 350 | `403b397e4e1d1830a5848367fe05096f8b41faac` | cherry-pick+surgical | ported | 8 | 0.85 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server -p codex-core --quiet | Exec-server filesystem split into shared trait + local/remote implementations; protected app-server fs_api overlap reviewed. |
 
+| 351 | `ded7854f09d210b4ae7236272ef002279b3f5de2` | cherry-pick | ported | 1 | 0.89 | just bazel-lock-check; bazel query //third_party/v8:all | Adds Bazel V8 source-build/release wiring and targets; no protected overlay paths touched. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4076,6 +4078,17 @@
 - Confidence: 0.85
 - Validation evidence: Bazel lock update/check passed; codex-exec-server tests passed; app-server/core compile gate passed.
 - Rollback note: Revert this sync commit if remote/local filesystem routing or fs API behavior regresses.
+
+### Commit `ded7854f09d210b4ae7236272ef002279b3f5de2`
+
+- Upstream intent: Add Bazel-managed V8 source-build support, release automation, and third_party targets for musl-capable rusty_v8 artifacts.
+- Local overlays touched: No protected-path overlap; local Indubitably auth, Bedrock provider/runtime, and provider-aware thread wiring are unaffected.
+- Invariants checked: Confirmed no protected paths were touched and local auth/provider/thread-manager overlays remain outside the changed surface.
+- Risk factors: Build/release wiring can silently affect Bazel packaging and the new V8 targets have limited local coverage.
+- Strategy selected: cherry-pick
+- Confidence: 0.89
+- Validation evidence: just bazel-lock-check; bazel query //third_party/v8:all
+- Rollback note: Revert this sync commit if Bazel V8 target loading or release wiring regresses.
 
 ## Batch Validation
 
