@@ -51,6 +51,8 @@
 - Batch 22 end ahead/behind: ahead 431 / behind 350
 - Batch 23 start ahead/behind: ahead 431 / behind 384
 - Batch 23 end ahead/behind: ahead 435 / behind 384
+- Batch 24 start ahead/behind: ahead 435 / behind 386
+- Batch 24 end ahead/behind: ahead 437 / behind 386
 
 ## Protected Surfaces
 
@@ -680,6 +682,8 @@
 | 350 | `403b397e4e1d1830a5848367fe05096f8b41faac` | cherry-pick+surgical | ported | 8 | 0.85 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server -p codex-core --quiet | Exec-server filesystem split into shared trait + local/remote implementations; protected app-server fs_api overlap reviewed. |
 
 | 351 | `ded7854f09d210b4ae7236272ef002279b3f5de2` | cherry-pick | ported | 1 | 0.89 | just bazel-lock-check; bazel query //third_party/v8:all | Adds Bazel V8 source-build/release wiring and targets; no protected overlay paths touched. |
+
+| 355 | `35f8b87a5b396ac9780fa0100cf6fb1af5a5e282` | cherry-pick | ported | 2 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet (targeted lib tests blocked by pre-existing ModelClient::new test compile errors) | Plugin marketplace/product gating now distinguishes a missing products field from an explicit empty list. |
 
 ## Decision Briefs
 
@@ -4092,6 +4096,17 @@
 - Validation evidence: just bazel-lock-check; bazel query //third_party/v8:all
 - Rollback note: Revert this sync commit if Bazel V8 target loading or release wiring regresses.
 
+### Commit `35f8b87a5b396ac9780fa0100cf6fb1af5a5e282`
+
+- Upstream intent: Treat a missing plugin products field as unrestricted and an explicit empty products list as no products allowed.
+- Local overlays touched: No protected-path overlap; local Indubitably auth, Bedrock provider/runtime, and provider-aware thread wiring are unaffected.
+- Invariants checked: Confirmed no protected paths were touched and overlay behavior remains outside the plugin marketplace/product gating surface.
+- Risk factors: Core plugin admission semantics changed, but the patch is localized and carries targeted unit-test additions for the new missing-vs-empty cases.
+- Strategy selected: cherry-pick
+- Confidence: 0.86
+- Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet; targeted lib tests for the new plugin-product cases were blocked by the existing ModelClient::new test compile mismatch in core/src/client.rs and core/tests/suite/bedrock_runtime.rs.
+- Rollback note: Revert this sync commit if plugin marketplace filtering or remote sync admission regresses.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -4549,3 +4564,5 @@
 - Batch 22 risk notes: order 350 touched protected `app-server/src/fs_api.rs` while introducing a broad exec-server filesystem split; integration preserved Indubitably auth behavior, Bedrock runtime/provider behavior, and provider-aware thread wiring; dependency lock maintenance (`just bazel-lock-update`/`just bazel-lock-check`) passed; targeted `codex-exec-server` tests passed and app-server/core compile-gate validation succeeded without regressions.
 - Batch 23 summary: processed 4 (orders 351-354), blocked 0, skipped 2, branch now ahead 435 / behind 384 vs upstream/main before publish.
 - Batch 23 risk notes: order 351 added Bazel V8 source-build/release wiring and validated cleanly via `just bazel-lock-check` plus `bazel query //third_party/v8:all`; order 352 was already obsolete on this branch because the legacy guardian test file and snapshot had been removed earlier; order 353 required surgical reconciliation with branch-local guardian/TUI test layout and was validated with `cargo test -p codex-tui experimental_popup_includes_guardian_approval --quiet`; order 354 was a true no-op because the `TurnStarted.model_context_window` TUI refresh path and regression coverage were already present.
+- Batch 24 summary: processed 1 (order 355), blocked 0, skipped 0, branch now ahead 437 / behind 386 vs upstream/main before publish.
+- Batch 24 risk notes: order 355 changed plugin marketplace admission semantics so a missing `products` field means unrestricted while an explicit empty list means no products allowed; it applied cleanly with no protected-path overlap and passed `cargo check -p codex-core --quiet`, while the new lib tests remained blocked by the existing `ModelClient::new` compile mismatch in unrelated `codex-core` test code.
