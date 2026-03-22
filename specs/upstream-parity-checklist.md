@@ -697,6 +697,8 @@
 
 | 355 | `35f8b87a5b396ac9780fa0100cf6fb1af5a5e282` | cherry-pick | ported | 2 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet (targeted lib tests blocked by pre-existing ModelClient::new test compile errors) | Plugin marketplace/product gating now distinguishes a missing products field from an explicit empty list. |
 
+| 356 | `2e22885e79bd793316da217929996149860fff43` | cherry-pick+surgical | ported | 9 | 0.80 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-features --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check --tests -p codex-core -p codex-cli -p codex-app-server -p codex-app-server-client -p codex-mcp-server -p codex-tui -p codex-tui-app-server --quiet; just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 just fix; just fmt | Split shared feature definitions into `codex-features`, preserving Indubitably CLI dispatch/version wiring and the Bedrock-aware review-model override while updating stale Bedrock test callsites to the current `ModelClient::new` signature. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4614,3 +4616,15 @@
 
 - Batch 27 summary: processed 1 (order 354), blocked 0, skipped 0, branch now ahead 443 / behind 386 vs upstream/main before publish.
 - Batch 27 risk notes: order 354 touched protected `app-server/src/codex_message_processor.rs` and `app-server/src/command_exec.rs` while widening `ExecParams` and `ExecRequest` across core exec/sandboxing callsites; `codex-core --lib full_buffer_capture` passed with the new full-buffer assertions, `codex-linux-sandbox landlock` compile-gated cleanly, and the app-server `command_exec` filter remained runner-limited by initialize timeouts that occurred before any staged `command/exec` request was sent; `just fix -p codex-core` again failed under workspace disk pressure (`ENOSPC`) while `just fmt` completed successfully.
+
+### Commit `2e22885e79bd793316da217929996149860fff43`
+
+- Upstream intent: Split feature definitions, parsing, and tests out of `codex-core` into a dedicated `codex-features` crate and rewire consumers to depend on it directly.
+- Local overlays touched: Protected overlap in `codex-rs/cli/src/main.rs` and `codex-rs/core/src/tasks/review.rs`; preserved Indubitably CLI version/env dispatch behavior and the Bedrock-specific review-model override while switching feature imports to `codex-features`.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.80
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-features --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check --tests -p codex-core -p codex-cli -p codex-app-server -p codex-app-server-client -p codex-mcp-server -p codex-tui -p codex-tui-app-server --quiet`; `just bazel-lock-update`; `just bazel-lock-check`; `CARGO_INCREMENTAL=0 just fix`; `just fmt`.
+- Rollback note: Revert this sync commit if feature listing/gating drifts between CLI/TUI/app-server consumers, if the Indubitably CLI entry flow changes unexpectedly, or if Bedrock review sessions stop honoring the current-session model override.
+
+- Batch 28 summary: processed 2 (orders 355-356), blocked 0, skipped 1, branch now ahead 445 / behind 386 vs upstream/main before publish.
+- Batch 28 risk notes: order 355 required no new patch because batch 24 had already carried the same marketplace semantics; order 356 moved shared feature logic into a new workspace crate and touched protected CLI/review entry points, so the port explicitly preserved fork-local Indubitably CLI dispatch/version handling and the Bedrock-aware `resolve_review_model` path; dependency guardrails (`just bazel-lock-update` / `just bazel-lock-check`) passed without a `MODULE.bazel.lock` delta; targeted moved-crate tests passed, broad consumer compile coverage passed after refreshing stale `bedrock_runtime` test callsites to the current `ModelClient::new` signature, and both `just fix` and `just fmt` completed successfully.
