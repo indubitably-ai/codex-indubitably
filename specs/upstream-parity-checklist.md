@@ -57,6 +57,8 @@
 - Batch 25 end ahead/behind: ahead 439 / behind 386
 - Batch 26 start ahead/behind: ahead 439 / behind 386
 - Batch 26 end ahead/behind: ahead 441 / behind 386
+- Batch 27 start ahead/behind: ahead 441 / behind 386
+- Batch 27 end ahead/behind: ahead 443 / behind 386
 
 ## Protected Surfaces
 
@@ -690,6 +692,8 @@
 | 352 | `2aa4873802134124071b160ddfa21bab28bd45da` | cherry-pick+surgical | ported | 6 | 0.79 | cargo test -p codex-login --quiet; cargo test -p codex-tui-app-server local_chatgpt_auth --quiet; cargo test -p codex-app-server --test all external_auth_refreshes_on_unauthorized -- --nocapture | Auth implementation moved into `codex-login` while preserving `codex-core` re-exports and local provider-aware auth wiring. |
 
 | 353 | `0a344e4fab8111acc1833091f26ff0b628853dc0` | cherry-pick+surgical | ported | 6 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib plugin_telemetry_metadata_uses_default_mcp_config_path --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install -- --test-threads=1 (8 passed, 1 pre-existing initialize timeout); CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install_returns_apps_needing_auth -- --nocapture (same initialize timeout before any plugin/install request) | Plugin installs now load bundled MCP servers into follow-up app-server requests and trigger bundled MCP OAuth login attempts after install. |
+
+| 354 | `a3e59e9e851a85f02b1b5213d897910ffe110801` | cherry-pick+surgical | ported | 8 | 0.78 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib full_buffer_capture --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all command_exec -- --test-threads=1 (13 passed, 2 initialize timeouts before any command/exec request); CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-linux-sandbox landlock --quiet | `command/exec disableOutputCap` now routes through an uncapped full-buffer exec capture policy while the capped shell-tool path keeps its existing timeout and truncation behavior. |
 
 | 355 | `35f8b87a5b396ac9780fa0100cf6fb1af5a5e282` | cherry-pick | ported | 2 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet (targeted lib tests blocked by pre-existing ModelClient::new test compile errors) | Plugin marketplace/product gating now distinguishes a missing products field from an explicit empty list. |
 
@@ -4598,3 +4602,15 @@
 
 - Batch 26 summary: processed 1 (order 353), blocked 0, skipped 0, branch now ahead 441 / behind 386 vs upstream/main before publish.
 - Batch 26 risk notes: order 353 touched protected `app-server/src/codex_message_processor.rs` by moving bundled plugin MCP servers into the live MCP refresh path and by starting bundled MCP OAuth login attempts after install; new app-server coverage for bundled plugin MCP availability passed, core plugin telemetry coverage passed, and the only remaining failures were existing app-server initialize timeouts in auth-filter plugin-install tests that reproduced before any staged `plugin/install` request was sent.
+
+### Commit `a3e59e9e851a85f02b1b5213d897910ffe110801`
+
+- Upstream intent: Add an explicit full-buffer exec capture policy so uncapped `command/exec` requests can retain full stdout/stderr buffers without using the normal shell-tool timeout/truncation policy.
+- Local overlays touched: Protected overlap (`codex-rs/app-server/src/*`) in `command/exec` request handling plus broad `codex-rs/core/src/*` exec/sandboxing plumbing; Indubitably auth and Bedrock provider/runtime overlays were unaffected because the port stayed inside execution capture behavior.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.78
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib full_buffer_capture --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all command_exec -- --test-threads=1` (13 passed, 2 failed at `initialize` before any `command/exec` request was sent); `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-linux-sandbox landlock --quiet`; `just fix -p codex-core` (`ENOSPC` while building Clippy dependencies); `just fmt`.
+- Rollback note: Revert this sync commit if uncapped `command/exec` output truncates unexpectedly, if capped shell-tool execs stop respecting output limits/timeouts, or if command-exec startup behavior regresses outside the known initialize-timeout runner issue.
+
+- Batch 27 summary: processed 1 (order 354), blocked 0, skipped 0, branch now ahead 443 / behind 386 vs upstream/main before publish.
+- Batch 27 risk notes: order 354 touched protected `app-server/src/codex_message_processor.rs` and `app-server/src/command_exec.rs` while widening `ExecParams` and `ExecRequest` across core exec/sandboxing callsites; `codex-core --lib full_buffer_capture` passed with the new full-buffer assertions, `codex-linux-sandbox landlock` compile-gated cleanly, and the app-server `command_exec` filter remained runner-limited by initialize timeouts that occurred before any staged `command/exec` request was sent; `just fix -p codex-core` again failed under workspace disk pressure (`ENOSPC`) while `just fmt` completed successfully.
