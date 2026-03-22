@@ -53,6 +53,10 @@
 - Batch 23 end ahead/behind: ahead 435 / behind 384
 - Batch 24 start ahead/behind: ahead 435 / behind 386
 - Batch 24 end ahead/behind: ahead 437 / behind 386
+- Batch 25 start ahead/behind: ahead 437 / behind 386
+- Batch 25 end ahead/behind: ahead 439 / behind 386
+- Batch 26 start ahead/behind: ahead 439 / behind 386
+- Batch 26 end ahead/behind: ahead 441 / behind 386
 
 ## Protected Surfaces
 
@@ -682,6 +686,10 @@
 | 350 | `403b397e4e1d1830a5848367fe05096f8b41faac` | cherry-pick+surgical | ported | 8 | 0.85 | just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-app-server -p codex-core --quiet | Exec-server filesystem split into shared trait + local/remote implementations; protected app-server fs_api overlap reviewed. |
 
 | 351 | `ded7854f09d210b4ae7236272ef002279b3f5de2` | cherry-pick | ported | 1 | 0.89 | just bazel-lock-check; bazel query //third_party/v8:all | Adds Bazel V8 source-build/release wiring and targets; no protected overlay paths touched. |
+
+| 352 | `2aa4873802134124071b160ddfa21bab28bd45da` | cherry-pick+surgical | ported | 6 | 0.79 | cargo test -p codex-login --quiet; cargo test -p codex-tui-app-server local_chatgpt_auth --quiet; cargo test -p codex-app-server --test all external_auth_refreshes_on_unauthorized -- --nocapture | Auth implementation moved into `codex-login` while preserving `codex-core` re-exports and local provider-aware auth wiring. |
+
+| 353 | `0a344e4fab8111acc1833091f26ff0b628853dc0` | cherry-pick+surgical | ported | 6 | 0.82 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib plugin_telemetry_metadata_uses_default_mcp_config_path --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install -- --test-threads=1 (8 passed, 1 pre-existing initialize timeout); CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install_returns_apps_needing_auth -- --nocapture (same initialize timeout before any plugin/install request) | Plugin installs now load bundled MCP servers into follow-up app-server requests and trigger bundled MCP OAuth login attempts after install. |
 
 | 355 | `35f8b87a5b396ac9780fa0100cf6fb1af5a5e282` | cherry-pick | ported | 2 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet (targeted lib tests blocked by pre-existing ModelClient::new test compile errors) | Plugin marketplace/product gating now distinguishes a missing products field from an explicit empty list. |
 
@@ -4578,3 +4586,15 @@
 
 - Batch 25 summary: processed 1 (order 352), blocked 0, skipped 0, branch now ahead 439 / behind 386 vs upstream/main before publish.
 - Batch 25 risk notes: queue recovery discovered that order 352 (`Move auth code into login crate`) was the missing upstream ancestor of the previously attempted features split, so intake was restarted from the correct frozen order; protected `app-server` overlaps were limited to auth-type rewires plus `ChatgptAuthTokens` account display handling; local compatibility adjustments removed stale core-local `try_parse_error_message` tests and updated branch-local `ModelClient::new` unit-test callsites to the current 9-argument signature; dependency guardrails (`just bazel-lock-update` / `just bazel-lock-check`) passed without a `MODULE.bazel.lock` delta; `just fix` failed with `ENOSPC` after validation and `just fmt` completed successfully.
+
+### Commit `0a344e4fab8111acc1833091f26ff0b628853dc0`
+
+- Upstream intent: Install bundled plugin MCP servers as part of `plugin/install`, refresh MCP state immediately, and start bundled MCP OAuth login attempts after install.
+- Local overlays touched: Protected overlap (`codex-rs/app-server/src/*`) in plugin-install response handling; preserved Indubitably auth behavior and provider-aware app-server wiring while reusing the branch-local MCP refresh/config flow.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.82
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --lib plugin_telemetry_metadata_uses_default_mcp_config_path --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install -- --test-threads=1` (8 passed, 1 failed at a pre-existing `initialize` timeout in `plugin_install_filters_disallowed_apps_needing_auth` before the staged plugin-install path ran); `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --test all plugin_install_returns_apps_needing_auth -- --nocapture` (same `initialize` timeout before any `plugin/install` request).
+- Rollback note: Revert this sync commit if plugin-installed bundled MCP servers fail to appear in follow-up MCP operations or bundled MCP OAuth login dispatch regresses.
+
+- Batch 26 summary: processed 1 (order 353), blocked 0, skipped 0, branch now ahead 441 / behind 386 vs upstream/main before publish.
+- Batch 26 risk notes: order 353 touched protected `app-server/src/codex_message_processor.rs` by moving bundled plugin MCP servers into the live MCP refresh path and by starting bundled MCP OAuth login attempts after install; new app-server coverage for bundled plugin MCP availability passed, core plugin telemetry coverage passed, and the only remaining failures were existing app-server initialize timeouts in auth-filter plugin-install tests that reproduced before any staged `plugin/install` request was sent.
