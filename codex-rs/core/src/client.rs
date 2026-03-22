@@ -1595,7 +1595,7 @@ impl AuthRequestTelemetryContext {
         Self {
             auth_mode: auth_mode.map(|mode| match mode {
                 AuthMode::ApiKey => "ApiKey",
-                AuthMode::Chatgpt => "Chatgpt",
+                AuthMode::Chatgpt | AuthMode::ChatgptAuthTokens => "Chatgpt",
             }),
             auth_header_attached: api_auth.auth_header_attached(),
             auth_header_name: api_auth.auth_header_name(),
@@ -1968,10 +1968,9 @@ mod tests {
             provider,
             session_source,
             None,
-            false,
-            false,
-            false,
-            None,
+            /*enable_request_compression*/ false,
+            /*include_timing_metrics*/ false,
+            /*beta_features_header*/ None,
         )
     }
 
@@ -2058,10 +2057,9 @@ mod tests {
             provider,
             SessionSource::Cli,
             None,
-            false,
-            false,
-            false,
-            None,
+            /*enable_request_compression*/ false,
+            /*include_timing_metrics*/ false,
+            /*beta_features_header*/ None,
         );
         let mut session = client.new_session();
         let model_info = test_model_info();
