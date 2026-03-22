@@ -703,6 +703,8 @@
 
 | 358 | `fa2a2f0be94e744d6d565a803e12c870d283f930` | cherry-pick+surgical | ported | 5 | 0.84 | cargo +nightly-2025-09-18 test --manifest-path tools/argument-comment-lint/Cargo.toml --quiet; ./tools/argument-comment-lint/run-prebuilt-linter.sh -p codex-windows-sandbox; just fmt | Switches repo lint enforcement to the released DotSlash-packaged argument-comment linter, updates the source/prebuilt wrappers and docs, and adds required anonymous-literal argument comments in Windows/TUI callsites surfaced by the packaged lint. |
 
+| 359 | `f7201e5a9` | cherry-pick+surgical | blocked | 5 | 0.74 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui plugins --quiet (failed: no space left on device) | Applied cleanly but validation blocked by disk exhaustion during rustc metadata write. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4124,6 +4126,17 @@
 - Confidence: 0.86
 - Validation evidence: CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check -p codex-core --quiet; targeted lib tests for the new plugin-product cases were blocked by the existing ModelClient::new test compile mismatch in core/src/client.rs and core/tests/suite/bedrock_runtime.rs.
 - Rollback note: Revert this sync commit if plugin marketplace filtering or remote sync admission regresses.
+
+### Commit `f7201e5a9`
+
+- Upstream intent: Add initial read-only plugins menu to tui and tui_app_server surfaces.
+- Local overlays touched: none (no protected-path overlap)
+- Invariants checked: Indubitably auth and Bedrock provider paths not touched.
+- Risk factors: Large UI/app-server surface addition; needs full test pass before intake.
+- Strategy selected: cherry-pick+surgical pending environment remediation
+- Confidence: 0.74
+- Validation evidence: staged apply succeeded; reverted after test failure to keep clean branch
+- Rollback note: free disk space, re-apply SHA, rerun targeted tui/tui_app_server tests
 
 ## Batch Validation
 
