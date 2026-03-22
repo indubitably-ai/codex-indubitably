@@ -67,11 +67,10 @@ async fn bedrock_provider_stream_without_token_returns_auth_error() {
         BEDROCK_PROVIDER_ID.to_string(),
         provider,
         SessionSource::Cli,
-        None,
-        false,
-        false,
-        false,
-        None,
+        /*model_verbosity*/ None,
+        /*enable_request_compression*/ false,
+        /*include_timing_metrics*/ false,
+        /*beta_features_header*/ None,
     );
     let mut session = client.new_session();
 
@@ -122,11 +121,10 @@ async fn bedrock_provider_stream_uses_proxy_runtime_and_avoids_responses_api() -
         BEDROCK_PROVIDER_ID.to_string(),
         provider,
         SessionSource::Cli,
-        None,
-        false,
-        false,
-        false,
-        None,
+        /*model_verbosity*/ None,
+        /*enable_request_compression*/ false,
+        /*include_timing_metrics*/ false,
+        /*beta_features_header*/ None,
     );
     let mut session = client.new_session();
 
@@ -213,11 +211,10 @@ async fn bedrock_provider_stream_surfaces_auth_expired_for_proxy_unauthorized() 
         BEDROCK_PROVIDER_ID.to_string(),
         provider,
         SessionSource::Cli,
-        None,
-        false,
-        false,
-        false,
-        None,
+        /*model_verbosity*/ None,
+        /*enable_request_compression*/ false,
+        /*include_timing_metrics*/ false,
+        /*beta_features_header*/ None,
     );
     let mut session = client.new_session();
 
@@ -286,11 +283,10 @@ async fn bedrock_provider_stream_reports_unknown_operation_from_non_proxy_endpoi
         BEDROCK_PROVIDER_ID.to_string(),
         provider,
         SessionSource::Cli,
-        None,
-        false,
-        false,
-        false,
-        None,
+        /*model_verbosity*/ None,
+        /*enable_request_compression*/ false,
+        /*include_timing_metrics*/ false,
+        /*beta_features_header*/ None,
     );
     let mut session = client.new_session();
 

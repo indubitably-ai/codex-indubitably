@@ -1259,7 +1259,7 @@ mod tests {
     use codex_core::config::ConfigOverrides;
     use codex_core::config::ConfigToml;
     use codex_core::config::ProjectConfig;
-    use codex_core::features::Feature;
+    use codex_features::Feature;
     use codex_protocol::protocol::AskForApproval;
     use codex_protocol::protocol::RolloutItem;
     use codex_protocol::protocol::RolloutLine;

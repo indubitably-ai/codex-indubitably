@@ -50,8 +50,6 @@ use codex_core::config::Config;
 use codex_core::config::ConfigOverrides;
 use codex_core::config::edit::ConfigEditsBuilder;
 use codex_core::config::find_codex_home;
-use codex_core::features::Stage;
-use codex_core::features::is_known_feature_key;
 use codex_core::util::INVOKED_COMMAND_NAME_ENV_VAR;
 use codex_core::util::command_with_args;
 
@@ -59,6 +57,9 @@ const CLI_VERSION: &str = match option_env!("INDUBITABLY_CLI_VERSION") {
     Some(version) => version,
     None => env!("CARGO_PKG_VERSION"),
 };
+use codex_features::FEATURES;
+use codex_features::Stage;
+use codex_features::is_known_feature_key;
 use codex_terminal_detection::TerminalName;
 
 /// Codex CLI
@@ -588,8 +589,7 @@ struct FeatureSetArgs {
     feature: String,
 }
 
-fn stage_str(stage: codex_core::features::Stage) -> &'static str {
-    use codex_core::features::Stage;
+fn stage_str(stage: Stage) -> &'static str {
     match stage {
         Stage::UnderDevelopment => "under development",
         Stage::Experimental { .. } => "experimental",
@@ -992,10 +992,10 @@ async fn cli_main(arg0_paths: Arg0DispatchPaths) -> anyhow::Result<()> {
                     overrides,
                 )
                 .await?;
-                let mut rows = Vec::with_capacity(codex_core::features::FEATURES.len());
+                let mut rows = Vec::with_capacity(FEATURES.len());
                 let mut name_width = 0;
                 let mut stage_width = 0;
-                for def in codex_core::features::FEATURES.iter() {
+                for def in FEATURES {
                     let name = def.key;
                     let stage = stage_str(def.stage);
                     let enabled = config.features.enabled(def.id);
@@ -1057,10 +1057,7 @@ fn maybe_print_under_development_feature_warning(
         return;
     }
 
-    let Some(spec) = codex_core::features::FEATURES
-        .iter()
-        .find(|spec| spec.key == feature)
-    else {
+    let Some(spec) = FEATURES.iter().find(|spec| spec.key == feature) else {
         return;
     };
     if !matches!(spec.stage, Stage::UnderDevelopment) {
