@@ -699,6 +699,8 @@
 
 | 356 | `2e22885e79bd793316da217929996149860fff43` | cherry-pick+surgical | ported | 9 | 0.80 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-features --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo check --tests -p codex-core -p codex-cli -p codex-app-server -p codex-app-server-client -p codex-mcp-server -p codex-tui -p codex-tui-app-server --quiet; just bazel-lock-update; just bazel-lock-check; CARGO_INCREMENTAL=0 just fix; just fmt | Split shared feature definitions into `codex-features`, preserving Indubitably CLI dispatch/version wiring and the Bedrock-aware review-model override while updating stale Bedrock test callsites to the current `ModelClient::new` signature. |
 
+| 357 | `96a86710c3b19f5154c7ce388026f7f6ac947377` | cherry-pick | ported | 2 | 0.93 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 just fix -p codex-exec-server; just fmt | Refactors `codex-exec-server` process handling into explicit local and remote implementations with shared process tests; no protected overlay surfaces were touched. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4628,3 +4630,15 @@
 
 - Batch 28 summary: processed 2 (orders 355-356), blocked 0, skipped 1, branch now ahead 445 / behind 386 vs upstream/main before publish.
 - Batch 28 risk notes: order 355 required no new patch because batch 24 had already carried the same marketplace semantics; order 356 moved shared feature logic into a new workspace crate and touched protected CLI/review entry points, so the port explicitly preserved fork-local Indubitably CLI dispatch/version handling and the Bedrock-aware `resolve_review_model` path; dependency guardrails (`just bazel-lock-update` / `just bazel-lock-check`) passed without a `MODULE.bazel.lock` delta; targeted moved-crate tests passed, broad consumer compile coverage passed after refreshing stale `bedrock_runtime` test callsites to the current `ModelClient::new` signature, and both `just fix` and `just fmt` completed successfully.
+
+### Commit `96a86710c3b19f5154c7ce388026f7f6ac947377`
+
+- Upstream intent: Split exec-server process handling into explicit local and remote implementations, make `Environment` expose `ExecProcess`, and add shared process tests covering both paths.
+- Local overlays touched: None; the diff stayed inside `codex-rs/exec-server`, with no protected-path overlap and no auth/provider/runtime routing behavior involved.
+- Strategy selected: cherry-pick.
+- Confidence: 0.93
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet`; `CARGO_INCREMENTAL=0 just fix -p codex-exec-server`; `just fmt`.
+- Rollback note: Revert this sync commit if remote exec-server process RPC behavior diverges from the local implementation or if exec-server process lifecycle tests begin failing.
+
+- Batch 29 summary: processed 1 (order 357), blocked 0, skipped 0, branch now ahead 447 / behind 387 vs upstream/main before publish.
+- Batch 29 risk notes: order 357 was a contained `codex-exec-server` refactor with no protected-path overlap, so it was taken as a straight cherry-pick; the new local/remote process split validated cleanly with the crate test suite, Clippy fix pass, and formatting, and no additional workspace lock maintenance was required because manifests did not change.
