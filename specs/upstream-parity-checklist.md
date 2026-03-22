@@ -701,6 +701,8 @@
 
 | 357 | `96a86710c3b19f5154c7ce388026f7f6ac947377` | cherry-pick | ported | 2 | 0.93 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-exec-server --quiet; CARGO_INCREMENTAL=0 just fix -p codex-exec-server; just fmt | Refactors `codex-exec-server` process handling into explicit local and remote implementations with shared process tests; no protected overlay surfaces were touched. |
 
+| 358 | `fa2a2f0be94e744d6d565a803e12c870d283f930` | cherry-pick+surgical | ported | 5 | 0.84 | cargo +nightly-2025-09-18 test --manifest-path tools/argument-comment-lint/Cargo.toml --quiet; ./tools/argument-comment-lint/run-prebuilt-linter.sh -p codex-windows-sandbox; just fmt | Switches repo lint enforcement to the released DotSlash-packaged argument-comment linter, updates the source/prebuilt wrappers and docs, and adds required anonymous-literal argument comments in Windows/TUI callsites surfaced by the packaged lint. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4642,3 +4644,15 @@
 
 - Batch 29 summary: processed 1 (order 357), blocked 0, skipped 0, branch now ahead 447 / behind 387 vs upstream/main before publish.
 - Batch 29 risk notes: order 357 was a contained `codex-exec-server` refactor with no protected-path overlap, so it was taken as a straight cherry-pick; the new local/remote process split validated cleanly with the crate test suite, Clippy fix pass, and formatting, and no additional workspace lock maintenance was required because manifests did not change.
+
+### Commit `fa2a2f0be94e744d6d565a803e12c870d283f930`
+
+- Upstream intent: Make repo lint enforcement use the released DotSlash-packaged argument-comment lint by default, keep a separate source-build path for lint development, and fix the remaining anonymous-literal callsites the packaged lint catches on Windows.
+- Local overlays touched: None of the protected Indubitably or Bedrock surfaces; non-protected local edits were limited to lint-driven `/*param*/` annotations and lint-wrapper/tooling updates.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.84
+- Validation evidence: `cargo +nightly-2025-09-18 test --manifest-path tools/argument-comment-lint/Cargo.toml --quiet`; `./tools/argument-comment-lint/run-prebuilt-linter.sh -p codex-windows-sandbox`; `just fmt`.
+- Rollback note: Revert this sync commit if `just argument-comment-lint`/`just clippy` stop working via the packaged path, if DotSlash resolution breaks on contributor machines, or if the new wrapper mishandles rustup toolchain inference.
+
+- Batch 30 summary: processed 1 (order 358), blocked 0, skipped 0, branch now ahead 449 / behind 387 vs upstream/main before publish.
+- Batch 30 risk notes: order 358 spanned CI/workflow config, checked-in DotSlash artifacts, lint wrappers, documentation, and a set of lint-driven Rust callsite annotations across TUI/core/windows crates, so it was treated as a tooling-heavy cherry-pick with extra validation rather than a pure no-op tooling change; the upstream patch applied cleanly with no protected-path overlap; `dotslash` had to be installed locally via Homebrew to exercise the new prebuilt wrapper path; the lint crate itself remained nightly-only, so the correct validation was `cargo +nightly-2025-09-18 test` rather than stable `cargo test`; once validated on nightly, the new prebuilt wrapper passed against `codex-windows-sandbox` and `just fmt` completed successfully.
