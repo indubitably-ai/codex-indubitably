@@ -59,6 +59,16 @@
 - Batch 26 end ahead/behind: ahead 441 / behind 386
 - Batch 27 start ahead/behind: ahead 441 / behind 386
 - Batch 27 end ahead/behind: ahead 443 / behind 386
+- Batch 28 start ahead/behind: ahead 443 / behind 386
+- Batch 28 end ahead/behind: ahead 445 / behind 386
+- Batch 29 start ahead/behind: ahead 445 / behind 387
+- Batch 29 end ahead/behind: ahead 447 / behind 387
+- Batch 30 start ahead/behind: ahead 447 / behind 387
+- Batch 30 end ahead/behind: ahead 449 / behind 387
+- Batch 31 start ahead/behind: ahead 449 / behind 387
+- Batch 31 end ahead/behind: ahead 450 / behind 387
+- Batch 32 start ahead/behind: ahead 450 / behind 593
+- Batch 32 end ahead/behind: ahead 453 / behind 593
 
 ## Protected Surfaces
 
@@ -703,7 +713,11 @@
 
 | 358 | `fa2a2f0be94e744d6d565a803e12c870d283f930` | cherry-pick+surgical | ported | 5 | 0.84 | cargo +nightly-2025-09-18 test --manifest-path tools/argument-comment-lint/Cargo.toml --quiet; ./tools/argument-comment-lint/run-prebuilt-linter.sh -p codex-windows-sandbox; just fmt | Switches repo lint enforcement to the released DotSlash-packaged argument-comment linter, updates the source/prebuilt wrappers and docs, and adds required anonymous-literal argument comments in Windows/TUI callsites surfaced by the packaged lint. |
 
-| 359 | `f7201e5a9` | cherry-pick+surgical | blocked | 5 | 0.74 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui plugins --quiet (failed: no space left on device) | Applied cleanly but validation blocked by disk exhaustion during rustc metadata write. |
+| 359 | `f7201e5a9` | cherry-pick+surgical | ported | 5 | 0.86 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server --quiet; just bazel-lock-update; just bazel-lock-check; just fix -p codex-tui -p codex-tui-app-server; just fmt | Retried after freeing disk space; full TUI and TUI-app-server crate suites passed and the new `codex-app-server-client` dependency was locked cleanly. |
+
+| 360 | `cc192763e10f55f5d374b60b50e2421d032ea681` | cherry-pick | ported | 2 | 0.94 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-hooks --quiet; just fix -p codex-hooks; just fmt | Windows now disables unsupported hooks.json lifecycle hooks up front and emits a session warning instead of attempting hook execution. |
+
+| 361 | `b1570d6c2355372c33ee6d095543ee23b2e65672` | manual-port | blocked | 6 | 0.71 | Analysis only; blocked before apply to preserve protected app-server/core startup behavior in this run. | Adds startup plugin-sync tasks across protected app-server plus core plugin-manager surfaces; stop point for this run. |
 
 ## Decision Briefs
 
@@ -4130,13 +4144,35 @@
 ### Commit `f7201e5a9`
 
 - Upstream intent: Add initial read-only plugins menu to tui and tui_app_server surfaces.
-- Local overlays touched: none (no protected-path overlap)
+- Local overlays touched: None (no protected-path overlap).
 - Invariants checked: Indubitably auth and Bedrock provider paths not touched.
-- Risk factors: Large UI/app-server surface addition; needs full test pass before intake.
-- Strategy selected: cherry-pick+surgical pending environment remediation
-- Confidence: 0.74
-- Validation evidence: staged apply succeeded; reverted after test failure to keep clean branch
-- Rollback note: free disk space, re-apply SHA, rerun targeted tui/tui_app_server tests
+- Risk factors: Large TUI/tui_app_server UI surface addition plus a new `codex-app-server-client` dependency in `codex-tui`; no protected-path overlap.
+- Strategy selected: cherry-pick+surgical.
+- Confidence: 0.86
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server --quiet`; `just bazel-lock-update`; `just bazel-lock-check`; `just fix -p codex-tui -p codex-tui-app-server`; `just fmt`. `just argument-comment-lint` still fails on unrelated pre-existing `codex-core` violations outside this intake.
+- Rollback note: Revert this sync commit if `/plugins` loading, cached marketplace state, plugin-detail navigation, or the mirrored tui_app_server flow regresses.
+
+### Commit `cc192763e10f55f5d374b60b50e2421d032ea681`
+
+- Upstream intent: Disable `hooks.json` lifecycle hooks on Windows sessions for now and surface an explicit warning instead of attempting unsupported hook execution.
+- Local overlays touched: None (no protected-path overlap).
+- Invariants checked: Indubitably auth and Bedrock provider/runtime behavior untouched.
+- Risk factors: Small Windows-only hooks-engine guard; no dependency or protected-path changes.
+- Strategy selected: cherry-pick.
+- Confidence: 0.94
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-hooks --quiet`; `just fix -p codex-hooks`; `just fmt`.
+- Rollback note: Revert this sync commit if Windows sessions should still execute lifecycle hooks or if hook-warning UX regresses.
+
+### Commit `b1570d6c2355372c33ee6d095543ee23b2e65672`
+
+- Upstream intent: Add one-time remote plugin startup sync/tasks during app-server and thread-manager startup flows.
+- Local overlays touched: Protected overlap in codex-rs/app-server/src/* plus core plugin-startup behavior that must not perturb Indubitably auth or provider-aware startup flows.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup flows remain unchanged while plugins initialize.
+- Risk factors: Protected-path overlap (+3), new startup behavior spanning app-server and core (+2), and cross-crate plugin-manager refactor scope (+1).
+- Strategy selected: manual-port
+- Confidence: 0.71
+- Validation evidence: Analyzed stat and protected-path overlap only; not applied because this run stops on manual-port candidates.
+- Rollback note: Resume with a manual port plan and broad core/app-server validation before intake.
 
 ## Batch Validation
 
@@ -4147,8 +4183,8 @@
 
 ## Follow-ups
 
-- Blocked commits: none in this 20-commit batch.
-- Manual port TODOs: none; protected-path review strategy used where required (batch 9: orders 107, 114, 115, 116; batch 10: orders 123, 127, 128, 130, 131, 132, 133, 134, 139; batch 11: orders 145, 148, 151, 154, 156, 159, 160).
+- Blocked commits: order 361 (`b1570d6c2`) is the current stop point; resume with a manual port rather than an automatic cherry-pick.
+- Manual port TODOs: order 361 needs a protected-surface manual port across `codex-rs/app-server/src/*` plus core plugin-startup behavior, with broad app-server/core validation before intake continues.
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -4669,3 +4705,7 @@
 
 - Batch 30 summary: processed 1 (order 358), blocked 0, skipped 0, branch now ahead 449 / behind 387 vs upstream/main before publish.
 - Batch 30 risk notes: order 358 spanned CI/workflow config, checked-in DotSlash artifacts, lint wrappers, documentation, and a set of lint-driven Rust callsite annotations across TUI/core/windows crates, so it was treated as a tooling-heavy cherry-pick with extra validation rather than a pure no-op tooling change; the upstream patch applied cleanly with no protected-path overlap; `dotslash` had to be installed locally via Homebrew to exercise the new prebuilt wrapper path; the lint crate itself remained nightly-only, so the correct validation was `cargo +nightly-2025-09-18 test` rather than stable `cargo test`; once validated on nightly, the new prebuilt wrapper passed against `codex-windows-sandbox` and `just fmt` completed successfully.
+- Batch 31 summary: processed 0, blocked 1 (order 359), skipped 0, branch now ahead 450 / behind 387 vs upstream/main before publish.
+- Batch 31 risk notes: order 359 applied cleanly but the run stopped on required validation because `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui plugins --quiet` hit `No space left on device (os error 28)` during rustc metadata writes; the staged diff was reverted and the blocked intake was recorded in `docs(sync): record batch 31 blocked intake`.
+- Batch 32 summary: processed 2 (orders 359-360), blocked 1 (order 361), skipped 0, branch now ahead 453 / behind 593 vs upstream/main before publish.
+- Batch 32 risk notes: order 359 was retried successfully after refetching to the March 27, 2026 upstream head and confirming ~24 GiB free disk space; full `codex-tui` and `codex-tui-app-server` crate suites passed, along with Bazel lock maintenance for the new `codex-app-server-client` dependency. `just argument-comment-lint` still fails on unrelated pre-existing `codex-core` anonymous-literal callsites in `bedrock/proxy_runtime.rs`, `canonical_trace.rs`, and `thread_manager.rs`, so that runner issue remains branch baseline rather than intake-specific. Order 360 was a straight cherry-pick with passing `codex-hooks` coverage. Order 361 was judged a manual-port candidate because it introduces new startup plugin-sync behavior across protected `app-server` surfaces and core plugin-manager flow, so the run stopped there by policy.
