@@ -721,6 +721,10 @@
 
 | 361 | `b1570d6c2355372c33ee6d095543ee23b2e65672` | manual-port | ported | 6 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo build -p codex-cli --bin codex -p codex-rmcp-client --bin test_stdio_server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server; just fmt | Manual port adds additive one-time startup remote plugin sync and a once-per-codex-home marker while preserving local startup/auth wiring; validation also required aligning stale inline core test assertions with current branch behavior. |
 
+| 362 | `b3a4da84da7f93664f0bba6807c0600a318732ec` | cherry-pick | ported | 2 | 0.91 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_reuses_prompt_cache_key_and_appends_prior_reviews --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_parallel_reviews_fork_from_last_committed_trunk_history --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core; just fmt | Guardian follow-up reviews now include an explicit reminder about prior reviews while reusing cached review state instead of rescanning full history. |
+
+| 363 | `461ba012fc20449fe2c81230387289abf2e6f0e6` | manual-port | blocked | 8 | 0.74 | Analysis only; blocked before apply because the upstream diff crosses protected app-server-protocol, app-server, core rollout, and tui_app_server surfaces. | Restores image-generation items in resumed thread history across protected protocol/app-server/core paths; next stop point for a dedicated manual-port pass. |
+
 ## Decision Briefs
 
 ### Commit `b9a2e400018c219e3010a5a5b8ded8645184da0b`
@@ -4176,6 +4180,28 @@
 - Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo build -p codex-cli --bin codex -p codex-rmcp-client --bin test_stdio_server --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server`; `just fmt`; `just argument-comment-lint` (still fails only on pre-existing branch-baseline callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`).
 - Rollback note: Revert `5103190b0` if startup plugin sync perturbs app-server startup, provider-aware thread initialization, or additive-only plugin reconciliation.
 
+### Commit `b3a4da84da7f93664f0bba6807c0600a318732ec`
+
+- Upstream intent: Add an explicit guardian follow-up reminder for reused reviews and cache prior-review state on the guardian session instead of rescanning rollout history on every follow-up.
+- Local overlays touched: None (no protected-path overlap); the diff stays within `codex-rs/core/src/guardian/*`.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, provider-aware startup, and app-server protocol surfaces remain untouched.
+- Risk factors: Low-scope guardian review-session change in one crate with snapshot-backed coverage.
+- Strategy selected: cherry-pick
+- Confidence: 0.91
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_reuses_prompt_cache_key_and_appends_prior_reviews --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_parallel_reviews_fork_from_last_committed_trunk_history --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core`; `just fmt`; `just argument-comment-lint` (still fails only on pre-existing branch-baseline callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`).
+- Rollback note: Revert `5a9b5a283e` if guardian follow-up reviews stop reusing prior rationale correctly or if the reminder pollutes first-review requests.
+
+### Commit `461ba012fc20449fe2c81230387289abf2e6f0e6`
+
+- Upstream intent: Restore image-generation items in resumed thread history so resume/fork/list flows keep prior generated-image context.
+- Local overlays touched: Protected overlap in `codex-rs/app-server-protocol/src/*`, `codex-rs/core/src/rollout/policy.rs`, `codex-rs/app-server-protocol/src/protocol/thread_history.rs`, and `codex-rs/tui_app_server/src/*`.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup are not touched yet because the commit was not applied; the protected protocol/app-server/core surfaces require a dedicated manual reconciliation.
+- Risk factors: Protected paths touched (+3), protocol/app-server history semantics changed (+3), and broad multi-crate/history-surface update (+2).
+- Strategy selected: manual-port
+- Confidence: 0.74
+- Validation evidence: Analyzed stat/protected-path overlap only; not applied because this run stops on manual-port candidates.
+- Rollback note: Resume with a dedicated manual-port plan that updates protocol schema, app-server history serialization, rollout policy, and the TUI app-server adapter together.
+
 ## Batch Validation
 
 - [x] CLI default provider smoke
@@ -4185,8 +4211,8 @@
 
 ## Follow-ups
 
-- Blocked commits: none in batch 34; next queued commit is order 362 (`b3a4da84d`, `Add guardian follow-up reminder (#15262)`) after refetching `upstream/main` to `61429a6c1`.
-- Manual port TODOs: order 361 is now ported; next run should refetch/freeze again and resume from order 362.
+- Blocked commits: order 363 (`461ba012fc`) is the current stop point; it needs a dedicated manual-port pass across protocol/app-server/core history surfaces.
+- Manual port TODOs: restore image-generation history across `app-server-protocol`, `core` rollout history/policy, and `tui_app_server` together while preserving local provider/auth overlays.
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -4715,3 +4741,5 @@
 - Batch 33 risk notes: refetch advanced `upstream/main` to `e02fd6e1d` (`2026-03-27T20:48:21-07:00`, `fix: clean up remaining Windows argument-comment-lint violations (#16071)`), widening the queue to 596 commits. Order 361 was re-scored against the current tree and remains a manual-port candidate because it introduces one-time startup plugin-sync tasks across protected `codex-rs/app-server/src/*` plus core plugin-manager startup behavior. No code was applied in this run; intake stopped immediately at the protected/manual boundary under the automation guardrails.
 - Batch 34 summary: processed 1 (order 361), blocked 0, skipped 0, branch now ahead 456 / behind 600 vs upstream/main before publish.
 - Batch 34 risk notes: refetch advanced `upstream/main` to `61429a6c1` (`2026-03-28T11:23:07-06:00`, `Rename tui_app_server to tui (#16104)`), widening the frozen queue to 601 commits. Order 361 was manually ported through protected `app-server` and core plugin-startup surfaces with additive-only startup sync semantics and a once-per-codex-home marker; full `codex-core --test all` and `codex-app-server` gates passed after building the helper binaries (`codex`, `test_stdio_server`) that the core integration suite expects. Validation also aligned stale inline `mcp_connection_manager` elicitation assertions with current branch semantics. `just argument-comment-lint` still fails only on pre-existing branch-baseline anonymous-literal callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`, so lint noise remains unrelated to this intake.
+- Batch 35 summary: processed 1 (order 362), blocked 1 (order 363), skipped 0, branch now ahead 458 / behind 601 vs upstream/main before publish.
+- Batch 35 risk notes: refetch advanced `upstream/main` again to `65f631c3d6` (`2026-03-28T11:09:41-07:00`, `fix: fix comment linter lint violations in Linux-only code (#16118)`), widening the frozen queue to 602 commits. Order 362 was a contained `codex-core` guardian change and cherry-picked cleanly with passing guardian reuse/follow-up regressions plus a scoped `just fix -p codex-core`. Order 363 immediately reintroduces a protected multi-crate history restoration across protocol/app-server/core/tui_app_server surfaces, so the batch stops there as a manual-port candidate. `just argument-comment-lint` still fails only on the same pre-existing branch-baseline `codex-core` callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`.
