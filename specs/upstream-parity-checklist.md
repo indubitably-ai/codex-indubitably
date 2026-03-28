@@ -69,6 +69,8 @@
 - Batch 31 end ahead/behind: ahead 450 / behind 387
 - Batch 32 start ahead/behind: ahead 450 / behind 593
 - Batch 32 end ahead/behind: ahead 453 / behind 593
+- Batch 33 start ahead/behind: ahead 453 / behind 596
+- Batch 33 end ahead/behind: ahead 454 / behind 596
 
 ## Protected Surfaces
 
@@ -4709,3 +4711,5 @@
 - Batch 31 risk notes: order 359 applied cleanly but the run stopped on required validation because `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui plugins --quiet` hit `No space left on device (os error 28)` during rustc metadata writes; the staged diff was reverted and the blocked intake was recorded in `docs(sync): record batch 31 blocked intake`.
 - Batch 32 summary: processed 2 (orders 359-360), blocked 1 (order 361), skipped 0, branch now ahead 453 / behind 593 vs upstream/main before publish.
 - Batch 32 risk notes: order 359 was retried successfully after refetching to the March 27, 2026 upstream head and confirming ~24 GiB free disk space; full `codex-tui` and `codex-tui-app-server` crate suites passed, along with Bazel lock maintenance for the new `codex-app-server-client` dependency. `just argument-comment-lint` still fails on unrelated pre-existing `codex-core` anonymous-literal callsites in `bedrock/proxy_runtime.rs`, `canonical_trace.rs`, and `thread_manager.rs`, so that runner issue remains branch baseline rather than intake-specific. Order 360 was a straight cherry-pick with passing `codex-hooks` coverage. Order 361 was judged a manual-port candidate because it introduces new startup plugin-sync behavior across protected `app-server` surfaces and core plugin-manager flow, so the run stopped there by policy.
+- Batch 33 summary: processed 0, blocked 1 (order 361), skipped 0, branch now ahead 454 / behind 596 vs upstream/main before publish.
+- Batch 33 risk notes: refetch advanced `upstream/main` to `e02fd6e1d` (`2026-03-27T20:48:21-07:00`, `fix: clean up remaining Windows argument-comment-lint violations (#16071)`), widening the queue to 596 commits. Order 361 was re-scored against the current tree and remains a manual-port candidate because it introduces one-time startup plugin-sync tasks across protected `codex-rs/app-server/src/*` plus core plugin-manager startup behavior. No code was applied in this run; intake stopped immediately at the protected/manual boundary under the automation guardrails.
