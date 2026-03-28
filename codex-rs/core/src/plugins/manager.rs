@@ -18,6 +18,7 @@ use super::remote::enable_remote_plugin;
 use super::remote::fetch_remote_featured_plugin_ids;
 use super::remote::fetch_remote_plugin_status;
 use super::remote::uninstall_remote_plugin;
+use super::startup_sync::start_startup_remote_plugin_sync_once;
 use super::store::DEFAULT_PLUGIN_VERSION;
 use super::store::PluginId;
 use super::store::PluginIdError;
@@ -774,6 +775,7 @@ impl PluginsManager {
         &self,
         config: &Config,
         auth: Option<&CodexAuth>,
+        additive_only: bool,
     ) -> Result<RemotePluginSyncResult, PluginRemoteSyncError> {
         if !config.features.enabled(Feature::Plugins) {
             return Ok(RemotePluginSyncResult::default());
@@ -913,7 +915,7 @@ impl PluginsManager {
                         value: value(true),
                     });
                 }
-            } else {
+            } else if !additive_only {
                 if is_installed {
                     uninstalls.push(plugin_id);
                 }
@@ -1110,7 +1112,7 @@ impl PluginsManager {
         })
     }
 
-    pub fn maybe_start_curated_repo_sync_for_config(
+    pub fn maybe_start_plugin_startup_tasks_for_config(
         self: &Arc<Self>,
         config: &Config,
         auth_manager: Arc<AuthManager>,
@@ -1138,6 +1140,12 @@ impl PluginsManager {
                     .collect::<Vec<_>>();
             configured_curated_plugin_ids.sort_unstable_by_key(super::store::PluginId::as_key);
             self.start_curated_repo_sync(configured_curated_plugin_ids);
+            start_startup_remote_plugin_sync_once(
+                Arc::clone(self),
+                self.codex_home.clone(),
+                config.clone(),
+                auth_manager.clone(),
+            );
 
             let config = config.clone();
             let manager = Arc::clone(self);
