@@ -719,7 +719,7 @@
 
 | 360 | `cc192763e10f55f5d374b60b50e2421d032ea681` | cherry-pick | ported | 2 | 0.94 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-hooks --quiet; just fix -p codex-hooks; just fmt | Windows now disables unsupported hooks.json lifecycle hooks up front and emits a session warning instead of attempting hook execution. |
 
-| 361 | `b1570d6c2355372c33ee6d095543ee23b2e65672` | manual-port | blocked | 6 | 0.71 | Analysis only; blocked before apply to preserve protected app-server/core startup behavior in this run. | Adds startup plugin-sync tasks across protected app-server plus core plugin-manager surfaces; stop point for this run. |
+| 361 | `b1570d6c2355372c33ee6d095543ee23b2e65672` | manual-port | ported | 6 | 0.84 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo build -p codex-cli --bin codex -p codex-rmcp-client --bin test_stdio_server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server; just fmt | Manual port adds additive one-time startup remote plugin sync and a once-per-codex-home marker while preserving local startup/auth wiring; validation also required aligning stale inline core test assertions with current branch behavior. |
 
 ## Decision Briefs
 
@@ -4168,13 +4168,13 @@
 ### Commit `b1570d6c2355372c33ee6d095543ee23b2e65672`
 
 - Upstream intent: Add one-time remote plugin startup sync/tasks during app-server and thread-manager startup flows.
-- Local overlays touched: Protected overlap in codex-rs/app-server/src/* plus core plugin-startup behavior that must not perturb Indubitably auth or provider-aware startup flows.
-- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup flows remain unchanged while plugins initialize.
+- Local overlays touched: Protected overlap in `codex-rs/app-server/src/*` plus core plugin-startup behavior; preserved Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup while wiring startup sync through the branch-local app-server entrypoints.
+- Invariants checked: Indubitably auth and provider-aware startup remain unchanged; startup sync is additive-only (no uninstall/clear of existing plugins) and runs once per codex home after curated-marketplace prerequisites exist.
 - Risk factors: Protected-path overlap (+3), new startup behavior spanning app-server and core (+2), and cross-crate plugin-manager refactor scope (+1).
 - Strategy selected: manual-port
-- Confidence: 0.71
-- Validation evidence: Analyzed stat and protected-path overlap only; not applied because this run stops on manual-port candidates.
-- Rollback note: Resume with a manual port plan and broad core/app-server validation before intake.
+- Confidence: 0.84
+- Validation evidence: `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo build -p codex-cli --bin codex -p codex-rmcp-client --bin test_stdio_server --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core --test all --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-app-server --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server`; `just fmt`; `just argument-comment-lint` (still fails only on pre-existing branch-baseline callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`).
+- Rollback note: Revert `5103190b0` if startup plugin sync perturbs app-server startup, provider-aware thread initialization, or additive-only plugin reconciliation.
 
 ## Batch Validation
 
@@ -4185,8 +4185,8 @@
 
 ## Follow-ups
 
-- Blocked commits: order 361 (`b1570d6c2`) is the current stop point; resume with a manual port rather than an automatic cherry-pick.
-- Manual port TODOs: order 361 needs a protected-surface manual port across `codex-rs/app-server/src/*` plus core plugin-startup behavior, with broad app-server/core validation before intake continues.
+- Blocked commits: none in batch 34; next queued commit is order 362 (`b3a4da84d`, `Add guardian follow-up reminder (#15262)`) after refetching `upstream/main` to `61429a6c1`.
+- Manual port TODOs: order 361 is now ported; next run should refetch/freeze again and resume from order 362.
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -4713,3 +4713,5 @@
 - Batch 32 risk notes: order 359 was retried successfully after refetching to the March 27, 2026 upstream head and confirming ~24 GiB free disk space; full `codex-tui` and `codex-tui-app-server` crate suites passed, along with Bazel lock maintenance for the new `codex-app-server-client` dependency. `just argument-comment-lint` still fails on unrelated pre-existing `codex-core` anonymous-literal callsites in `bedrock/proxy_runtime.rs`, `canonical_trace.rs`, and `thread_manager.rs`, so that runner issue remains branch baseline rather than intake-specific. Order 360 was a straight cherry-pick with passing `codex-hooks` coverage. Order 361 was judged a manual-port candidate because it introduces new startup plugin-sync behavior across protected `app-server` surfaces and core plugin-manager flow, so the run stopped there by policy.
 - Batch 33 summary: processed 0, blocked 1 (order 361), skipped 0, branch now ahead 454 / behind 596 vs upstream/main before publish.
 - Batch 33 risk notes: refetch advanced `upstream/main` to `e02fd6e1d` (`2026-03-27T20:48:21-07:00`, `fix: clean up remaining Windows argument-comment-lint violations (#16071)`), widening the queue to 596 commits. Order 361 was re-scored against the current tree and remains a manual-port candidate because it introduces one-time startup plugin-sync tasks across protected `codex-rs/app-server/src/*` plus core plugin-manager startup behavior. No code was applied in this run; intake stopped immediately at the protected/manual boundary under the automation guardrails.
+- Batch 34 summary: processed 1 (order 361), blocked 0, skipped 0, branch now ahead 456 / behind 600 vs upstream/main before publish.
+- Batch 34 risk notes: refetch advanced `upstream/main` to `61429a6c1` (`2026-03-28T11:23:07-06:00`, `Rename tui_app_server to tui (#16104)`), widening the frozen queue to 601 commits. Order 361 was manually ported through protected `app-server` and core plugin-startup surfaces with additive-only startup sync semantics and a once-per-codex-home marker; full `codex-core --test all` and `codex-app-server` gates passed after building the helper binaries (`codex`, `test_stdio_server`) that the core integration suite expects. Validation also aligned stale inline `mcp_connection_manager` elicitation assertions with current branch semantics. `just argument-comment-lint` still fails only on pre-existing branch-baseline anonymous-literal callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`, so lint noise remains unrelated to this intake.
