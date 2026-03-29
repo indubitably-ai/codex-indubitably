@@ -723,7 +723,9 @@
 
 | 362 | `b3a4da84da7f93664f0bba6807c0600a318732ec` | cherry-pick | ported | 2 | 0.91 | CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_reuses_prompt_cache_key_and_appends_prior_reviews --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core guardian_parallel_reviews_fork_from_last_committed_trunk_history --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-core; just fmt | Guardian follow-up reviews now include an explicit reminder about prior reviews while reusing cached review state instead of rescanning full history. |
 
-| 363 | `461ba012fc20449fe2c81230387289abf2e6f0e6` | manual-port | blocked | 8 | 0.74 | Analysis only; blocked before apply because the upstream diff crosses protected app-server-protocol, app-server, core rollout, and tui_app_server surfaces. | Restores image-generation items in resumed thread history across protected protocol/app-server/core paths; next stop point for a dedicated manual-port pass. |
+| 363 | `461ba012fc20449fe2c81230387289abf2e6f0e6` | manual-port | ported | 6 | 0.86 | just write-app-server-schema; cargo test -p codex-app-server-protocol --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core persists_image_generation_end_events_in_limited_mode --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server replayed_image_generation_item_preserves_saved_path --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server bridges_non_message_snapshot_items_via_legacy_events --quiet; CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server-protocol -p codex-core -p codex-tui-app-server; just fmt | Manual port keeps generated-image `savedPath` in protocol thread items, rollout replay, and TUI app-server replay so resumed thread history retains image-generation context. |
+
+| 364 | `e5f4d1fef59a3309339394575052c7cc1fff0996` | manual-port | blocked | 8 | 0.72 | Analysis only; blocked before apply because the upstream diff rewrites curated/startup plugin sync internals immediately after the earlier startup-sync manual port. | Prefers git-first curated plugin sync with HTTP fallback by heavily rewriting `core/src/plugins/startup_sync.rs` and related manager wiring; next dedicated manual-port candidate. |
 
 ## Decision Briefs
 
@@ -4194,13 +4196,24 @@
 ### Commit `461ba012fc20449fe2c81230387289abf2e6f0e6`
 
 - Upstream intent: Restore image-generation items in resumed thread history so resume/fork/list flows keep prior generated-image context.
-- Local overlays touched: Protected overlap in `codex-rs/app-server-protocol/src/*`, `codex-rs/core/src/rollout/policy.rs`, `codex-rs/app-server-protocol/src/protocol/thread_history.rs`, and `codex-rs/tui_app_server/src/*`.
-- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup are not touched yet because the commit was not applied; the protected protocol/app-server/core surfaces require a dedicated manual reconciliation.
-- Risk factors: Protected paths touched (+3), protocol/app-server history semantics changed (+3), and broad multi-crate/history-surface update (+2).
+- Local overlays touched: Protected overlap in `codex-rs/app-server-protocol/src/*`, `codex-rs/core/src/rollout/policy.rs`, and `codex-rs/tui_app_server/src/*`; the manual port preserves the fork’s nullable v2 payload convention instead of upstream’s optional `savedPath` wire field.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and provider-aware startup remain untouched; the manual port is limited to image-generation history persistence and replay paths.
+- Risk factors: Protected paths touched (+3), protocol/history semantics changed (+2), and multi-crate replay wiring across protocol/core/TUI surfaces (+1).
 - Strategy selected: manual-port
-- Confidence: 0.74
-- Validation evidence: Analyzed stat/protected-path overlap only; not applied because this run stops on manual-port candidates.
-- Rollback note: Resume with a dedicated manual-port plan that updates protocol schema, app-server history serialization, rollout policy, and the TUI app-server adapter together.
+- Confidence: 0.86
+- Validation evidence: `just write-app-server-schema`; `cargo test -p codex-app-server-protocol --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-core persists_image_generation_end_events_in_limited_mode --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server replayed_image_generation_item_preserves_saved_path --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' cargo test -p codex-tui-app-server bridges_non_message_snapshot_items_via_legacy_events --quiet`; `CARGO_INCREMENTAL=0 RUSTFLAGS='-C debuginfo=0' just fix -p codex-app-server-protocol -p codex-core -p codex-tui-app-server`; `just fmt`; `just argument-comment-lint` (still fails only on pre-existing branch-baseline callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`).
+- Rollback note: Revert `37b1fa7e13` if resumed/forked thread history drops generated-image items again or if the nullable `savedPath` wire shape regresses client compatibility.
+
+### Commit `e5f4d1fef59a3309339394575052c7cc1fff0996`
+
+- Upstream intent: Prefer a git clone for curated plugin sync and fall back to HTTP archive download if git is unavailable.
+- Local overlays touched: No protected-path glob overlap, but the diff heavily rewrites `codex-rs/core/src/plugins/startup_sync.rs` plus related plugin-manager internals immediately after the already-manually-ported startup remote sync behavior.
+- Invariants checked: Indubitably auth, Bedrock provider/runtime behavior, and app-server startup wiring remain untouched because the commit was not applied; the next port needs to reconcile git-first curated sync with the branch-local additive-only startup sync invariants.
+- Risk factors: Large plugin-startup refactor (+3), adjacent to a recent manual port in the same subsystem (+3), and deletes/moves test ownership across `core/src/plugins/*` (+2).
+- Strategy selected: manual-port
+- Confidence: 0.72
+- Validation evidence: Analyzed upstream diff/stat only after completing order 363; not applied because the batch stops again at the next high-risk startup-sync rewrite.
+- Rollback note: Resume with a dedicated manual-port plan that reconciles git-first curated sync transport with the fork’s existing startup marker/additive reconciliation behavior.
 
 ## Batch Validation
 
@@ -4211,8 +4224,8 @@
 
 ## Follow-ups
 
-- Blocked commits: order 363 (`461ba012fc`) is the current stop point; it needs a dedicated manual-port pass across protocol/app-server/core history surfaces.
-- Manual port TODOs: restore image-generation history across `app-server-protocol`, `core` rollout history/policy, and `tui_app_server` together while preserving local provider/auth overlays.
+- Blocked commits: order 364 (`e5f4d1fef5`) is the current stop point; it needs a dedicated manual-port pass across `core/src/plugins/*`.
+- Manual port TODOs: reconcile git-first curated plugin sync transport with the branch-local additive startup-sync marker flow introduced in the earlier manual port.
 - Batch 2 summary: processed 6 (orders 15-20), blocked 0, skipped 0, branch now ahead 63 / behind 292 vs upstream/main.
 - Batch 3 summary: processed 10 (orders 21-30), blocked 0, skipped 0, branch now ahead 79 / behind 293 vs upstream/main.
 - Batch 4 summary: processed 10 (orders 31-40), blocked 0, skipped 0, branch now ahead 90 / behind 301 vs upstream/main.
@@ -4743,3 +4756,5 @@
 - Batch 34 risk notes: refetch advanced `upstream/main` to `61429a6c1` (`2026-03-28T11:23:07-06:00`, `Rename tui_app_server to tui (#16104)`), widening the frozen queue to 601 commits. Order 361 was manually ported through protected `app-server` and core plugin-startup surfaces with additive-only startup sync semantics and a once-per-codex-home marker; full `codex-core --test all` and `codex-app-server` gates passed after building the helper binaries (`codex`, `test_stdio_server`) that the core integration suite expects. Validation also aligned stale inline `mcp_connection_manager` elicitation assertions with current branch semantics. `just argument-comment-lint` still fails only on pre-existing branch-baseline anonymous-literal callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`, so lint noise remains unrelated to this intake.
 - Batch 35 summary: processed 1 (order 362), blocked 1 (order 363), skipped 0, branch now ahead 458 / behind 601 vs upstream/main before publish.
 - Batch 35 risk notes: refetch advanced `upstream/main` again to `65f631c3d6` (`2026-03-28T11:09:41-07:00`, `fix: fix comment linter lint violations in Linux-only code (#16118)`), widening the frozen queue to 602 commits. Order 362 was a contained `codex-core` guardian change and cherry-picked cleanly with passing guardian reuse/follow-up regressions plus a scoped `just fix -p codex-core`. Order 363 immediately reintroduces a protected multi-crate history restoration across protocol/app-server/core/tui_app_server surfaces, so the batch stops there as a manual-port candidate. `just argument-comment-lint` still fails only on the same pre-existing branch-baseline `codex-core` callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`.
+- Batch 36 summary: processed 1 (order 363), blocked 1 (order 364), skipped 0, branch now ahead 460 / behind 617 vs upstream/main before publish.
+- Batch 36 risk notes: manual ported order 363 by preserving generated-image `savedPath` across `app-server-protocol`, rollout persistence/replay, and `tui_app_server` replay, then regenerated schema fixtures and documented the wire shape in the app-server README. Validation initially hit ENOSPC with only 124 MiB free on `/System/Volumes/Data`; `cargo clean` reclaimed 21.6 GiB and the rerun passed via targeted protocol/core/TUI tests plus scoped `just fix -p codex-app-server-protocol -p codex-core -p codex-tui-app-server` and `just fmt`. A refetch at closure advanced `upstream/main` to `3807807f91` (`2026-03-28`, `[mcp] Increase MCP startup timeout. (#16080)`), widening git ancestry to 617 commits behind. The next queued commit, order 364 (`e5f4d1fef5`), is another large startup plugin-sync rewrite inside `core/src/plugins/*`, so the batch stops again for a dedicated manual-port pass. `just argument-comment-lint` still fails only on the same pre-existing branch-baseline `codex-core` callsites in `core/src/bedrock/proxy_runtime.rs`, `core/src/canonical_trace.rs`, and `core/src/thread_manager.rs`.
