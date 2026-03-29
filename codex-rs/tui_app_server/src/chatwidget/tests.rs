@@ -4745,6 +4745,29 @@ async fn replayed_reasoning_item_hides_raw_reasoning_when_disabled() {
 }
 
 #[tokio::test]
+async fn replayed_image_generation_item_preserves_saved_path() {
+    let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(None).await;
+
+    chat.replay_thread_item(
+        AppServerThreadItem::ImageGeneration {
+            id: "image-1".to_string(),
+            status: "completed".to_string(),
+            revised_prompt: Some("diagram".to_string()),
+            result: "Zm9v".to_string(),
+            saved_path: Some("/tmp/generated-image.png".to_string()),
+        },
+        "turn-1".to_string(),
+        ReplayKind::ThreadSnapshot,
+    );
+
+    let rendered = match rx.try_recv() {
+        Ok(AppEvent::InsertHistoryCell(cell)) => lines_to_single_string(&cell.transcript_lines(80)),
+        other => panic!("expected InsertHistoryCell, got {other:?}"),
+    };
+    assert!(rendered.contains("Saved to: file:///tmp/generated-image.png"));
+}
+
+#[tokio::test]
 async fn replayed_reasoning_item_shows_raw_reasoning_when_enabled() {
     let (mut chat, mut rx, _op_rx) = make_chatwidget_manual(None).await;
     chat.config.show_raw_agent_reasoning = true;

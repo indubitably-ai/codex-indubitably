@@ -4256,6 +4256,7 @@ pub enum ThreadItem {
         status: String,
         revised_prompt: Option<String>,
         result: String,
+        saved_path: Option<String>,
     },
     #[serde(rename_all = "camelCase")]
     #[ts(rename_all = "camelCase")]
@@ -4432,6 +4433,7 @@ impl From<CoreTurnItem> for ThreadItem {
                 status: image.status,
                 revised_prompt: image.revised_prompt,
                 result: image.result,
+                saved_path: image.saved_path,
             },
             CoreTurnItem::ContextCompaction(compaction) => {
                 ThreadItem::ContextCompaction { id: compaction.id }
@@ -7668,6 +7670,25 @@ mod tests {
                     query: Some("docs".to_string()),
                     queries: None,
                 }),
+            }
+        );
+
+        let image_item = TurnItem::ImageGeneration(codex_protocol::items::ImageGenerationItem {
+            id: "image-1".to_string(),
+            status: "completed".to_string(),
+            revised_prompt: Some("diagram".to_string()),
+            result: "Zm9v".to_string(),
+            saved_path: Some("/tmp/generated.png".to_string()),
+        });
+
+        assert_eq!(
+            ThreadItem::from(image_item),
+            ThreadItem::ImageGeneration {
+                id: "image-1".to_string(),
+                status: "completed".to_string(),
+                revised_prompt: Some("diagram".to_string()),
+                result: "Zm9v".to_string(),
+                saved_path: Some("/tmp/generated.png".to_string()),
             }
         );
     }
